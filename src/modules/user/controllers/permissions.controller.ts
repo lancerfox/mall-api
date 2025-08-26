@@ -18,15 +18,13 @@ import {
   ROLES,
   PERMISSIONS,
 } from '../../../common/decorators/roles.decorator';
-import { MenuService } from '../../menu/services/menu.service';
-
 @ApiTags('权限管理')
 @Controller('permissions')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UsePipes(new ValidationPipe({ transform: true }))
 @ApiBearerAuth()
 export class PermissionsController {
-  constructor(private readonly menuService: MenuService) {}
+  constructor() {}
 
   @Get()
   @ApiOperation({ summary: '获取所有权限列表' })
@@ -39,13 +37,8 @@ export class PermissionsController {
     permissions: string[];
     predefinedPermissions: typeof PERMISSIONS;
   }> {
-    const menuPermissions = await this.menuService.getAllPermissions();
-
-    // 合并菜单权限和预定义权限
-    const allPermissions = [...menuPermissions, ...Object.values(PERMISSIONS)];
-
     // 去重并排序
-    const uniquePermissions = [...new Set(allPermissions)].sort();
+    const uniquePermissions = [...new Set(Object.values(PERMISSIONS))].sort();
 
     return {
       permissions: uniquePermissions,

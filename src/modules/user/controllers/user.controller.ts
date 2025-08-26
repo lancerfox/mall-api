@@ -28,7 +28,6 @@ import {
 } from '../../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../../common/decorators/user.decorator';
 import { UserService } from '../services/user.service';
-import { MenuService } from '../../menu/services/menu.service';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { QueryUserDto } from '../dto/query-user.dto';
@@ -49,10 +48,7 @@ import { MongoIdValidationPipe } from '../../../common/pipes/mongo-id-validation
 @UsePipes(new ValidationPipe({ transform: true }))
 @ApiBearerAuth()
 export class UserController {
-  constructor(
-    private readonly userService: UserService,
-    private readonly menuService: MenuService,
-  ) {}
+  constructor(private readonly userService: UserService) {}
 
   @Get()
   @ApiOperation({ summary: '获取用户列表' })
@@ -250,31 +246,6 @@ export class UserController {
     return {
       message: '批量删除用户成功',
       deletedCount: result.deletedCount,
-    };
-  }
-
-  @Get(':id/menus')
-  @ApiOperation({ summary: '获取用户菜单权限' })
-  @ApiResponse({
-    status: 200,
-    description: '获取用户菜单权限成功',
-  })
-  @Permissions(PERMISSIONS.PERMISSION_VIEW)
-  async getUserMenus(
-    @Param('id', MongoIdValidationPipe) id: string,
-  ): Promise<{ menus: any[]; permissions: string[] }> {
-    const user = await this.userService.findById(id);
-    if (!user) {
-      throw new HttpException('用户不存在', HttpStatus.NOT_FOUND);
-    }
-
-    const menus = await this.menuService.findUserMenuTree(
-      user.role,
-      user.permissions,
-    );
-    return {
-      menus,
-      permissions: user.permissions,
     };
   }
 }

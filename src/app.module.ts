@@ -6,7 +6,6 @@ import { AppService } from './app.service';
 import { ConfigModule } from './config/config.module';
 import { UserModule } from './modules/user/user.module';
 import { AuthModule } from './modules/auth/auth.module';
-import { MenuModule } from './modules/menu/menu.module';
 import { LogModule } from './modules/log/log.module';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
@@ -25,7 +24,6 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
     }),
     UserModule,
     AuthModule,
-    MenuModule,
     LogModule,
   ],
   controllers: [AppController],
