@@ -9,6 +9,24 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 
 /**
+ * 用户角色
+ */
+export enum UserRole {
+  ADMIN = 'admin',
+  SUPER_ADMIN = 'super_admin',
+  OPERATOR = 'operator',
+}
+
+/**
+ * 用户状态
+ */
+export enum UserStatus {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+  LOCKED = 'locked',
+}
+
+/**
  * 查询用户数据传输对象
  */
 export class QueryUserDto {
@@ -19,7 +37,7 @@ export class QueryUserDto {
   })
   @IsOptional()
   @IsNumberString()
-  @Transform(({ value }) => parseInt(value))
+  @Transform(({ value }: { value: string }) => parseInt(value, 10))
   @Min(1)
   page?: number = 1;
 
@@ -30,7 +48,7 @@ export class QueryUserDto {
   })
   @IsOptional()
   @IsNumberString()
-  @Transform(({ value }) => parseInt(value))
+  @Transform(({ value }: { value: string }) => parseInt(value, 10))
   @Min(1)
   limit?: number = 10;
 
@@ -61,18 +79,18 @@ export class QueryUserDto {
   @ApiPropertyOptional({
     description: '角色筛选',
     example: 'admin',
-    enum: ['admin', 'super_admin', 'operator'],
+    enum: UserRole,
   })
   @IsOptional()
-  @IsEnum(['admin', 'super_admin', 'operator'])
-  role?: string;
+  @IsEnum(UserRole)
+  role?: UserRole;
 
   @ApiPropertyOptional({
     description: '状态筛选',
     example: 'active',
-    enum: ['active', 'inactive', 'locked'],
+    enum: UserStatus,
   })
   @IsOptional()
-  @IsEnum(['active', 'inactive', 'locked'])
-  status?: string;
+  @IsEnum(UserStatus)
+  status?: UserStatus;
 }

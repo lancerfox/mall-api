@@ -33,10 +33,10 @@ export class PermissionsController {
     description: '获取权限列表成功',
   })
   @Roles(ROLES.SUPER_ADMIN, ROLES.ADMIN)
-  async getAllPermissions(): Promise<{
+  getAllPermissions(): {
     permissions: string[];
-    predefinedPermissions: typeof PERMISSIONS;
-  }> {
+    predefinedPermissions: Record<string, string>;
+  } {
     // 去重并排序
     const uniquePermissions = [...new Set(Object.values(PERMISSIONS))].sort();
 
@@ -54,7 +54,7 @@ export class PermissionsController {
   })
   @Roles(ROLES.SUPER_ADMIN, ROLES.ADMIN)
   getAllRoles(): {
-    roles: typeof ROLES;
+    roles: Record<string, string>;
     roleDescriptions: Record<string, string>;
   } {
     const roleDescriptions = {

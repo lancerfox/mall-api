@@ -1,6 +1,15 @@
 import * as Joi from 'joi';
 
 /**
+ * Node环境
+ */
+export enum NodeEnv {
+  DEVELOPMENT = 'development',
+  PRODUCTION = 'production',
+  TEST = 'test',
+}
+
+/**
  * 环境变量验证模式
  * 定义应用程序所需的环境变量及其验证规则
  */
@@ -19,6 +28,6 @@ export const validationSchema = Joi.object({
 
   // 环境类型
   NODE_ENV: Joi.string()
-    .valid('development', 'production', 'test')
-    .default('development'),
+    .valid(...Object.values(NodeEnv))
+    .default(NodeEnv.DEVELOPMENT),
 });
