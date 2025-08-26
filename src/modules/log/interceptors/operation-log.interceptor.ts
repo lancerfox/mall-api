@@ -51,8 +51,7 @@ export class OperationLogInterceptor implements NestInterceptor {
   ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    const request = context.switchToHttp().getRequest();
-    const response = context.switchToHttp().getResponse();
+    const request = context.switchToHttp().getRequest<RequestWithUser>();
     const startTime = Date.now();
 
     // 提取用户信息（假设从JWT token中获取）
@@ -189,7 +188,7 @@ export class OperationLogInterceptor implements NestInterceptor {
   }
 
   private sanitizeRequestData(data: unknown): unknown {
-    if (!data) return null;
+    if (!data || typeof data !== 'object') return null;
 
     // 移除敏感信息
     const sanitized = { ...(data as Record<string, unknown>) };
@@ -219,17 +218,19 @@ export class OperationLogInterceptor implements NestInterceptor {
     }
 
     // 移除敏感信息
-    const sanitized = { ...(data as Record<string, unknown>) };
-    const sensitiveFields = ['password', 'token', 'secret', 'key'];
+    if (typeof data === 'object' && data !== null) {
+      const sanitized = { ...(data as Record<string, unknown>) };
+      const sensitiveFields = ['password', 'token', 'secret', 'key'];
 
-    if (typeof sanitized === 'object' && sanitized !== null) {
       sensitiveFields.forEach((field) => {
         if (field in sanitized) {
           sanitized[field] = '***';
         }
       });
+
+      return sanitized;
     }
 
-    return sanitized;
+    return data;
   }
 }
