@@ -25,6 +25,8 @@ export default tseslint.config(
     },
   },
   {
-    rules: {},
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
   },
 );

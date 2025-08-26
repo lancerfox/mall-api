@@ -66,7 +66,7 @@ export interface IUserDocument extends Document {
   role: string;
   createdAt: Date;
   updatedAt: Date;
-  toObject(): any;
+  toObject(): IUserWithoutPassword;
 }
 
 /**
