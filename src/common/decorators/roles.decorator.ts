@@ -43,11 +43,11 @@ export const PERMISSIONS = {
   USER_UPDATE_STATUS: 'user:update-status',
 
   // 菜单管理权限
-  MENU_CREATE: 'menu:create',
-  MENU_READ: 'menu:read',
-  MENU_UPDATE: 'menu:update',
-  MENU_DELETE: 'menu:delete',
-  MENU_SORT: 'menu:sort',
+  // MENU_CREATE: 'menu:create',
+  // MENU_READ: 'menu:read',
+  // MENU_UPDATE: 'menu:update',
+  // MENU_DELETE: 'menu:delete',
+  // MENU_SORT: 'menu:sort',
 
   // 系统管理权限
   SYSTEM_CONFIG: 'system:config',

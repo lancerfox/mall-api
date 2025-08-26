@@ -10,7 +10,7 @@ dotenv.config({ path: path.join(__dirname, '../.env') });
  */
 async function setupAdminPermissions() {
   const mongoUri = process.env.DATABASE_URL;
-  
+
   if (!mongoUri) {
     console.error('❌ 错误: 未找到 MONGODB_URI 环境变量');
     console.log('请确保在 .env 文件中配置了 MONGODB_URI');
@@ -22,7 +22,7 @@ async function setupAdminPermissions() {
   try {
     console.log('🔗 连接到 MongoDB...');
     await client.connect();
-    
+
     const db = client.db();
     const usersCollection = db.collection('users');
     const menusCollection = db.collection('menus');
@@ -30,65 +30,68 @@ async function setupAdminPermissions() {
     // 1. 检查 admin 用户是否存在
     console.log('👤 查找 admin 用户...');
     const adminUser = await usersCollection.findOne({ username: 'admin' });
-    
+
     if (!adminUser) {
       console.error('❌ 错误: 未找到用户名为 "admin" 的用户');
       console.log('请确保数据库中存在用户名为 "admin" 的用户');
       process.exit(1);
     }
 
-    console.log(`✅ 找到 admin 用户: ${adminUser.username} (${adminUser.email})`);
+    console.log(
+      `✅ 找到 admin 用户: ${adminUser.username} (${adminUser.email})`,
+    );
 
     // 2. 获取所有菜单的权限
     console.log('📋 获取所有菜单权限...');
-    const menus = await menusCollection.find({
-      permission: { $exists: true, $ne: null, $ne: '' }
-    }).toArray();
+    const menus = await menusCollection
+      .find({
+        permission: { $exists: true, $ne: null, $ne: '' },
+      })
+      .toArray();
 
-    const menuPermissions = [...new Set(menus.map(menu => menu.permission).filter(Boolean))];
+    const menuPermissions = [
+      ...new Set(menus.map((menu) => menu.permission).filter(Boolean)),
+    ];
     console.log(`📝 找到 ${menuPermissions.length} 个菜单权限:`);
-    menuPermissions.forEach(permission => console.log(`   - ${permission}`));
+    menuPermissions.forEach((permission) => console.log(`   - ${permission}`));
 
     // 3. 预定义的系统权限（来自 PERMISSIONS 常量）
     const systemPermissions = [
       'user:create',
-      'user:read', 
+      'user:read',
       'user:update',
       'user:delete',
       'user:reset-password',
       'user:update-status',
-      'menu:create',
-      'menu:read',
-      'menu:update', 
-      'menu:delete',
-      'menu:sort',
       'system:config',
       'system:log',
       'permission:assign',
-      'permission:view'
+      'permission:view',
     ];
 
     // 4. 前端路由中定义的动态权限（来自 mall-admin 路由配置）
     const routePermissions = [
       // 系统管理权限
       'system:view',
-      'system:user:view',
-      'system:menu:view',
-      
+      'user:view',
+      'menu:view',
+
       // 仪表板权限
       'dashboard:view',
-      
+
       // 多级菜单权限
       'level:view',
-      'level:menu1:view',
-      'level:menu1-1:view',
-      'level:menu1-1-1:view',
-      'level:menu1-2:view',
-      'level:menu2:view'
+      'level:menu2:view',
     ];
 
     // 5. 合并所有权限并去重
-    const allPermissions = [...new Set([...menuPermissions, ...systemPermissions, ...routePermissions])].sort();
+    const allPermissions = [
+      ...new Set([
+        ...menuPermissions,
+        ...systemPermissions,
+        ...routePermissions,
+      ]),
+    ].sort();
     console.log(`🔐 总共 ${allPermissions.length} 个权限将被授予`);
     console.log('📋 权限详情:');
     console.log(`   - 菜单权限: ${menuPermissions.length} 个`);
@@ -103,9 +106,9 @@ async function setupAdminPermissions() {
         $set: {
           role: 'super_admin',
           permissions: allPermissions,
-          updatedAt: new Date()
-        }
-      }
+          updatedAt: new Date(),
+        },
+      },
     );
 
     if (updateResult.modifiedCount === 1) {
@@ -122,15 +125,14 @@ async function setupAdminPermissions() {
     console.log('🔍 验证更新结果...');
     const updatedUser = await usersCollection.findOne(
       { username: 'admin' },
-      { projection: { password: 0 } }
+      { projection: { password: 0 } },
     );
-    
+
     console.log('📊 更新后的用户信息:');
     console.log(`   用户名: ${updatedUser.username}`);
     console.log(`   角色: ${updatedUser.role}`);
     console.log(`   权限数量: ${updatedUser.permissions?.length || 0}`);
     console.log(`   状态: ${updatedUser.status}`);
-
   } catch (error) {
     console.error('❌ 脚本执行失败:', error.message);
     process.exit(1);

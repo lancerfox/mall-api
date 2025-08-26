@@ -56,14 +56,10 @@ npm run setup-admin
 
 #### 动态路由权限（来自前端路由配置）
 - `system:view` - 系统管理模块访问
-- `system:user:view` - 用户管理页面访问
-- `system:menu:view` - 菜单管理页面访问
+- `user:view` - 用户管理页面访问
+- `menu:view` - 菜单管理页面访问
 - `dashboard:view` - 仪表板访问
 - `level:view` - 多级菜单模块访问
-- `level:menu1:view` - 一级菜单访问
-- `level:menu1-1:view` - 二级菜单访问
-- `level:menu1-1-1:view` - 三级菜单访问
-- `level:menu1-2:view` - 二级菜单2访问
 - `level:menu2:view` - 一级菜单2访问
 
 ### 5. 执行结果
