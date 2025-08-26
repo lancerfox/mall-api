@@ -125,7 +125,6 @@ export class AuthService {
       throw new UnauthorizedException('用户不存在');
     }
     const userInfo = this.formatUserInfo(updatedUser);
-    console.log('accessToken', accessToken);
     return {
       access_token: accessToken,
       user: userInfo,

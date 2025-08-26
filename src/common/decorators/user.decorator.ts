@@ -1,4 +1,5 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+import type { Request as ExpressRequest } from 'express';
 
 export interface FullUser {
   id: string;
@@ -13,6 +14,11 @@ export interface JwtUser {
   role: string;
 }
 
+interface RequestWithUser extends ExpressRequest {
+  fullUser?: FullUser;
+  user?: JwtUser;
+}
+
 /**
  * 当前用户装饰器
  * 用于在控制器方法中获取当前认证用户的信息
@@ -21,9 +27,10 @@ export const CurrentUser = createParamDecorator(
   (
     data: keyof FullUser | keyof JwtUser | undefined,
     ctx: ExecutionContext,
-  ): any => {
-    const request = ctx.switchToHttp().getRequest();
-    const user: FullUser | JwtUser = request.fullUser || request.user;
+  ): FullUser | JwtUser | string | string[] | undefined => {
+    const request = ctx.switchToHttp().getRequest<RequestWithUser>();
+    const user: FullUser | JwtUser | undefined =
+      request.fullUser ?? request.user;
 
     // 如果指定了特定字段，则返回该字段的值
     if (data && user) {

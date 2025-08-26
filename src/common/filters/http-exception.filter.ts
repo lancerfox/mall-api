@@ -13,7 +13,7 @@ import { ERROR_CODES, ERROR_MESSAGES } from '../constants/error-codes';
 
 interface MongoError extends Error {
   code?: number;
-  keyPattern?: { [key: string]: any };
+  keyPattern?: Record<string, unknown>;
 }
 
 interface ValidationError {
