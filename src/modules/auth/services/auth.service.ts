@@ -159,12 +159,9 @@ export class AuthService {
     return {
       id: user._id,
       username: user.username,
-      email: user.email,
-      realName: user.realName,
       role: user.role,
       status: user.status,
       avatar: user.avatar,
-      phone: user.phone,
       permissions: user.permissions,
       lastLoginTime: user.lastLoginTime,
       lastLoginIp: user.lastLoginIp,
@@ -196,9 +193,6 @@ export class AuthService {
   async updateProfile(
     userId: string,
     updateData: {
-      email: string;
-      realName: string;
-      phone?: string;
       avatar?: string;
     },
     ip?: string,

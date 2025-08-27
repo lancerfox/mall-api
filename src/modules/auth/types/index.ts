@@ -7,12 +7,9 @@ import { Document } from 'mongoose';
 export interface IUserWithoutPassword {
   _id: string;
   username: string;
-  email: string;
-  realName: string;
   role: string;
   status: string;
   avatar?: string;
-  phone?: string;
   permissions: string[];
   lastLoginTime?: Date;
   lastLoginIp?: string;
@@ -41,12 +38,9 @@ export interface ILoginResponse {
   user: {
     id: string;
     username: string;
-    email: string;
-    realName: string;
     role: string;
     status: string;
     avatar?: string;
-    phone?: string;
     permissions: string[];
     lastLoginTime?: Date;
     lastLoginIp?: string;

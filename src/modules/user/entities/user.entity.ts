@@ -12,12 +12,6 @@ export class User {
   @Prop({ required: true })
   password: string;
 
-  @Prop({ required: true })
-  email: string;
-
-  @Prop({ default: '管理员' })
-  realName: string;
-
   @Prop({
     type: String,
     enum: ['admin', 'super_admin', 'operator'],
@@ -34,9 +28,6 @@ export class User {
 
   @Prop()
   avatar?: string;
-
-  @Prop()
-  phone?: string;
 
   @Prop()
   lastLoginTime?: Date;

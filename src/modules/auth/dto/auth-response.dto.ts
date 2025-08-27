@@ -17,18 +17,6 @@ export class UserInfoDto {
   username: string;
 
   @ApiProperty({
-    description: '邮箱',
-    example: 'admin@example.com',
-  })
-  email: string;
-
-  @ApiProperty({
-    description: '真实姓名',
-    example: '系统管理员',
-  })
-  realName: string;
-
-  @ApiProperty({
     description: '用户角色',
     enum: ['admin', 'super_admin', 'operator'],
     example: 'admin',
@@ -48,13 +36,6 @@ export class UserInfoDto {
     required: false,
   })
   avatar?: string;
-
-  @ApiProperty({
-    description: '手机号',
-    example: '13800138000',
-    required: false,
-  })
-  phone?: string;
 
   @ApiProperty({
     description: '用户权限列表',

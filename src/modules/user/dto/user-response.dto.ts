@@ -17,18 +17,6 @@ export class UserResponseDto {
   username: string;
 
   @ApiProperty({
-    description: '邮箱',
-    example: 'admin@example.com',
-  })
-  email: string;
-
-  @ApiProperty({
-    description: '真实姓名',
-    example: '系统管理员',
-  })
-  realName: string;
-
-  @ApiProperty({
     description: '用户角色',
     example: 'admin',
     enum: ['admin', 'super_admin', 'operator'],
@@ -47,12 +35,6 @@ export class UserResponseDto {
     example: 'https://example.com/avatar.jpg',
   })
   avatar?: string;
-
-  @ApiPropertyOptional({
-    description: '手机号码',
-    example: '13800138000',
-  })
-  phone?: string;
 
   @ApiPropertyOptional({
     description: '最后登录时间',

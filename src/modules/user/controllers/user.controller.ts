@@ -107,8 +107,8 @@ export class UserController {
   ): Promise<UserResponseDto> {
     // 防止用户修改自己的角色和状态
     if (currentUserId === id) {
-      delete updateUserDto.role;
-      delete updateUserDto.status;
+      delete (updateUserDto as Partial<UpdateUserDto>).role;
+      delete (updateUserDto as Partial<UpdateUserDto>).status;
     }
 
     return await this.userService.update(id, updateUserDto);

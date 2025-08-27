@@ -13,22 +13,6 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
  */
 export class UpdateUserDto {
   @ApiPropertyOptional({
-    description: '邮箱',
-    example: 'admin@example.com',
-  })
-  @IsOptional()
-  @IsEmail()
-  email?: string;
-
-  @ApiPropertyOptional({
-    description: '真实姓名',
-    example: '系统管理员',
-  })
-  @IsOptional()
-  @IsString()
-  realName?: string;
-
-  @ApiPropertyOptional({
     description: '用户角色',
     example: 'admin',
     enum: ['admin', 'super_admin', 'operator'],
@@ -53,14 +37,6 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString()
   avatar?: string;
-
-  @ApiPropertyOptional({
-    description: '手机号码',
-    example: '13800138000',
-  })
-  @IsOptional()
-  @IsString()
-  phone?: string;
 
   @ApiPropertyOptional({
     description: '用户权限列表',

@@ -12,7 +12,6 @@ import {
   BatchOperationDto,
   BatchUpdateStatusDto,
 } from '../dto/batch-operation.dto';
-
 describe('UserController', () => {
   let controller: UserController;
   let userService: jest.Mocked<UserService>;
@@ -20,8 +19,6 @@ describe('UserController', () => {
   const mockUser = {
     _id: '507f1f77bcf86cd799439011',
     username: 'testuser',
-    email: 'test@example.com',
-    realName: '测试用户',
     role: 'admin',
     status: 'active',
     permissions: ['user:read'],
@@ -108,8 +105,6 @@ describe('UserController', () => {
       const createUserDto: CreateUserDto = {
         username: 'newuser',
         password: 'Password123!',
-        email: 'newuser@example.com',
-        realName: '新用户',
         role: 'admin',
       };
       userService.create.mockResolvedValue(mockUser);
@@ -124,8 +119,7 @@ describe('UserController', () => {
   describe('update', () => {
     it('should update user successfully', async () => {
       const updateUserDto: UpdateUserDto = {
-        email: 'updated@example.com',
-        realName: '更新用户',
+        role: 'operator',
       };
       const updatedUser = { ...mockUser, ...updateUserDto };
       userService.update.mockResolvedValue(updatedUser);
@@ -145,11 +139,10 @@ describe('UserController', () => {
 
     it('should prevent user from updating own role and status', async () => {
       const updateUserDto: UpdateUserDto = {
-        email: 'updated@example.com',
         role: 'super_admin',
         status: 'inactive',
       };
-      const expectedDto = { email: 'updated@example.com' };
+      const expectedDto = {};
       userService.update.mockResolvedValue(mockUser);
 
       await controller.update(
@@ -194,7 +187,9 @@ describe('UserController', () => {
 
   describe('updateStatus', () => {
     it('should update user status successfully', async () => {
-      const updateStatusDto: UpdateUserStatusDto = { status: 'inactive' };
+      const updateStatusDto: UpdateUserStatusDto = {
+        status: 'inactive',
+      };
       const updatedUser = { ...mockUser, status: 'inactive' };
       userService.updateStatus.mockResolvedValue(updatedUser);
 
@@ -212,7 +207,9 @@ describe('UserController', () => {
     });
 
     it('should prevent user from updating own status', async () => {
-      const updateStatusDto: UpdateUserStatusDto = { status: 'inactive' };
+      const updateStatusDto: UpdateUserStatusDto = {
+        status: 'inactive',
+      };
 
       await expect(
         controller.updateStatus(
@@ -398,7 +395,9 @@ describe('UserController', () => {
 
   describe('updateUserStatus', () => {
     it('should update user status successfully (alias method)', async () => {
-      const updateStatusDto: UpdateUserStatusDto = { status: 'inactive' };
+      const updateStatusDto: UpdateUserStatusDto = {
+        status: 'inactive',
+      };
       const updatedUser = { ...mockUser, status: 'inactive' };
       userService.updateUserStatus.mockResolvedValue(updatedUser);
 

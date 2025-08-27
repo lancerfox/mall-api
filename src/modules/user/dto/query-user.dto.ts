@@ -89,24 +89,6 @@ export class QueryUserDto {
   username?: string;
 
   @ApiPropertyOptional({
-    description: '邮箱搜索',
-    example: 'admin@example.com',
-  })
-  @Transform(emptyStringToUndefined)
-  @IsOptional()
-  @IsString()
-  email?: string;
-
-  @ApiPropertyOptional({
-    description: '真实姓名搜索',
-    example: '管理员',
-  })
-  @Transform(emptyStringToUndefined)
-  @IsOptional()
-  @IsString()
-  realName?: string;
-
-  @ApiPropertyOptional({
     description: '角色筛选',
     example: 'admin',
     enum: UserRole,

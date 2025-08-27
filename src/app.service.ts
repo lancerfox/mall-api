@@ -23,8 +23,6 @@ export class AppService implements OnModuleInit {
         const createUserDto: CreateUserDto = {
           username: adminUsername,
           password: adminPassword,
-          email: 'admin@example.com',
-          realName: '系统管理员',
           role: 'super_admin',
         };
         await this.userService.create(createUserDto);

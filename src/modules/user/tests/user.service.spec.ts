@@ -14,13 +14,11 @@ jest.mock('bcrypt');
 
 describe('UserService', () => {
   let service: UserService;
-  let userModel: jest.Mocked<Model<UserDocument>>;
+  let userModel: any;
 
   const mockUserData = {
     _id: '507f1f77bcf86cd799439011',
     username: 'testuser',
-    email: 'test@example.com',
-    realName: '测试用户',
     role: 'admin',
     status: 'active',
     permissions: ['user:read'],
@@ -132,8 +130,6 @@ describe('UserService', () => {
       expect(result).toMatchObject({
         _id: '507f1f77bcf86cd799439011',
         username: 'testuser',
-        email: 'test@example.com',
-        realName: '测试用户',
         role: 'admin',
         status: 'active',
         permissions: ['user:read'],
@@ -172,9 +168,7 @@ describe('UserService', () => {
   describe('updateProfile', () => {
     it('should update user profile', async () => {
       const updateData = {
-        email: 'new@example.com',
-        realName: '新用户',
-        phone: '1234567890',
+        avatar: 'new-avatar.jpg',
       };
 
       const mockSelect = jest
@@ -199,8 +193,7 @@ describe('UserService', () => {
 
     it('should throw error when user not found', async () => {
       const updateData = {
-        email: 'new@example.com',
-        realName: '新用户',
+        avatar: 'new-avatar.jpg',
       };
 
       const mockSelect = jest
@@ -263,8 +256,6 @@ describe('UserService', () => {
       expect(result.data[0]).toMatchObject({
         _id: '507f1f77bcf86cd799439011',
         username: 'testuser',
-        email: 'test@example.com',
-        realName: '测试用户',
         role: 'admin',
         status: 'active',
         permissions: ['user:read'],
@@ -309,9 +300,8 @@ describe('UserService', () => {
     it('should create user successfully', async () => {
       const createUserDto: CreateUserDto = {
         username: 'newuser',
-        email: 'newuser@example.com',
         password: 'password123',
-        realName: '新用户',
+        role: 'admin',
       };
 
       // Mock that user doesn't exist
@@ -328,9 +318,8 @@ describe('UserService', () => {
     it('should throw conflict error for existing username', async () => {
       const createUserDto: CreateUserDto = {
         username: 'existinguser',
-        email: 'new@example.com',
         password: 'password123',
-        realName: '新用户',
+        role: 'admin',
       };
 
       // Mock that username exists
@@ -342,43 +331,17 @@ describe('UserService', () => {
         HttpException,
       );
     });
-
-    it('should throw conflict error for existing email', async () => {
-      const createUserDto: CreateUserDto = {
-        username: 'newuser',
-        email: 'existing@example.com',
-        password: 'password123',
-        realName: '新用户',
-      };
-
-      // Mock that username doesn't exist but email exists
-      userModel.findOne
-        .mockReturnValueOnce({ exec: jest.fn().mockResolvedValue(null) } as any)
-        .mockReturnValueOnce({
-          exec: jest.fn().mockResolvedValue(mockUser),
-        } as any);
-
-      await expect(service.create(createUserDto)).rejects.toThrow(
-        HttpException,
-      );
-    });
   });
 
   describe('update', () => {
     it('should update user successfully', async () => {
       const updateUserDto: UpdateUserDto = {
-        email: 'updated@example.com',
-        realName: '更新用户',
+        role: 'operator',
       };
 
       // Mock user exists
       userModel.findById.mockReturnValue({
         exec: jest.fn().mockResolvedValue(mockUser),
-      } as any);
-
-      // Mock email doesn't exist for other users
-      userModel.findOne.mockReturnValue({
-        exec: jest.fn().mockResolvedValue(null),
       } as any);
 
       const mockSelect = jest
@@ -398,7 +361,7 @@ describe('UserService', () => {
 
     it('should throw not found error for non-existent user', async () => {
       const updateUserDto: UpdateUserDto = {
-        email: 'updated@example.com',
+        role: 'operator',
       };
 
       userModel.findById.mockReturnValue({
@@ -640,7 +603,7 @@ describe('UserService', () => {
       const mockExec = jest.fn().mockResolvedValue({ deletedCount: 2 });
       userModel.deleteMany.mockReturnValue({ exec: mockExec } as any);
 
-      const result = await service.batchDelete(['id1', 'id2']);
+      const result = await service.batchDelete(['id1', 'id2'], 'currentUserId');
 
       expect(userModel.deleteMany).toHaveBeenCalledWith({
         _id: { $in: ['id1', 'id2'] },

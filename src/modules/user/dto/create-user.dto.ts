@@ -49,25 +49,6 @@ export class CreateUserDto {
   password: string;
 
   @ApiProperty({
-    description: '邮箱',
-    example: 'admin@example.com',
-  })
-  @IsEmail({}, { message: '邮箱格式不正确' })
-  @IsNotEmpty({ message: '邮箱不能为空' })
-  @MaxLength(100, { message: '邮箱长度不能超过100位' })
-  email: string;
-
-  @ApiProperty({
-    description: '真实姓名',
-    example: '系统管理员',
-  })
-  @IsString({ message: '真实姓名必须是字符串' })
-  @IsNotEmpty({ message: '真实姓名不能为空' })
-  @MinLength(2, { message: '真实姓名长度至少2位' })
-  @MaxLength(20, { message: '真实姓名长度不能超过20位' })
-  realName: string;
-
-  @ApiProperty({
     description: '用户角色',
     example: 'admin',
     enum: ['admin', 'super_admin', 'operator'],
@@ -86,15 +67,6 @@ export class CreateUserDto {
   @IsUrl({}, { message: '头像URL格式不正确' })
   @MaxLength(500, { message: '头像URL长度不能超过500位' })
   avatar?: string;
-
-  @ApiPropertyOptional({
-    description: '手机号码',
-    example: '13800138000',
-  })
-  @IsOptional()
-  @IsString({ message: '手机号码必须是字符串' })
-  @Matches(/^1[3-9]\d{9}$/, { message: '手机号码格式不正确' })
-  phone?: string;
 
   @ApiPropertyOptional({
     description: '用户权限列表',

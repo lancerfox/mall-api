@@ -40,8 +40,6 @@ describe('User Entity', () => {
 
       expect(paths.username).toBeDefined();
       expect(paths.password).toBeDefined();
-      expect(paths.email).toBeDefined();
-      expect(paths.realName).toBeDefined();
       expect(paths.role).toBeDefined();
       expect(paths.status).toBeDefined();
     });
@@ -50,7 +48,6 @@ describe('User Entity', () => {
       const userSchema = UserSchema;
       const paths = userSchema.paths;
 
-      expect(paths.realName.defaultValue).toBe('管理员');
       expect(paths.role.defaultValue).toBe('admin');
       expect(paths.status.defaultValue).toBe('active');
       expect(typeof paths.permissions.defaultValue).toBe('function');
@@ -100,8 +97,6 @@ describe('User Entity', () => {
       const userData = {
         username: 'testuser',
         password: 'password123',
-        email: 'test@example.com',
-        realName: '测试用户',
         role: 'admin',
         status: 'active',
         permissions: ['user:read'],
@@ -111,8 +106,6 @@ describe('User Entity', () => {
       Object.assign(user, userData);
 
       expect(user.username).toBe('testuser');
-      expect(user.email).toBe('test@example.com');
-      expect(user.realName).toBe('测试用户');
       expect(user.role).toBe('admin');
       expect(user.status).toBe('active');
       expect(user.permissions).toEqual(['user:read']);
@@ -122,18 +115,14 @@ describe('User Entity', () => {
       const userData = {
         username: 'testuser',
         password: 'password123',
-        email: 'test@example.com',
-        realName: '测试用户',
         role: 'admin',
         avatar: 'https://example.com/avatar.jpg',
-        phone: '13800138000',
       };
 
       const user = new User();
       Object.assign(user, userData);
 
       expect(user.avatar).toBe('https://example.com/avatar.jpg');
-      expect(user.phone).toBe('13800138000');
       expect(user.lastLoginTime).toBeUndefined();
       expect(user.lastLoginIp).toBeUndefined();
     });

@@ -70,9 +70,6 @@ export class UserService {
   async updateProfile(
     id: string,
     updateData: {
-      email: string;
-      realName: string;
-      phone?: string;
       avatar?: string;
     },
   ): Promise<UserResponseDto> {
@@ -82,7 +79,7 @@ export class UserService {
       .exec();
 
     if (!updatedUser) {
-      throw new Error('用户不存在');
+      throw new HttpException('用户不存在', HttpStatus.NOT_FOUND);
     }
 
     return this.transformUserToResponse(updatedUser);
@@ -105,29 +102,13 @@ export class UserService {
    * @returns 用户列表和分页信息
    */
   async findAll(query: QueryUserDto): Promise<UserListResponseDto> {
-    const {
-      page = 1,
-      limit = 10,
-      username,
-      email,
-      realName,
-      role,
-      status,
-    } = query;
+    const { page = 1, limit = 10, username, role, status } = query;
 
     // 构建查询条件
     const filter: FilterQuery<UserDocument> = {};
 
     if (username) {
       filter.username = { $regex: username, $options: 'i' };
-    }
-
-    if (email) {
-      filter.email = { $regex: email, $options: 'i' };
-    }
-
-    if (realName) {
-      filter.realName = { $regex: realName, $options: 'i' };
     }
 
     if (role) {
@@ -181,14 +162,6 @@ export class UserService {
       throw new HttpException('用户名已存在', HttpStatus.CONFLICT);
     }
 
-    // 检查邮箱是否已存在
-    const existingEmail = await this.userModel
-      .findOne({ email: createUserDto.email })
-      .exec();
-    if (existingEmail) {
-      throw new HttpException('邮箱已存在', HttpStatus.CONFLICT);
-    }
-
     // 创建新用户
     const newUser = new this.userModel(createUserDto);
     const savedUser = await newUser.save();
@@ -210,19 +183,6 @@ export class UserService {
     const existingUser = await this.userModel.findById(id).exec();
     if (!existingUser) {
       throw new HttpException('用户不存在', HttpStatus.NOT_FOUND);
-    }
-
-    // 如果更新邮箱，检查邮箱是否已被其他用户使用
-    if (updateUserDto.email && updateUserDto.email !== existingUser.email) {
-      const emailExists = await this.userModel
-        .findOne({
-          email: updateUserDto.email,
-          _id: { $ne: id },
-        })
-        .exec();
-      if (emailExists) {
-        throw new HttpException('邮箱已被其他用户使用', HttpStatus.CONFLICT);
-      }
     }
 
     // 如果更新密码，需要加密
@@ -554,16 +514,26 @@ export class UserService {
     ];
 
     // 根据权限过滤菜单
-    return allMenus.filter((menu) => {
-      if (menu.children) {
-        menu.children = menu.children.filter(
-          (child: any) =>
-            !child.permission || permissions.includes(child.permission),
-        );
-        return menu.children.length > 0;
-      }
-      return !menu.permission || permissions.includes(menu.permission);
-    });
+    return allMenus
+      .map((menu) => {
+        if (menu.children) {
+          const filteredChildren = menu.children.filter(
+            (child) =>
+              !child.permission || permissions.includes(child.permission),
+          );
+          if (filteredChildren.length > 0) {
+            return { ...menu, children: filteredChildren };
+          }
+        }
+        if (
+          !menu.children &&
+          (!menu.permission || permissions.includes(menu.permission))
+        ) {
+          return menu;
+        }
+        return null;
+      })
+      .filter((menu) => menu !== null);
   }
 
   /**
@@ -616,30 +586,13 @@ export class UserService {
    * @returns 用户响应数据
    */
   private transformUserToResponse(user: UserDocument): UserResponseDto {
-    const userObj = user.toObject() as {
-      _id: string;
-      username: string;
-      email: string;
-      realName: string;
-      role: string;
-      status: string;
-      avatar?: string;
-      phone?: string;
-      permissions?: string[];
-      lastLoginTime?: Date;
-      lastLoginIp?: string;
-      createdAt: Date;
-      updatedAt: Date;
-    };
+    const userObj = user.toObject();
     return {
       _id: String(userObj._id),
       username: userObj.username,
-      email: userObj.email,
-      realName: userObj.realName,
       role: userObj.role,
       status: userObj.status,
       avatar: userObj.avatar,
-      phone: userObj.phone,
       permissions: userObj.permissions || [],
       lastLoginTime: userObj.lastLoginTime,
       lastLoginIp: userObj.lastLoginIp,
