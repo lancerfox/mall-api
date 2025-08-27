@@ -3,21 +3,15 @@ import { getModelToken } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { SecurityService } from '../services/security.service';
 import { User, UserDocument } from '../../user/entities/user.entity';
-import { OperationLogService } from '../../log/services/operation-log.service';
 
 describe('SecurityService', () => {
   let service: SecurityService;
   let userModel: jest.Mocked<Model<UserDocument>>;
-  let operationLogService: jest.Mocked<OperationLogService>;
 
   beforeEach(async () => {
     const mockUserModel = {
       findById: jest.fn(),
       findOne: jest.fn(),
-    };
-
-    const mockOperationLogService = {
-      create: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -27,16 +21,11 @@ describe('SecurityService', () => {
           provide: getModelToken(User.name),
           useValue: mockUserModel,
         },
-        {
-          provide: OperationLogService,
-          useValue: mockOperationLogService,
-        },
       ],
     }).compile();
 
     service = module.get<SecurityService>(SecurityService);
     userModel = module.get(getModelToken(User.name));
-    operationLogService = module.get(OperationLogService);
 
     // Clear any existing intervals
     jest.clearAllTimers();

@@ -2,14 +2,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { AuthController } from '../controllers/auth.controller';
 import { AuthService } from '../services/auth.service';
-import { OperationLogService } from '../../log/services/operation-log.service';
 import { LoginDto } from '../dto/login.dto';
 import { ChangePasswordDto } from '../dto/change-password.dto';
 
 describe('AuthController', () => {
   let controller: AuthController;
   let authService: jest.Mocked<AuthService>;
-  let operationLogService: jest.Mocked<OperationLogService>;
 
   const mockUser = {
     _id: '507f1f77bcf86cd799439011',
@@ -42,21 +40,13 @@ describe('AuthController', () => {
       getSecurityStats: jest.fn(),
     };
 
-    const mockOperationLogService = {
-      logLogin: jest.fn(),
-    };
-
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
-      providers: [
-        { provide: AuthService, useValue: mockAuthService },
-        { provide: OperationLogService, useValue: mockOperationLogService },
-      ],
+      providers: [{ provide: AuthService, useValue: mockAuthService }],
     }).compile();
 
     controller = module.get<AuthController>(AuthController);
     authService = module.get(AuthService);
-    operationLogService = module.get(OperationLogService);
   });
 
   it('should be defined', () => {
@@ -91,57 +81,27 @@ describe('AuthController', () => {
 
     it('should throw UnauthorizedException for invalid credentials', async () => {
       authService.validateUser.mockResolvedValue(null);
-      operationLogService.logLogin.mockResolvedValue({} as any);
 
       await expect(
         controller.login(loginDto, mockRequest, '127.0.0.1'),
       ).rejects.toThrow(UnauthorizedException);
-
-      expect(operationLogService.logLogin).toHaveBeenCalledWith(
-        '',
-        'testuser',
-        '127.0.0.1',
-        'test-agent',
-        'error',
-        '用户名或密码错误',
-      );
     });
 
     it('should throw UnauthorizedException for inactive user', async () => {
       const inactiveUser = { ...mockUser, status: 'inactive' };
       authService.validateUser.mockResolvedValue(inactiveUser as any);
-      operationLogService.logLogin.mockResolvedValue({} as any);
 
       await expect(
         controller.login(loginDto, mockRequest, '127.0.0.1'),
       ).rejects.toThrow(UnauthorizedException);
-
-      expect(operationLogService.logLogin).toHaveBeenCalledWith(
-        inactiveUser._id,
-        inactiveUser.username,
-        '127.0.0.1',
-        'test-agent',
-        'error',
-        '用户账户已被禁用或锁定',
-      );
     });
 
     it('should handle system errors', async () => {
       authService.validateUser.mockRejectedValue(new Error('Database error'));
-      operationLogService.logLogin.mockResolvedValue({} as any);
 
       await expect(
         controller.login(loginDto, mockRequest, '127.0.0.1'),
       ).rejects.toThrow(UnauthorizedException);
-
-      expect(operationLogService.logLogin).toHaveBeenCalledWith(
-        '',
-        'testuser',
-        '127.0.0.1',
-        'test-agent',
-        'error',
-        '系统错误',
-      );
     });
   });
 

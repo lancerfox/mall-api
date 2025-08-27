@@ -4,7 +4,6 @@ import { ConfigService } from '@nestjs/config';
 import { UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { AuthService } from '../services/auth.service';
 import { UserService } from '../../user/services/user.service';
-import { OperationLogService } from '../../log/services/operation-log.service';
 import { SecurityService } from '../services/security.service';
 import * as bcrypt from 'bcrypt';
 
@@ -15,7 +14,6 @@ describe('AuthService', () => {
   let userService: jest.Mocked<UserService>;
   let jwtService: jest.Mocked<JwtService>;
   let configService: jest.Mocked<ConfigService>;
-  let operationLogService: jest.Mocked<OperationLogService>;
   let securityService: jest.Mocked<SecurityService>;
 
   const mockUser = {
@@ -66,12 +64,6 @@ describe('AuthService', () => {
       get: jest.fn(),
     };
 
-    const mockOperationLogService = {
-      logLogin: jest.fn(),
-      logProfileUpdate: jest.fn(),
-      logPasswordChange: jest.fn(),
-    };
-
     const mockSecurityService = {
       isAccountLocked: jest.fn(),
       getRemainingLockTime: jest.fn(),
@@ -86,7 +78,6 @@ describe('AuthService', () => {
         { provide: UserService, useValue: mockUserService },
         { provide: JwtService, useValue: mockJwtService },
         { provide: ConfigService, useValue: mockConfigService },
-        { provide: OperationLogService, useValue: mockOperationLogService },
         { provide: SecurityService, useValue: mockSecurityService },
       ],
     }).compile();
@@ -95,7 +86,6 @@ describe('AuthService', () => {
     userService = module.get(UserService);
     jwtService = module.get(JwtService);
     configService = module.get(ConfigService);
-    operationLogService = module.get(OperationLogService);
     securityService = module.get(SecurityService);
   });
 
@@ -209,7 +199,6 @@ describe('AuthService', () => {
         if (key === 'JWT_EXPIRES_IN') return '1h';
         return undefined;
       });
-      operationLogService.logLogin.mockResolvedValue({} as any);
 
       const result = await service.login(
         mockUserWithoutPassword as any,
@@ -232,7 +221,6 @@ describe('AuthService', () => {
           expiresIn: '1h',
         },
       );
-      expect(operationLogService.logLogin).toHaveBeenCalled();
       expect(result).toEqual({
         access_token: mockToken,
         user: expect.objectContaining({
@@ -323,7 +311,6 @@ describe('AuthService', () => {
         .mockResolvedValueOnce(true)
         .mockResolvedValueOnce(false);
       userService.updatePassword.mockResolvedValue();
-      operationLogService.logPasswordChange.mockResolvedValue({} as any);
 
       await service.changePassword(
         '507f1f77bcf86cd799439011',
@@ -340,13 +327,6 @@ describe('AuthService', () => {
       expect(userService.updatePassword).toHaveBeenCalledWith(
         '507f1f77bcf86cd799439011',
         'newpassword',
-      );
-      expect(operationLogService.logPasswordChange).toHaveBeenCalledWith(
-        '507f1f77bcf86cd799439011',
-        'testuser',
-        '127.0.0.1',
-        'test-agent',
-        'success',
       );
     });
 
