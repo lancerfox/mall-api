@@ -6,7 +6,6 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UserService } from '../../user/services/user.service';
-import { OperationLogService } from '../../log/services/operation-log.service';
 import { SecurityService } from './security.service';
 import * as bcrypt from 'bcrypt';
 import { IUserWithoutPassword, ILoginResponse, IJwtPayload } from '../types';
@@ -18,7 +17,6 @@ export class AuthService {
     private userService: UserService,
     private jwtService: JwtService,
     private configService: ConfigService,
-    private operationLogService: OperationLogService,
     private securityService: SecurityService,
   ) {}
 
@@ -106,18 +104,6 @@ export class AuthService {
       expiresIn: this.configService.get('JWT_EXPIRES_IN', '1h'),
     });
 
-    // 记录登录日志
-    try {
-      await this.operationLogService.logLogin(
-        user._id,
-        user.username,
-        ip,
-        userAgent,
-      );
-    } catch (error: unknown) {
-      // 日志记录失败不应影响登录流程
-      console.error('Failed to log login:', error);
-    }
 
     // 获取更新后的用户信息
     const updatedUser = await this.userService.findById(user._id);
@@ -210,36 +196,11 @@ export class AuthService {
         updateData,
       );
 
-      // 记录操作日志
-      try {
-        await this.operationLogService.logProfileUpdate(
-          userId,
-          user.username,
-          ip,
-          userAgent,
-          'success',
-        );
-      } catch (logError: unknown) {
-        console.error('Failed to log profile update:', logError);
-      }
 
       return this.formatUserInfo(updatedUser);
     } catch (error: unknown) {
       const user = await this.userService.findById(userId);
 
-      // 记录操作失败日志
-      try {
-        await this.operationLogService.logProfileUpdate(
-          userId,
-          user?.username || 'unknown',
-          ip,
-          userAgent,
-          'error',
-          error instanceof Error ? error.message : '未知错误',
-        );
-      } catch (logError: unknown) {
-        console.error('Failed to log profile update error:', logError);
-      }
 
       throw error;
     }
@@ -294,34 +255,9 @@ export class AuthService {
       // 更新密码
       await this.userService.updatePassword(userId, newPassword);
 
-      // 记录操作日志
-      try {
-        await this.operationLogService.logPasswordChange(
-          userId,
-          user.username,
-          ip,
-          userAgent,
-          'success',
-        );
-      } catch (logError: unknown) {
-        console.error('Failed to log password change:', logError);
-      }
     } catch (error: unknown) {
       const user = await this.userService.findById(userId);
 
-      // 记录操作失败日志
-      try {
-        await this.operationLogService.logPasswordChange(
-          userId,
-          user?.username || 'unknown',
-          ip,
-          userAgent,
-          'error',
-          error instanceof Error ? error.message : '未知错误',
-        );
-      } catch (logError: unknown) {
-        console.error('Failed to log password change error:', logError);
-      }
 
       throw error;
     }

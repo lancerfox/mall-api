@@ -19,7 +19,6 @@ import {
 } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { AuthService } from '../services/auth.service';
-import { OperationLogService } from '../../log/services/operation-log.service';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { Public } from '../../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../../common/decorators/user.decorator';
@@ -36,7 +35,6 @@ import type { JwtUser } from '../../../common/decorators/user.decorator';
 export class AuthController {
   constructor(
     private authService: AuthService,
-    private operationLogService: OperationLogService,
   ) {}
 
   /**
@@ -74,39 +72,11 @@ export class AuthController {
       );
 
       if (!user) {
-        // 记录登录失败日志
-        try {
-          await this.operationLogService.logLogin(
-            '', // 用户ID未知
-            loginDto.username,
-            ip,
-            userAgent,
-            'error',
-            '用户名或密码错误',
-          );
-        } catch (logError: unknown) {
-          console.error('Failed to log failed login:', logError);
-        }
-
         throw new UnauthorizedException('用户名或密码错误');
       }
 
       // 检查用户状态
       if (user.status !== 'active') {
-        // 记录登录失败日志
-        try {
-          await this.operationLogService.logLogin(
-            user._id,
-            user.username,
-            ip,
-            userAgent,
-            'error',
-            '用户账户已被禁用或锁定',
-          );
-        } catch (logError: unknown) {
-          console.error('Failed to log failed login:', logError);
-        }
-
         throw new UnauthorizedException('用户账户已被禁用或锁定');
       }
 
@@ -114,20 +84,6 @@ export class AuthController {
     } catch (error: unknown) {
       if (error instanceof UnauthorizedException) {
         throw error;
-      }
-
-      // 记录系统错误
-      try {
-        await this.operationLogService.logLogin(
-          '',
-          loginDto.username,
-          ip,
-          userAgent,
-          'error',
-          '系统错误',
-        );
-      } catch (logError: unknown) {
-        console.error('Failed to log system error:', logError);
       }
 
       throw new UnauthorizedException('登录失败，请稍后重试');

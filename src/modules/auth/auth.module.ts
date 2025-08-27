@@ -7,7 +7,6 @@ import { SecurityService } from './services/security.service';
 import { AuthController } from './controllers/auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { UserModule } from '../user/user.module';
-import { LogModule } from '../log/log.module';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { User, UserSchema } from '../user/entities/user.entity';
 
@@ -15,8 +14,6 @@ import { User, UserSchema } from '../user/entities/user.entity';
   imports: [
     // 导入UserModule以使用UserService
     UserModule,
-    // 导入LogModule以使用OperationLogService
-    LogModule,
     // 注册User模型，供SecurityService使用
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     // 配置JWT模块

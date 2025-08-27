@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument } from '../../user/entities/user.entity';
-import { OperationLogService } from '../../log/services/operation-log.service';
 
 interface LoginAttempt {
   username: string;
@@ -44,7 +43,6 @@ export class SecurityService {
   constructor(
     @InjectModel(User.name)
     private userModel: Model<UserDocument>,
-    private operationLogService: OperationLogService,
   ) {
     // Clean up old login attempts every hour
     setInterval(() => this.cleanupOldAttempts(), 60 * 60 * 1000);
@@ -334,23 +332,11 @@ export class SecurityService {
       }
 
       if (uniqueIPs.size >= this.config.suspiciousLoginThreshold) {
-        // 记录可疑登录警告
-        await this.operationLogService.create({
-          userId: 'system',
-          username: 'system',
-          action: 'suspicious_login_detected',
-          module: 'security',
-          description: `检测到用户 ${username} 存在可疑登录行为：${uniqueIPs.size} 个不同IP地址`,
-          ip,
-          userAgent,
-          status: 'success',
-          method: 'SYSTEM',
-          url: '/security/alert',
-          requestData: {
-            username,
-            uniqueIPCount: uniqueIPs.size,
-            ips: Array.from(uniqueIPs),
-          },
+        // 记录可疑登录警告到控制台
+        console.warn(`检测到用户 ${username} 存在可疑登录行为：${uniqueIPs.size} 个不同IP地址`, {
+          username,
+          uniqueIPCount: uniqueIPs.size,
+          ips: Array.from(uniqueIPs),
         });
       }
     } catch (error) {
