@@ -170,7 +170,7 @@ export class OperationLogService {
    * @param query 查询参数
    * @returns 操作日志列表和分页信息
    */
-  async findAll(query: OperationLogQueryDto) {
+  async findAll(query: OperationLogQueryDto & { userId?: string }) {
     const {
       page = 1,
       limit = 10,
@@ -181,10 +181,15 @@ export class OperationLogService {
       startTime,
       endTime,
       ip,
+      userId,
     } = query;
 
     // 构建查询条件
     const filter: FilterQuery<OperationLogDocument> = {};
+
+    if (userId) {
+      filter.userId = userId;
+    }
 
     if (username) {
       filter.username = { $regex: username, $options: 'i' };

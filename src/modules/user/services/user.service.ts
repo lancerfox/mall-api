@@ -183,7 +183,7 @@ export class UserService {
    * @param createUserDto 创建用户数据
    * @returns 创建的用户信息
    */
-  async createUser(createUserDto: CreateUserDto): Promise<UserResponseDto> {
+  async create(createUserDto: CreateUserDto): Promise<UserResponseDto> {
     // 检查用户名是否已存在
     const existingUser = await this.userModel
       .findOne({ username: createUserDto.username })
@@ -213,7 +213,7 @@ export class UserService {
    * @param updateUserDto 更新数据
    * @returns 更新后的用户信息
    */
-  async updateUser(
+  async update(
     id: string,
     updateUserDto: UpdateUserDto,
   ): Promise<UserResponseDto> {
@@ -262,7 +262,7 @@ export class UserService {
    * 删除用户
    * @param id 用户ID
    */
-  async deleteUser(id: string): Promise<void> {
+  async remove(id: string): Promise<void> {
     const result = await this.userModel.findByIdAndDelete(id).exec();
     if (!result) {
       throw new HttpException('用户不存在', HttpStatus.NOT_FOUND);
@@ -275,7 +275,7 @@ export class UserService {
    * @param status 新状态
    * @returns 更新后的用户信息
    */
-  async updateUserStatus(id: string, status: string): Promise<UserResponseDto> {
+  async updateStatus(id: string, status: string): Promise<UserResponseDto> {
     const updatedUser = await this.userModel
       .findByIdAndUpdate(id, { status }, { new: true })
       .select('-password')
@@ -348,7 +348,7 @@ export class UserService {
    * @param permissions 权限列表
    * @returns 更新后的用户信息
    */
-  async updateUserPermissions(
+  async updatePermissions(
     id: string,
     permissions: string[],
   ): Promise<UserResponseDto> {
@@ -464,7 +464,7 @@ export class UserService {
    * @param status 新状态
    * @returns 更新结果
    */
-  async batchUpdateUserStatus(
+  async batchUpdateStatus(
     userIds: string[],
     status: string,
   ): Promise<{ modifiedCount: number }> {
@@ -481,7 +481,7 @@ export class UserService {
    * @param currentUserId 当前用户ID（防止删除自己）
    * @returns 删除结果
    */
-  async batchDeleteUsers(
+  async batchDelete(
     userIds: string[],
     currentUserId: string,
   ): Promise<{ deletedCount: number }> {
@@ -493,6 +493,130 @@ export class UserService {
       .exec();
 
     return { deletedCount: result.deletedCount };
+  }
+
+  /**
+   * 获取用户菜单
+   * @param userId 用户ID
+   * @returns 用户菜单信息
+   */
+  async getUserMenus(userId: string): Promise<{
+    permissions: string[];
+    menus: any[];
+  }> {
+    const user = await this.userModel
+      .findById(userId)
+      .select('permissions role')
+      .exec();
+
+    if (!user) {
+      throw new HttpException('用户不存在', HttpStatus.NOT_FOUND);
+    }
+
+    // 获取用户所有权限
+    const permissions = await this.getUserPermissions(userId);
+
+    // 根据权限生成菜单（这里是示例，实际应该从菜单表查询）
+    const menus = this.generateMenusByPermissions(permissions);
+
+    return {
+      permissions,
+      menus,
+    };
+  }
+
+  /**
+   * 根据权限生成菜单
+   * @param permissions 权限列表
+   * @returns 菜单列表
+   */
+  private generateMenusByPermissions(permissions: string[]): any[] {
+    const allMenus = [
+      {
+        id: 'user',
+        name: '用户管理',
+        path: '/user',
+        icon: 'user',
+        children: [
+          {
+            id: 'user-list',
+            name: '用户列表',
+            path: '/user/list',
+            permission: 'user:read',
+          },
+        ],
+      },
+      {
+        id: 'system',
+        name: '系统管理',
+        path: '/system',
+        icon: 'system',
+        children: [
+          {
+            id: 'system-config',
+            name: '系统配置',
+            path: '/system/config',
+            permission: 'system:read',
+          },
+        ],
+      },
+    ];
+
+    // 根据权限过滤菜单
+    return allMenus.filter((menu) => {
+      if (menu.children) {
+        menu.children = menu.children.filter(
+          (child: any) =>
+            !child.permission || permissions.includes(child.permission),
+        );
+        return menu.children.length > 0;
+      }
+      return !menu.permission || permissions.includes(menu.permission);
+    });
+  }
+
+  /**
+   * 根据ID删除用户
+   * @param id 用户ID
+   */
+  async deleteById(id: string): Promise<void> {
+    return this.remove(id);
+  }
+
+  /**
+   * 更新用户状态
+   * @param id 用户ID
+   * @param status 新状态
+   * @returns 更新后的用户信息
+   */
+  async updateUserStatus(id: string, status: string): Promise<UserResponseDto> {
+    return this.updateStatus(id, status);
+  }
+
+  /**
+   * 重置用户密码
+   * @param id 用户ID
+   * @param resetPasswordDto 重置密码数据
+   * @returns 重置结果
+   */
+  async resetUserPassword(
+    id: string,
+    resetPasswordDto: ResetPasswordDto,
+  ): Promise<{ message: string; newPassword?: string }> {
+    return this.resetPassword(id, resetPasswordDto);
+  }
+
+  /**
+   * 批量删除用户
+   * @param userIds 用户ID列表
+   * @param currentUserId 当前用户ID（防止删除自己）
+   * @returns 删除结果
+   */
+  async batchDeleteUsers(
+    userIds: string[],
+    currentUserId: string,
+  ): Promise<{ deletedCount: number }> {
+    return this.batchDelete(userIds, currentUserId);
   }
 
   /**

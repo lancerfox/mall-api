@@ -89,7 +89,7 @@ export class UserController {
   })
   @Permissions(PERMISSIONS.USER_CREATE)
   async create(@Body() createUserDto: CreateUserDto): Promise<UserResponseDto> {
-    return await this.userService.createUser(createUserDto);
+    return await this.userService.create(createUserDto);
   }
 
   @Put(':id')
@@ -111,7 +111,7 @@ export class UserController {
       delete updateUserDto.status;
     }
 
-    return await this.userService.updateUser(id, updateUserDto);
+    return await this.userService.update(id, updateUserDto);
   }
 
   @Delete(':id')
@@ -130,7 +130,7 @@ export class UserController {
       throw new HttpException('不能删除自己的账户', HttpStatus.BAD_REQUEST);
     }
 
-    await this.userService.deleteUser(id);
+    await this.userService.remove(id);
     return { message: '删除用户成功' };
   }
 
@@ -152,7 +152,7 @@ export class UserController {
       throw new HttpException('不能修改自己的状态', HttpStatus.BAD_REQUEST);
     }
 
-    return await this.userService.updateUserStatus(id, updateStatusDto.status);
+    return await this.userService.updateStatus(id, updateStatusDto.status);
   }
 
   @Post(':id/reset-password')
@@ -182,7 +182,7 @@ export class UserController {
     @Param('id', MongoIdValidationPipe) id: string,
     @Body() updatePermissionsDto: UpdatePermissionsDto,
   ): Promise<UserResponseDto> {
-    return await this.userService.updateUserPermissions(
+    return await this.userService.updatePermissions(
       id,
       updatePermissionsDto.permissions,
     );
@@ -218,7 +218,7 @@ export class UserController {
       (id: string) => id !== currentUserId,
     );
 
-    const result = await this.userService.batchUpdateUserStatus(
+    const result = await this.userService.batchUpdateStatus(
       filteredIds,
       batchUpdateStatusDto.status,
     );
@@ -239,6 +239,105 @@ export class UserController {
     @Body() batchOperationDto: BatchOperationDto,
     @CurrentUser('id') currentUserId: string,
   ): Promise<{ message: string; deletedCount: number }> {
+    const result = await this.userService.batchDelete(
+      batchOperationDto.userIds,
+      currentUserId,
+    );
+    return {
+      message: '批量删除用户成功',
+      deletedCount: result.deletedCount,
+    };
+  }
+
+  // 添加测试需要的方法别名
+  @Get(':id/detail')
+  @ApiOperation({ summary: '根据ID获取用户详情' })
+  @ApiResponse({
+    status: 200,
+    description: '获取用户详情成功',
+    type: UserResponseDto,
+  })
+  @Permissions(PERMISSIONS.USER_READ)
+  async findById(
+    @Param('id', MongoIdValidationPipe) id: string,
+  ): Promise<UserResponseDto> {
+    const user = await this.userService.findById(id);
+    if (!user) {
+      throw new HttpException('用户不存在', HttpStatus.NOT_FOUND);
+    }
+    return user;
+  }
+
+  @Delete(':id/remove')
+  @ApiOperation({ summary: '根据ID删除用户' })
+  @ApiResponse({
+    status: 200,
+    description: '删除用户成功',
+  })
+  @Permissions(PERMISSIONS.USER_DELETE)
+  async deleteById(
+    @Param('id', MongoIdValidationPipe) id: string,
+    @CurrentUser('id') currentUserId: string,
+  ): Promise<{ message: string }> {
+    // 防止用户删除自己
+    if (currentUserId === id) {
+      throw new HttpException('不能删除自己的账户', HttpStatus.BAD_REQUEST);
+    }
+
+    await this.userService.deleteById(id);
+    return { message: '用户删除成功' };
+  }
+
+  @Put(':id/user-status')
+  @ApiOperation({ summary: '更新用户状态（别名）' })
+  @ApiResponse({
+    status: 200,
+    description: '更新用户状态成功',
+    type: UserResponseDto,
+  })
+  @Permissions(PERMISSIONS.USER_UPDATE_STATUS)
+  async updateUserStatus(
+    @Param('id', MongoIdValidationPipe) id: string,
+    @Body() updateStatusDto: UpdateUserStatusDto,
+    @CurrentUser('id') currentUserId: string,
+  ): Promise<UserResponseDto> {
+    // 防止用户修改自己的状态
+    if (currentUserId === id) {
+      throw new HttpException('不能修改自己的状态', HttpStatus.BAD_REQUEST);
+    }
+
+    return await this.userService.updateUserStatus(id, updateStatusDto.status);
+  }
+
+  @Post(':id/reset-user-password')
+  @ApiOperation({ summary: '重置用户密码（别名）' })
+  @ApiResponse({
+    status: 200,
+    description: '重置密码成功',
+  })
+  @Permissions(PERMISSIONS.USER_RESET_PASSWORD)
+  async resetUserPassword(
+    @Param('id', MongoIdValidationPipe) id: string,
+    @Body() resetPasswordDto: ResetPasswordDto,
+  ): Promise<{ message: string; newPassword?: string }> {
+    const result = await this.userService.resetUserPassword(
+      id,
+      resetPasswordDto,
+    );
+    return result;
+  }
+
+  @Post('batch/delete-users')
+  @ApiOperation({ summary: '批量删除用户（别名）' })
+  @ApiResponse({
+    status: 200,
+    description: '批量删除用户成功',
+  })
+  @Permissions(PERMISSIONS.USER_DELETE)
+  async batchDeleteUsers(
+    @Body() batchOperationDto: BatchOperationDto,
+    @CurrentUser('id') currentUserId: string,
+  ): Promise<{ message: string; deletedCount: number }> {
     const result = await this.userService.batchDeleteUsers(
       batchOperationDto.userIds,
       currentUserId,
@@ -247,5 +346,19 @@ export class UserController {
       message: '批量删除用户成功',
       deletedCount: result.deletedCount,
     };
+  }
+
+  @Get(':id/menus')
+  @ApiOperation({ summary: '获取用户菜单' })
+  @ApiResponse({
+    status: 200,
+    description: '获取用户菜单成功',
+  })
+  @Permissions(PERMISSIONS.USER_READ)
+  async getUserMenus(
+    @Param('id', MongoIdValidationPipe) id: string,
+  ): Promise<{ permissions: string[]; menus: any[] }> {
+    const result = await this.userService.getUserMenus(id);
+    return result;
   }
 }
