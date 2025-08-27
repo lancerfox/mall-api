@@ -34,8 +34,4 @@ export class AppService implements OnModuleInit {
       console.error('创建初始管理员账户失败:', error);
     }
   }
-
-  getHello(): string {
-    return 'Hello World!';
-  }
 }
