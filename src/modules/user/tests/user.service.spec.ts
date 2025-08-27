@@ -588,11 +588,9 @@ describe('UserService', () => {
 
     it('should return true when user has permission', async () => {
       const userWithPermission = { ...mockUser, permissions: ['user:read'] };
-      const mockSelect = jest
-        .fn()
-        .mockReturnValue({
-          exec: jest.fn().mockResolvedValue(userWithPermission),
-        });
+      const mockSelect = jest.fn().mockReturnValue({
+        exec: jest.fn().mockResolvedValue(userWithPermission),
+      });
       userModel.findById.mockReturnValue({ select: mockSelect } as any);
 
       const result = await service.hasPermission(
@@ -605,11 +603,9 @@ describe('UserService', () => {
 
     it('should return false when user does not have permission', async () => {
       const userWithoutPermission = { ...mockUser, permissions: ['user:read'] };
-      const mockSelect = jest
-        .fn()
-        .mockReturnValue({
-          exec: jest.fn().mockResolvedValue(userWithoutPermission),
-        });
+      const mockSelect = jest.fn().mockReturnValue({
+        exec: jest.fn().mockResolvedValue(userWithoutPermission),
+      });
       userModel.findById.mockReturnValue({ select: mockSelect } as any);
 
       const result = await service.hasPermission(

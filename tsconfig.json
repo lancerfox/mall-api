@@ -39,14 +39,14 @@
     "@typescript-eslint/no-explicit-any": "off"
   },
   "include": [
-    "src/**/*", "tests/app.service.spec.ts", "tests/app.controller.spec.ts",
+    "src/**/*", "test/app.service.spec.ts", "test/app.controller.spec.ts",
   ],
   "exclude": [
     "node_modules",
     "dist",
     "**/*.spec.ts",
     "**/*.test.ts",
-    "tests/**/*",
-    "tests/**/*"
+    "test/**/*",
+    "test/**/*"
   ]
 }
