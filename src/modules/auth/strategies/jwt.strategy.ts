@@ -19,7 +19,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: IJwtPayload) {
-    console.log('JWT Strategy - validating payload:', payload);
+    // console.log('JWT Strategy - validating payload:', payload);
 
     // 验证用户是否存在且状态正常
     const user = await this.userService.findById(payload.sub);
@@ -33,10 +33,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('用户账户已被禁用');
     }
 
-    console.log(
-      'JWT Strategy - validation successful for user:',
-      user.username,
-    );
+    // console.log(
+    //   'JWT Strategy - validation successful for user:',
+    //   user.username,
+    // );
 
     // 返回用户信息，这将被添加到request.user中
     return {
