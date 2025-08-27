@@ -4,7 +4,6 @@ import { AuthController } from '../controllers/auth.controller';
 import { AuthService } from '../services/auth.service';
 import { OperationLogService } from '../../log/services/operation-log.service';
 import { LoginDto } from '../dto/login.dto';
-import { UpdateProfileDto } from '../dto/update-profile.dto';
 import { ChangePasswordDto } from '../dto/change-password.dto';
 
 describe('AuthController', () => {
@@ -39,9 +38,7 @@ describe('AuthController', () => {
       validateUser: jest.fn(),
       login: jest.fn(),
       getProfile: jest.fn(),
-      updateProfile: jest.fn(),
       changePassword: jest.fn(),
-      validatePasswordStrength: jest.fn(),
       getSecurityStats: jest.fn(),
     };
 
@@ -161,35 +158,6 @@ describe('AuthController', () => {
     });
   });
 
-  describe('updateProfile', () => {
-    const updateProfileDto: UpdateProfileDto = {
-      email: 'newemail@example.com',
-      realName: '新用户名',
-      phone: '13800138000',
-      avatar: 'https://example.com/avatar.jpg',
-    };
-
-    it('should update profile successfully', async () => {
-      const updatedUser = { ...mockUser, ...updateProfileDto };
-      authService.updateProfile.mockResolvedValue(updatedUser as any);
-
-      const result = await controller.updateProfile(
-        updateProfileDto,
-        '507f1f77bcf86cd799439011',
-        mockRequest,
-        '127.0.0.1',
-      );
-
-      expect(authService.updateProfile).toHaveBeenCalledWith(
-        '507f1f77bcf86cd799439011',
-        updateProfileDto,
-        '127.0.0.1',
-        'test-agent',
-      );
-      expect(result).toEqual(updatedUser);
-    });
-  });
-
   describe('changePassword', () => {
     const changePasswordDto: ChangePasswordDto = {
       currentPassword: 'oldpassword',
@@ -231,32 +199,6 @@ describe('AuthController', () => {
           '127.0.0.1',
         ),
       ).rejects.toThrow(BadRequestException);
-    });
-  });
-
-  describe('validatePassword', () => {
-    it('should validate password strength', () => {
-      const mockValidation = {
-        isValid: true,
-        errors: [],
-        score: 85,
-      };
-      authService.validatePasswordStrength.mockReturnValue(mockValidation);
-
-      const result = controller.validatePassword({
-        password: 'StrongPass123!',
-      });
-
-      expect(authService.validatePasswordStrength).toHaveBeenCalledWith(
-        'StrongPass123!',
-      );
-      expect(result).toEqual(mockValidation);
-    });
-
-    it('should throw BadRequestException for empty password', () => {
-      expect(() => controller.validatePassword({ password: '' })).toThrow(
-        BadRequestException,
-      );
     });
   });
 

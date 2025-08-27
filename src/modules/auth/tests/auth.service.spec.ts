@@ -54,7 +54,6 @@ describe('AuthService', () => {
       findOne: jest.fn(),
       findById: jest.fn(),
       updateLastLogin: jest.fn(),
-      updateProfile: jest.fn(),
       updatePassword: jest.fn(),
     };
 
@@ -77,7 +76,6 @@ describe('AuthService', () => {
       isAccountLocked: jest.fn(),
       getRemainingLockTime: jest.fn(),
       recordLoginAttempt: jest.fn(),
-      validatePasswordStrength: jest.fn(),
       getLoginAttemptStats: jest.fn(),
       unlockAccount: jest.fn(),
     };
@@ -317,67 +315,6 @@ describe('AuthService', () => {
     });
   });
 
-  describe('updateProfile', () => {
-    const updateData = {
-      email: 'newemail@example.com',
-      realName: '新用户名',
-      phone: '13800138000',
-      avatar: 'https://example.com/avatar.jpg',
-    };
-
-    it('should update profile successfully', async () => {
-      const updatedUser = {
-        ...mockUserWithoutPassword,
-        ...updateData,
-      };
-      userService.findById.mockResolvedValue(mockUserWithoutPassword as any);
-      userService.updateProfile.mockResolvedValue(updatedUser as any);
-      operationLogService.logProfileUpdate.mockResolvedValue({} as any);
-
-      const result = await service.updateProfile(
-        '507f1f77bcf86cd799439011',
-        updateData,
-        '127.0.0.1',
-        'test-agent',
-      );
-
-      expect(userService.updateProfile).toHaveBeenCalledWith(
-        '507f1f77bcf86cd799439011',
-        updateData,
-      );
-      expect(operationLogService.logProfileUpdate).toHaveBeenCalledWith(
-        '507f1f77bcf86cd799439011',
-        'testuser',
-        '127.0.0.1',
-        'test-agent',
-        'success',
-      );
-      expect(result).toEqual(
-        expect.objectContaining({
-          id: '507f1f77bcf86cd799439011',
-          username: 'testuser',
-          role: 'admin',
-          status: 'active',
-          permissions: ['user:read'],
-          avatar: 'https://example.com/avatar.jpg',
-        }),
-      );
-    });
-
-    it('should throw UnauthorizedException if user not found', async () => {
-      userService.findById.mockResolvedValue(null);
-
-      await expect(
-        service.updateProfile(
-          '507f1f77bcf86cd799439011',
-          updateData,
-          '127.0.0.1',
-          'test-agent',
-        ),
-      ).rejects.toThrow(UnauthorizedException);
-    });
-  });
-
   describe('changePassword', () => {
     it('should change password successfully', async () => {
       userService.findById.mockResolvedValue(mockUserWithoutPassword as any);
@@ -385,11 +322,6 @@ describe('AuthService', () => {
       (bcrypt.compare as jest.Mock)
         .mockResolvedValueOnce(true)
         .mockResolvedValueOnce(false);
-      securityService.validatePasswordStrength.mockReturnValue({
-        isValid: true,
-        errors: [],
-        score: 85,
-      });
       userService.updatePassword.mockResolvedValue();
       operationLogService.logPasswordChange.mockResolvedValue({} as any);
 
@@ -401,9 +333,6 @@ describe('AuthService', () => {
         'test-agent',
       );
 
-      expect(securityService.validatePasswordStrength).toHaveBeenCalledWith(
-        'newpassword',
-      );
       expect(bcrypt.compare).toHaveBeenCalledWith(
         'oldpassword',
         'hashedpassword',
@@ -421,34 +350,10 @@ describe('AuthService', () => {
       );
     });
 
-    it('should throw BadRequestException for weak password', async () => {
-      userService.findById.mockResolvedValue(mockUserWithoutPassword as any);
-      securityService.validatePasswordStrength.mockReturnValue({
-        isValid: false,
-        errors: ['密码太弱'],
-        score: 30,
-      });
-
-      await expect(
-        service.changePassword(
-          '507f1f77bcf86cd799439011',
-          'oldpassword',
-          'weak',
-          '127.0.0.1',
-          'test-agent',
-        ),
-      ).rejects.toThrow(BadRequestException);
-    });
-
     it('should throw UnauthorizedException for incorrect current password', async () => {
       userService.findById.mockResolvedValue(mockUserWithoutPassword as any);
       userService.findOne.mockResolvedValue(mockUser as any);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
-      securityService.validatePasswordStrength.mockReturnValue({
-        isValid: true,
-        errors: [],
-        score: 85,
-      });
 
       await expect(
         service.changePassword(
@@ -465,11 +370,6 @@ describe('AuthService', () => {
       userService.findById.mockResolvedValue(mockUserWithoutPassword as any);
       userService.findOne.mockResolvedValue(mockUser as any);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
-      securityService.validatePasswordStrength.mockReturnValue({
-        isValid: true,
-        errors: [],
-        score: 85,
-      });
 
       await expect(
         service.changePassword(
@@ -480,20 +380,6 @@ describe('AuthService', () => {
           'test-agent',
         ),
       ).rejects.toThrow(BadRequestException);
-    });
-  });
-
-  describe('validatePasswordStrength', () => {
-    it('should validate password strength', () => {
-      const mockValidation = { isValid: true, errors: [], score: 85 };
-      securityService.validatePasswordStrength.mockReturnValue(mockValidation);
-
-      const result = service.validatePasswordStrength('StrongPass123!');
-
-      expect(securityService.validatePasswordStrength).toHaveBeenCalledWith(
-        'StrongPass123!',
-      );
-      expect(result).toEqual(mockValidation);
     });
   });
 

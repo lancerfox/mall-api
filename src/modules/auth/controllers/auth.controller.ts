@@ -23,7 +23,6 @@ import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { Public } from '../../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../../common/decorators/user.decorator';
 import { LoginDto } from '../dto/login.dto';
-import { UpdateProfileDto } from '../dto/update-profile.dto';
 import { ChangePasswordDto } from '../dto/change-password.dto';
 import { AuthResponseDto, UserInfoDto } from '../dto/auth-response.dto';
 import { ILoginResponse } from '../types';
@@ -111,46 +110,6 @@ export class AuthController {
   }
 
   /**
-   * 更新用户资料接口
-   * @param updateProfileDto 更新资料数据传输对象
-   * @param req 请求对象（包含用户信息）
-   * @param ip 客户端IP地址
-   * @returns 更新后的用户资料信息
-   */
-  @ApiOperation({ summary: '更新用户资料' })
-  @ApiBearerAuth()
-  @ApiResponse({
-    status: 200,
-    description: '更新成功',
-    type: UserInfoDto,
-  })
-  @ApiResponse({
-    status: 400,
-    description: '请求参数错误',
-  })
-  @ApiResponse({
-    status: 401,
-    description: '未授权访问',
-  })
-  @UseGuards(JwtAuthGuard)
-  @Put('profile')
-  async updateProfile(
-    @Body() updateProfileDto: UpdateProfileDto,
-    @CurrentUser('sub') userId: string,
-    @Req() req: Request,
-    @Ip() ip: string,
-  ): Promise<UserInfoDto> {
-    const userAgent = req.headers['user-agent'];
-
-    return await this.authService.updateProfile(
-      userId,
-      updateProfileDto,
-      ip,
-      userAgent,
-    );
-  }
-
-  /**
    * 修改密码接口
    * @param changePasswordDto 修改密码数据传输对象
    * @param req 请求对象（包含用户信息）
@@ -204,57 +163,6 @@ export class AuthController {
     );
 
     return { message: '密码修改成功' };
-  }
-
-  /**
-   * 验证密码强度接口
-   * @param body 包含密码的请求体
-   * @returns 密码强度验证结果
-   */
-  @ApiOperation({ summary: '验证密码强度' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        password: {
-          type: 'string',
-          description: '待验证的密码',
-          example: 'MyPassword123!',
-        },
-      },
-      required: ['password'],
-    },
-  })
-  @ApiResponse({
-    status: 200,
-    description: '验证成功',
-    schema: {
-      type: 'object',
-      properties: {
-        isValid: {
-          type: 'boolean',
-          description: '密码是否符合要求',
-        },
-        errors: {
-          type: 'array',
-          items: { type: 'string' },
-          description: '错误信息列表',
-        },
-        score: {
-          type: 'number',
-          description: '密码强度评分（0-100）',
-        },
-      },
-    },
-  })
-  @Public()
-  @Post('validate-password')
-  validatePassword(@Body() body: { password: string }) {
-    if (!body.password) {
-      throw new BadRequestException('密码不能为空');
-    }
-
-    return this.authService.validatePasswordStrength(body.password);
   }
 
   /**

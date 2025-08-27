@@ -168,42 +168,6 @@ export class AuthService {
   }
 
   /**
-   * 更新用户资料
-   * @param userId 用户ID
-   * @param updateData 更新数据
-   * @param ip 客户端IP地址
-   * @param userAgent 用户代理
-   * @returns 更新后的用户信息
-   */
-  async updateProfile(
-    userId: string,
-    updateData: {
-      avatar?: string;
-    },
-    ip?: string,
-    userAgent?: string,
-  ): Promise<UserInfoDto> {
-    try {
-      const user = await this.userService.findById(userId);
-      if (!user) {
-        throw new UnauthorizedException('用户不存在');
-      }
-
-      // 更新用户资料
-      const updatedUser = await this.userService.updateProfile(
-        userId,
-        updateData,
-      );
-
-      return this.formatUserInfo(updatedUser);
-    } catch (error: unknown) {
-      const user = await this.userService.findById(userId);
-
-      throw error;
-    }
-  }
-
-  /**
    * 修改密码
    * @param userId 用户ID
    * @param currentPassword 当前密码
@@ -222,17 +186,6 @@ export class AuthService {
       const user = await this.userService.findById(userId);
       if (!user) {
         throw new UnauthorizedException('用户不存在');
-      }
-
-      // 验证密码强度
-      const passwordValidation =
-        this.securityService.validatePasswordStrength(newPassword);
-      if (!passwordValidation.isValid) {
-        throw new BadRequestException({
-          message: '密码强度不符合要求',
-          errors: passwordValidation.errors,
-          score: passwordValidation.score,
-        });
       }
 
       // 验证当前密码
@@ -256,15 +209,6 @@ export class AuthService {
 
       throw error;
     }
-  }
-
-  /**
-   * 验证密码强度
-   * @param password 密码
-   * @returns 验证结果
-   */
-  validatePasswordStrength(password: string) {
-    return this.securityService.validatePasswordStrength(password);
   }
 
   /**
