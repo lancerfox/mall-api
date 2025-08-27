@@ -99,16 +99,6 @@ export class UserService {
       .exec();
   }
 
-  /**
-   * 创建新用户
-   * @param username 用户名
-   * @param password 密码（将自动加密）
-   * @returns 创建的用户信息
-   */
-  async create(username: string, password: string): Promise<UserDocument> {
-    const newUser = new this.userModel({ username, password });
-    return newUser.save();
-  }
 
   /**
    * 获取用户列表（分页、搜索、筛选）
@@ -537,6 +527,7 @@ export class UserService {
         name: '用户管理',
         path: '/user',
         icon: 'user',
+        permission: 'user:read',
         children: [
           {
             id: 'user-list',
@@ -551,6 +542,7 @@ export class UserService {
         name: '系统管理',
         path: '/system',
         icon: 'system',
+        permission: 'system:read',
         children: [
           {
             id: 'system-config',

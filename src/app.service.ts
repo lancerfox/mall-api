@@ -1,5 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { UserService } from './modules/user/services/user.service';
+import { CreateUserDto } from './modules/user/dto/create-user.dto';
 
 @Injectable()
 export class AppService implements OnModuleInit {
@@ -19,7 +20,14 @@ export class AppService implements OnModuleInit {
 
       if (!existingAdmin) {
         // 创建初始管理员账户
-        await this.userService.create(adminUsername, adminPassword);
+        const createUserDto: CreateUserDto = {
+          username: adminUsername,
+          password: adminPassword,
+          email: 'admin@example.com',
+          realName: '系统管理员',
+          role: 'super_admin',
+        };
+        await this.userService.create(createUserDto);
         console.log('初始管理员账户创建成功: admin/admin');
       } else {
         console.log('管理员账户已存在');
