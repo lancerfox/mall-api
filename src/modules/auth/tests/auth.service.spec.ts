@@ -326,7 +326,10 @@ describe('AuthService', () => {
     };
 
     it('should update profile successfully', async () => {
-      const updatedUser = { ...mockUserWithoutPassword, ...updateData };
+      const updatedUser = { 
+        ...mockUserWithoutPassword,
+        ...updateData 
+      };
       userService.findById.mockResolvedValue(mockUserWithoutPassword as any);
       userService.updateProfile.mockResolvedValue(updatedUser as any);
       operationLogService.logProfileUpdate.mockResolvedValue({} as any);
@@ -349,7 +352,14 @@ describe('AuthService', () => {
         'test-agent',
         'success',
       );
-      expect(result).toEqual(expect.objectContaining(updateData));
+      expect(result).toEqual(expect.objectContaining({
+        id: '507f1f77bcf86cd799439011',
+        username: 'testuser',
+        role: 'admin',
+        status: 'active',
+        permissions: ['user:read'],
+        avatar: 'https://example.com/avatar.jpg'
+      }));
     });
 
     it('should throw UnauthorizedException if user not found', async () => {
@@ -492,6 +502,7 @@ describe('AuthService', () => {
         successfulAttempts: 8,
         failedAttempts: 2,
         lockedAccounts: 0,
+        suspiciousAttempts: 0,
       };
       securityService.getLoginAttemptStats.mockReturnValue(mockStats);
 

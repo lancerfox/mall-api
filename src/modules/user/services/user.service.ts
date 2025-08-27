@@ -9,7 +9,6 @@ import { UpdateUserDto } from '../dto/update-user.dto';
 import { QueryUserDto } from '../dto/query-user.dto';
 import { UserResponseDto } from '../dto/user-response.dto';
 import { UserListResponseDto } from '../dto/user-list-response.dto';
-import { ResetPasswordDto } from '../dto/reset-password.dto';
 
 @Injectable()
 export class UserService {
@@ -219,64 +218,6 @@ export class UserService {
   }
 
   /**
-   * 更新用户状态
-   * @param id 用户ID
-   * @param status 新状态
-   * @returns 更新后的用户信息
-   */
-  async updateStatus(id: string, status: string): Promise<UserResponseDto> {
-    const updatedUser = await this.userModel
-      .findByIdAndUpdate(id, { status }, { new: true })
-      .select('-password')
-      .exec();
-
-    if (!updatedUser) {
-      throw new HttpException('用户不存在', HttpStatus.NOT_FOUND);
-    }
-
-    return this.transformUserToResponse(updatedUser);
-  }
-
-  /**
-   * 重置用户密码
-   * @param id 用户ID
-   * @param resetPasswordDto 重置密码数据
-   * @returns 重置结果
-   */
-  async resetPassword(
-    id: string,
-    resetPasswordDto: ResetPasswordDto,
-  ): Promise<{ message: string; newPassword?: string }> {
-    const user = await this.userModel.findById(id).exec();
-    if (!user) {
-      throw new HttpException('用户不存在', HttpStatus.NOT_FOUND);
-    }
-
-    // 加密新密码
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(
-      resetPasswordDto.newPassword,
-      saltRounds,
-    );
-
-    // 更新密码
-    await this.userModel
-      .findByIdAndUpdate(id, { password: hashedPassword })
-      .exec();
-
-    const result: { message: string; newPassword?: string } = {
-      message: '密码重置成功',
-    };
-
-    // 如果需要返回新密码（用于邮件通知等）
-    if (resetPasswordDto.sendEmail) {
-      result.newPassword = resetPasswordDto.newPassword;
-    }
-
-    return result;
-  }
-
-  /**
    * 生成随机密码
    * @param length 密码长度
    * @returns 随机密码
@@ -408,43 +349,6 @@ export class UserService {
   }
 
   /**
-   * 批量更新用户状态
-   * @param userIds 用户ID列表
-   * @param status 新状态
-   * @returns 更新结果
-   */
-  async batchUpdateStatus(
-    userIds: string[],
-    status: string,
-  ): Promise<{ modifiedCount: number }> {
-    const result = await this.userModel
-      .updateMany({ _id: { $in: userIds } }, { status })
-      .exec();
-
-    return { modifiedCount: result.modifiedCount };
-  }
-
-  /**
-   * 批量删除用户
-   * @param userIds 用户ID列表
-   * @param currentUserId 当前用户ID（防止删除自己）
-   * @returns 删除结果
-   */
-  async batchDelete(
-    userIds: string[],
-    currentUserId: string,
-  ): Promise<{ deletedCount: number }> {
-    // 过滤掉当前用户ID
-    const filteredIds = userIds.filter((id) => id !== currentUserId);
-
-    const result = await this.userModel
-      .deleteMany({ _id: { $in: filteredIds } })
-      .exec();
-
-    return { deletedCount: result.deletedCount };
-  }
-
-  /**
    * 获取用户菜单
    * @param userId 用户ID
    * @returns 用户菜单信息
@@ -534,50 +438,6 @@ export class UserService {
         return null;
       })
       .filter((menu) => menu !== null);
-  }
-
-  /**
-   * 根据ID删除用户
-   * @param id 用户ID
-   */
-  async deleteById(id: string): Promise<void> {
-    return this.remove(id);
-  }
-
-  /**
-   * 更新用户状态
-   * @param id 用户ID
-   * @param status 新状态
-   * @returns 更新后的用户信息
-   */
-  async updateUserStatus(id: string, status: string): Promise<UserResponseDto> {
-    return this.updateStatus(id, status);
-  }
-
-  /**
-   * 重置用户密码
-   * @param id 用户ID
-   * @param resetPasswordDto 重置密码数据
-   * @returns 重置结果
-   */
-  async resetUserPassword(
-    id: string,
-    resetPasswordDto: ResetPasswordDto,
-  ): Promise<{ message: string; newPassword?: string }> {
-    return this.resetPassword(id, resetPasswordDto);
-  }
-
-  /**
-   * 批量删除用户
-   * @param userIds 用户ID列表
-   * @param currentUserId 当前用户ID（防止删除自己）
-   * @returns 删除结果
-   */
-  async batchDeleteUsers(
-    userIds: string[],
-    currentUserId: string,
-  ): Promise<{ deletedCount: number }> {
-    return this.batchDelete(userIds, currentUserId);
   }
 
   /**

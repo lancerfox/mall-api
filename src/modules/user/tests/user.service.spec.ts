@@ -7,7 +7,6 @@ import { User, UserDocument } from '../entities/user.entity';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { QueryUserDto } from '../dto/query-user.dto';
-import { ResetPasswordDto } from '../dto/reset-password.dto';
 import * as bcrypt from 'bcrypt';
 
 jest.mock('bcrypt');
@@ -68,8 +67,6 @@ describe('UserService', () => {
         exec: jest.fn(),
       }),
       countDocuments: jest.fn().mockReturnValue({ exec: jest.fn() }),
-      updateMany: jest.fn().mockReturnValue({ exec: jest.fn() }),
-      deleteMany: jest.fn().mockReturnValue({ exec: jest.fn() }),
       findByIdAndDelete: jest.fn().mockReturnValue({ exec: jest.fn() }),
       aggregate: jest.fn(),
       create: jest.fn(),
@@ -223,15 +220,6 @@ describe('UserService', () => {
     });
   });
 
-  describe('create (with username and password)', () => {
-    it('should create user with username and password', async () => {
-      // This test is for the overloaded create method that takes username and password separately
-      // But it seems this method might not exist or work differently
-      // Let's skip this test for now since the DTO version works
-      expect(true).toBe(true);
-    });
-  });
-
   describe('findAll', () => {
     it('should return paginated user list', async () => {
       const queryDto: QueryUserDto = { page: 1, limit: 10 };
@@ -296,7 +284,7 @@ describe('UserService', () => {
     });
   });
 
-  describe('create (with DTO)', () => {
+  describe('create', () => {
     it('should create user successfully', async () => {
       const createUserDto: CreateUserDto = {
         username: 'newuser',
@@ -421,93 +409,6 @@ describe('UserService', () => {
     });
   });
 
-  describe('updateStatus', () => {
-    it('should update user status successfully', async () => {
-      const mockSelect = jest
-        .fn()
-        .mockReturnValue({ exec: jest.fn().mockResolvedValue(mockUser) });
-      userModel.findByIdAndUpdate.mockReturnValue({
-        select: mockSelect,
-      } as any);
-
-      const result = await service.updateStatus(
-        '507f1f77bcf86cd799439011',
-        'inactive',
-      );
-
-      expect(userModel.findByIdAndUpdate).toHaveBeenCalledWith(
-        '507f1f77bcf86cd799439011',
-        { status: 'inactive' },
-        { new: true },
-      );
-      expect(result).toBeDefined();
-    });
-
-    it('should throw not found error when user does not exist', async () => {
-      const mockSelect = jest
-        .fn()
-        .mockReturnValue({ exec: jest.fn().mockResolvedValue(null) });
-      userModel.findByIdAndUpdate.mockReturnValue({
-        select: mockSelect,
-      } as any);
-
-      await expect(
-        service.updateStatus('507f1f77bcf86cd799439011', 'inactive'),
-      ).rejects.toThrow(HttpException);
-    });
-  });
-
-  describe('resetPassword', () => {
-    it('should reset password successfully', async () => {
-      const resetPasswordDto: ResetPasswordDto = {
-        sendEmail: false,
-        newPassword: 'newpassword123',
-      };
-
-      userModel.findById.mockReturnValue({
-        exec: jest.fn().mockResolvedValue(mockUser),
-      } as any);
-      (bcrypt.hash as jest.Mock).mockResolvedValue('hashedpassword');
-
-      // Mock findByIdAndUpdate to return an object with exec method
-      userModel.findByIdAndUpdate.mockReturnValue({
-        exec: jest.fn().mockResolvedValue(mockUser),
-      } as any);
-
-      const result = await service.resetPassword(
-        '507f1f77bcf86cd799439011',
-        resetPasswordDto,
-      );
-
-      expect(result.message).toBe('密码重置成功');
-    });
-
-    it('should return new password when sendEmail is true', async () => {
-      const resetPasswordDto: ResetPasswordDto = {
-        sendEmail: true,
-        newPassword: 'newpassword123',
-      };
-
-      userModel.findById.mockReturnValue({
-        exec: jest.fn().mockResolvedValue(mockUser),
-      } as any);
-      (bcrypt.hash as jest.Mock).mockResolvedValue('hashedpassword');
-
-      // Mock findByIdAndUpdate to return an object with exec method
-      userModel.findByIdAndUpdate.mockReturnValue({
-        exec: jest.fn().mockResolvedValue(mockUser),
-      } as any);
-
-      const result = await service.resetPassword(
-        '507f1f77bcf86cd799439011',
-        resetPasswordDto,
-      );
-
-      expect(result.message).toBe('密码重置成功');
-      expect(result.newPassword).toBeDefined();
-    });
-  });
-
   describe('updatePermissions', () => {
     it('should update user permissions successfully', async () => {
       const permissions = ['user:read', 'user:write'];
@@ -577,49 +478,6 @@ describe('UserService', () => {
       );
 
       expect(result).toBe(false);
-    });
-  });
-
-  describe('batchUpdateStatus', () => {
-    it('should batch update user status', async () => {
-      const mockExec = jest.fn().mockResolvedValue({ modifiedCount: 2 });
-      userModel.updateMany.mockReturnValue({ exec: mockExec } as any);
-
-      const result = await service.batchUpdateStatus(
-        ['id1', 'id2'],
-        'inactive',
-      );
-
-      expect(userModel.updateMany).toHaveBeenCalledWith(
-        { _id: { $in: ['id1', 'id2'] } },
-        { status: 'inactive' },
-      );
-      expect(result).toEqual({ modifiedCount: 2 });
-    });
-  });
-
-  describe('batchDelete', () => {
-    it('should batch delete users', async () => {
-      const mockExec = jest.fn().mockResolvedValue({ deletedCount: 2 });
-      userModel.deleteMany.mockReturnValue({ exec: mockExec } as any);
-
-      const result = await service.batchDelete(['id1', 'id2'], 'currentUserId');
-
-      expect(userModel.deleteMany).toHaveBeenCalledWith({
-        _id: { $in: ['id1', 'id2'] },
-      });
-      expect(result).toEqual({ deletedCount: 2 });
-    });
-
-    it('should filter out current user ID', async () => {
-      const mockExec = jest.fn().mockResolvedValue({ deletedCount: 1 });
-      userModel.deleteMany.mockReturnValue({ exec: mockExec } as any);
-
-      await service.batchDelete(['id1', 'currentUserId'], 'currentUserId');
-
-      expect(userModel.deleteMany).toHaveBeenCalledWith({
-        _id: { $in: ['id1'] },
-      });
     });
   });
 

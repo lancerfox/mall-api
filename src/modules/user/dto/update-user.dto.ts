@@ -1,7 +1,7 @@
 import {
   IsString,
   IsOptional,
-  IsEmail,
+  // IsEmail,
   IsEnum,
   IsArray,
   MinLength,
