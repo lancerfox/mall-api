@@ -59,6 +59,7 @@ export class UserController {
   })
   @Permissions(PERMISSIONS.USER_READ)
   async findAll(@Query() query: QueryUserDto): Promise<UserListResponseDto> {
+    console.log(query);
     return await this.userService.findAll(query);
   }
 

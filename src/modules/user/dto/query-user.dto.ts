@@ -1,12 +1,10 @@
-import {
-  IsOptional,
-  IsString,
-  IsEnum,
-  IsNumberString,
-  Min,
-} from 'class-validator';
+import { IsOptional, IsString, IsEnum, IsInt, Min } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
+
+// 辅助函数：将空字符串转换为 undefined
+const emptyStringToUndefined = ({ value }: { value: unknown }) =>
+  value === '' ? undefined : value;
 
 /**
  * 用户角色
@@ -34,28 +32,39 @@ export class QueryUserDto {
     description: '页码',
     example: 1,
     minimum: 1,
+    type: Number,
   })
+  @Transform(({ value }: { value: unknown }) =>
+    value === '' || value === null || value === undefined
+      ? undefined
+      : parseInt(String(value), 10),
+  )
   @IsOptional()
-  @IsNumberString()
-  @Transform(({ value }: { value: string }) => parseInt(value, 10))
-  @Min(1)
+  @IsInt({ message: '页码必须是整数' })
+  @Min(1, { message: '页码不能小于1' })
   page?: number = 1;
 
   @ApiPropertyOptional({
     description: '每页数量',
     example: 10,
     minimum: 1,
+    type: Number,
   })
+  @Transform(({ value }: { value: unknown }) =>
+    value === '' || value === null || value === undefined
+      ? undefined
+      : parseInt(String(value), 10),
+  )
   @IsOptional()
-  @IsNumberString()
-  @Transform(({ value }: { value: string }) => parseInt(value, 10))
-  @Min(1)
+  @IsInt({ message: '每页数量必须是整数' })
+  @Min(1, { message: '每页数量不能小于1' })
   limit?: number = 10;
 
   @ApiPropertyOptional({
     description: '用户名搜索',
     example: 'admin',
   })
+  @Transform(emptyStringToUndefined)
   @IsOptional()
   @IsString()
   username?: string;
@@ -64,6 +73,7 @@ export class QueryUserDto {
     description: '邮箱搜索',
     example: 'admin@example.com',
   })
+  @Transform(emptyStringToUndefined)
   @IsOptional()
   @IsString()
   email?: string;
@@ -72,6 +82,7 @@ export class QueryUserDto {
     description: '真实姓名搜索',
     example: '管理员',
   })
+  @Transform(emptyStringToUndefined)
   @IsOptional()
   @IsString()
   realName?: string;
@@ -81,6 +92,7 @@ export class QueryUserDto {
     example: 'admin',
     enum: UserRole,
   })
+  @Transform(emptyStringToUndefined)
   @IsOptional()
   @IsEnum(UserRole)
   role?: UserRole;
@@ -90,6 +102,7 @@ export class QueryUserDto {
     example: 'active',
     enum: UserStatus,
   })
+  @Transform(emptyStringToUndefined)
   @IsOptional()
   @IsEnum(UserStatus)
   status?: UserStatus;

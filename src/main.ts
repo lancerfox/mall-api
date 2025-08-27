@@ -51,10 +51,10 @@ async function bootstrap() {
       },
       'JWT-auth',
     )
-    .addTag('认证管理', '用户登录、注册、权限验证相关接口')
-    .addTag('用户管理', '系统用户的增删改查操作')
+    // .addTag('认证管理', '用户登录、注册、权限验证相关接口')
+    // .addTag('用户管理', '系统用户的增删改查操作')
     // .addTag('菜单管理', '系统菜单的管理和权限控制')
-    .addTag('日志管理', '系统操作日志的查询和管理')
+    // .addTag('日志管理', '系统操作日志的查询和管理')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
