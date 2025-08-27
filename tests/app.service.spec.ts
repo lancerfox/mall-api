@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AppService } from './app.service';
-import { UserService } from './modules/user/services/user.service';
+import { AppService } from '../src/app.service';
+import { UserService } from '../src/modules/user/services/user.service';
 
 describe('AppService', () => {
   let service: AppService;
@@ -59,7 +59,9 @@ describe('AppService', () => {
 
       expect(userService.findOne).toHaveBeenCalledWith('admin');
       expect(userService.create).toHaveBeenCalledWith('admin', 'admin');
-      expect(consoleSpy).toHaveBeenCalledWith('初始管理员账户创建成功: admin/admin');
+      expect(consoleSpy).toHaveBeenCalledWith(
+        '初始管理员账户创建成功: admin/admin',
+      );
 
       consoleSpy.mockRestore();
     });
@@ -86,20 +88,28 @@ describe('AppService', () => {
 
       expect(userService.findOne).toHaveBeenCalledWith('admin');
       expect(userService.create).toHaveBeenCalledWith('admin', 'admin');
-      expect(consoleErrorSpy).toHaveBeenCalledWith('创建初始管理员账户失败:', expect.any(Error));
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        '创建初始管理员账户失败:',
+        expect.any(Error),
+      );
 
       consoleErrorSpy.mockRestore();
     });
 
     it('should handle errors when checking existing admin user', async () => {
-      userService.findOne.mockRejectedValue(new Error('Database connection error'));
+      userService.findOne.mockRejectedValue(
+        new Error('Database connection error'),
+      );
       const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
 
       await service.onModuleInit();
 
       expect(userService.findOne).toHaveBeenCalledWith('admin');
       expect(userService.create).not.toHaveBeenCalled();
-      expect(consoleErrorSpy).toHaveBeenCalledWith('创建初始管理员账户失败:', expect.any(Error));
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        '创建初始管理员账户失败:',
+        expect.any(Error),
+      );
 
       consoleErrorSpy.mockRestore();
     });

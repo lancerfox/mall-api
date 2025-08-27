@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { SecurityService } from './security.service';
+import { SecurityService } from '../services/security.service';
 import { User, UserDocument } from '../../user/entities/user.entity';
 import { OperationLogService } from '../../log/services/operation-log.service';
 
@@ -68,7 +68,12 @@ describe('SecurityService', () => {
     it('should lock account after max failed attempts', () => {
       // Record 5 failed attempts (default max)
       for (let i = 0; i < 5; i++) {
-        service.recordLoginAttempt('testuser', '127.0.0.1', false, 'test-agent');
+        service.recordLoginAttempt(
+          'testuser',
+          '127.0.0.1',
+          false,
+          'test-agent',
+        );
       }
 
       expect(service.isAccountLocked('testuser', '127.0.0.1')).toBe(true);
@@ -84,7 +89,12 @@ describe('SecurityService', () => {
     it('should return true for locked account', () => {
       // Lock the account by recording max failed attempts
       for (let i = 0; i < 5; i++) {
-        service.recordLoginAttempt('testuser', '127.0.0.1', false, 'test-agent');
+        service.recordLoginAttempt(
+          'testuser',
+          '127.0.0.1',
+          false,
+          'test-agent',
+        );
       }
 
       const result = service.isAccountLocked('testuser', '127.0.0.1');
@@ -101,7 +111,12 @@ describe('SecurityService', () => {
     it('should return remaining time for locked account', () => {
       // Lock the account
       for (let i = 0; i < 5; i++) {
-        service.recordLoginAttempt('testuser', '127.0.0.1', false, 'test-agent');
+        service.recordLoginAttempt(
+          'testuser',
+          '127.0.0.1',
+          false,
+          'test-agent',
+        );
       }
 
       const result = service.getRemainingLockTime('testuser', '127.0.0.1');
@@ -164,7 +179,9 @@ describe('SecurityService', () => {
 
     it('should give bonus points for longer passwords', () => {
       const shortResult = service.validatePasswordStrength('Pass123!');
-      const longResult = service.validatePasswordStrength('VeryLongStrongPassword123!@#$');
+      const longResult = service.validatePasswordStrength(
+        'VeryLongStrongPassword123!@#$',
+      );
 
       // Both passwords should be valid but longer password should get bonus points
       expect(shortResult.isValid).toBe(true);
@@ -177,7 +194,12 @@ describe('SecurityService', () => {
     it('should unlock locked account', () => {
       // Lock the account first
       for (let i = 0; i < 5; i++) {
-        service.recordLoginAttempt('testuser', '127.0.0.1', false, 'test-agent');
+        service.recordLoginAttempt(
+          'testuser',
+          '127.0.0.1',
+          false,
+          'test-agent',
+        );
       }
 
       expect(service.isAccountLocked('testuser', '127.0.0.1')).toBe(true);

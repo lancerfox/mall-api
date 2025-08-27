@@ -1,6 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ArgumentsHost, HttpException, HttpStatus, BadRequestException } from '@nestjs/common';
-import { HttpExceptionFilter } from './http-exception.filter';
+import {
+  ArgumentsHost,
+  HttpException,
+  HttpStatus,
+  BadRequestException,
+} from '@nestjs/common';
+import { HttpExceptionFilter } from '../filters/http-exception.filter';
 import { ERROR_CODES } from '../constants/error-codes';
 
 describe('HttpExceptionFilter', () => {
@@ -77,13 +82,19 @@ describe('HttpExceptionFilter', () => {
         data: null,
         timestamp: expect.any(String),
         errors: {
-          username: ['username should not be empty', 'username must be longer than or equal to 3 characters'],
+          username: [
+            'username should not be empty',
+            'username must be longer than or equal to 3 characters',
+          ],
         },
       });
     });
 
     it('should handle unauthorized exception', () => {
-      const exception = new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
+      const exception = new HttpException(
+        'Unauthorized',
+        HttpStatus.UNAUTHORIZED,
+      );
 
       filter.catch(exception, mockHost);
 
@@ -125,11 +136,16 @@ describe('HttpExceptionFilter', () => {
     });
 
     it('should handle internal server error', () => {
-      const exception = new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
+      const exception = new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
 
       filter.catch(exception, mockHost);
 
-      expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
+      expect(mockResponse.status).toHaveBeenCalledWith(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
       expect(mockResponse.json).toHaveBeenCalledWith({
         code: ERROR_CODES.INTERNAL_SERVER_ERROR,
         message: 'Internal Server Error',

@@ -5,7 +5,7 @@ import {
   OperationLog,
   OperationLogDocument,
   OperationLogSchema,
-} from './operation-log.entity';
+} from '../entities/operation-log.entity';
 
 describe('OperationLog Entity', () => {
   let operationLogModel: Model<OperationLogDocument>;

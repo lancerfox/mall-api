@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Reflector } from '@nestjs/core';
-import { OperationLogController } from './operation-log.controller';
+import { OperationLogController } from '../controllers/operation-log.controller';
 import { OperationLogService } from '../services/operation-log.service';
 import { OperationLogQueryDto } from '../dto/operation-log-response.dto';
 import { UserService } from '../../user/services/user.service';
@@ -119,9 +119,13 @@ describe('OperationLogController', () => {
     it('should return operation log by id', async () => {
       operationLogService.findById.mockResolvedValue(mockOperationLog as any);
 
-      const result = await controller.getOperationLogById('507f1f77bcf86cd799439011');
+      const result = await controller.getOperationLogById(
+        '507f1f77bcf86cd799439011',
+      );
 
-      expect(operationLogService.findById).toHaveBeenCalledWith('507f1f77bcf86cd799439011');
+      expect(operationLogService.findById).toHaveBeenCalledWith(
+        '507f1f77bcf86cd799439011',
+      );
       expect(result).toEqual(mockOperationLog);
     });
   });
@@ -131,9 +135,15 @@ describe('OperationLogController', () => {
       const query: OperationLogQueryDto = { page: 1, limit: 10 };
       operationLogService.findByUserId.mockResolvedValue(mockLogList);
 
-      const result = await controller.getUserOperationLogs('507f1f77bcf86cd799439012', query);
+      const result = await controller.getUserOperationLogs(
+        '507f1f77bcf86cd799439012',
+        query,
+      );
 
-      expect(operationLogService.findByUserId).toHaveBeenCalledWith('507f1f77bcf86cd799439012', query);
+      expect(operationLogService.findByUserId).toHaveBeenCalledWith(
+        '507f1f77bcf86cd799439012',
+        query,
+      );
       expect(result).toEqual(mockLogList);
     });
 
@@ -141,9 +151,15 @@ describe('OperationLogController', () => {
       const query: OperationLogQueryDto = {};
       operationLogService.findByUserId.mockResolvedValue(mockLogList);
 
-      const result = await controller.getUserOperationLogs('507f1f77bcf86cd799439012', query);
+      const result = await controller.getUserOperationLogs(
+        '507f1f77bcf86cd799439012',
+        query,
+      );
 
-      expect(operationLogService.findByUserId).toHaveBeenCalledWith('507f1f77bcf86cd799439012', query);
+      expect(operationLogService.findByUserId).toHaveBeenCalledWith(
+        '507f1f77bcf86cd799439012',
+        query,
+      );
       expect(result).toEqual(mockLogList);
     });
   });
@@ -155,7 +171,10 @@ describe('OperationLogController', () => {
 
       const result = await controller.getLogStatistics(query);
 
-      expect(operationLogService.getStatistics).toHaveBeenCalledWith('2023-01-01', '2023-12-31');
+      expect(operationLogService.getStatistics).toHaveBeenCalledWith(
+        '2023-01-01',
+        '2023-12-31',
+      );
       expect(result).toEqual(mockStatistics);
     });
 
@@ -165,7 +184,10 @@ describe('OperationLogController', () => {
 
       const result = await controller.getLogStatistics(query);
 
-      expect(operationLogService.getStatistics).toHaveBeenCalledWith(undefined, undefined);
+      expect(operationLogService.getStatistics).toHaveBeenCalledWith(
+        undefined,
+        undefined,
+      );
       expect(result).toEqual(mockStatistics);
     });
 
@@ -175,7 +197,10 @@ describe('OperationLogController', () => {
 
       const result = await controller.getLogStatistics(query);
 
-      expect(operationLogService.getStatistics).toHaveBeenCalledWith('2023-01-01', undefined);
+      expect(operationLogService.getStatistics).toHaveBeenCalledWith(
+        '2023-01-01',
+        undefined,
+      );
       expect(result).toEqual(mockStatistics);
     });
   });

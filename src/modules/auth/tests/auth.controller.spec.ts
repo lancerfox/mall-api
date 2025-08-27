@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException, BadRequestException } from '@nestjs/common';
-import { AuthController } from './auth.controller';
+import { AuthController } from '../controllers/auth.controller';
 import { AuthService } from '../services/auth.service';
 import { OperationLogService } from '../../log/services/operation-log.service';
 import { LoginDto } from '../dto/login.dto';
@@ -154,7 +154,9 @@ describe('AuthController', () => {
 
       const result = await controller.getProfile('507f1f77bcf86cd799439011');
 
-      expect(authService.getProfile).toHaveBeenCalledWith('507f1f77bcf86cd799439011');
+      expect(authService.getProfile).toHaveBeenCalledWith(
+        '507f1f77bcf86cd799439011',
+      );
       expect(result).toEqual(mockUser);
     });
   });
@@ -241,9 +243,13 @@ describe('AuthController', () => {
       };
       authService.validatePasswordStrength.mockReturnValue(mockValidation);
 
-      const result = controller.validatePassword({ password: 'StrongPass123!' });
+      const result = controller.validatePassword({
+        password: 'StrongPass123!',
+      });
 
-      expect(authService.validatePasswordStrength).toHaveBeenCalledWith('StrongPass123!');
+      expect(authService.validatePasswordStrength).toHaveBeenCalledWith(
+        'StrongPass123!',
+      );
       expect(result).toEqual(mockValidation);
     });
 

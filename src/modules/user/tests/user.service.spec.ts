@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { Model } from 'mongoose';
-import { UserService } from './user.service';
+import { UserService } from '../services/user.service';
 import { User, UserDocument } from '../entities/user.entity';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
@@ -54,20 +54,20 @@ describe('UserService', () => {
     // Add static methods to the constructor
     Object.assign(MockConstructor, {
       findOne: jest.fn().mockReturnValue({ exec: jest.fn() }),
-      findById: jest.fn().mockReturnValue({ 
+      findById: jest.fn().mockReturnValue({
         select: jest.fn().mockReturnValue({ exec: jest.fn() }),
-        exec: jest.fn()
+        exec: jest.fn(),
       }),
-      findByIdAndUpdate: jest.fn().mockReturnValue({ 
+      findByIdAndUpdate: jest.fn().mockReturnValue({
         select: jest.fn().mockReturnValue({ exec: jest.fn() }),
-        exec: jest.fn()
+        exec: jest.fn(),
       }),
       find: jest.fn().mockReturnValue({
         skip: jest.fn().mockReturnThis(),
         limit: jest.fn().mockReturnThis(),
         sort: jest.fn().mockReturnThis(),
         select: jest.fn().mockReturnThis(),
-        exec: jest.fn()
+        exec: jest.fn(),
       }),
       countDocuments: jest.fn().mockReturnValue({ exec: jest.fn() }),
       updateMany: jest.fn().mockReturnValue({ exec: jest.fn() }),
@@ -119,12 +119,16 @@ describe('UserService', () => {
 
   describe('findById', () => {
     it('should find user by id', async () => {
-      const mockSelect = jest.fn().mockReturnValue({ exec: jest.fn().mockResolvedValue(mockUser) });
+      const mockSelect = jest
+        .fn()
+        .mockReturnValue({ exec: jest.fn().mockResolvedValue(mockUser) });
       userModel.findById.mockReturnValue({ select: mockSelect } as any);
 
       const result = await service.findById('507f1f77bcf86cd799439011');
 
-      expect(userModel.findById).toHaveBeenCalledWith('507f1f77bcf86cd799439011');
+      expect(userModel.findById).toHaveBeenCalledWith(
+        '507f1f77bcf86cd799439011',
+      );
       expect(result).toMatchObject({
         _id: '507f1f77bcf86cd799439011',
         username: 'testuser',
@@ -137,7 +141,9 @@ describe('UserService', () => {
     });
 
     it('should return null when user not found', async () => {
-      const mockSelect = jest.fn().mockReturnValue({ exec: jest.fn().mockResolvedValue(null) });
+      const mockSelect = jest
+        .fn()
+        .mockReturnValue({ exec: jest.fn().mockResolvedValue(null) });
       userModel.findById.mockReturnValue({ select: mockSelect } as any);
 
       const result = await service.findById('507f1f77bcf86cd799439011');
@@ -171,15 +177,22 @@ describe('UserService', () => {
         phone: '1234567890',
       };
 
-      const mockSelect = jest.fn().mockReturnValue({ exec: jest.fn().mockResolvedValue(mockUser) });
-      userModel.findByIdAndUpdate.mockReturnValue({ select: mockSelect } as any);
+      const mockSelect = jest
+        .fn()
+        .mockReturnValue({ exec: jest.fn().mockResolvedValue(mockUser) });
+      userModel.findByIdAndUpdate.mockReturnValue({
+        select: mockSelect,
+      } as any);
 
-      const result = await service.updateProfile('507f1f77bcf86cd799439011', updateData);
+      const result = await service.updateProfile(
+        '507f1f77bcf86cd799439011',
+        updateData,
+      );
 
       expect(userModel.findByIdAndUpdate).toHaveBeenCalledWith(
         '507f1f77bcf86cd799439011',
         updateData,
-        { new: true }
+        { new: true },
       );
       expect(result).toBeDefined();
     });
@@ -190,11 +203,16 @@ describe('UserService', () => {
         realName: '新用户',
       };
 
-      const mockSelect = jest.fn().mockReturnValue({ exec: jest.fn().mockResolvedValue(null) });
-      userModel.findByIdAndUpdate.mockReturnValue({ select: mockSelect } as any);
+      const mockSelect = jest
+        .fn()
+        .mockReturnValue({ exec: jest.fn().mockResolvedValue(null) });
+      userModel.findByIdAndUpdate.mockReturnValue({
+        select: mockSelect,
+      } as any);
 
-      await expect(service.updateProfile('507f1f77bcf86cd799439011', updateData))
-        .rejects.toThrow('用户不存在');
+      await expect(
+        service.updateProfile('507f1f77bcf86cd799439011', updateData),
+      ).rejects.toThrow('用户不存在');
     });
   });
 
@@ -207,7 +225,7 @@ describe('UserService', () => {
 
       expect(userModel.findByIdAndUpdate).toHaveBeenCalledWith(
         '507f1f77bcf86cd799439011',
-        { password: 'newpassword' }
+        { password: 'newpassword' },
       );
     });
   });
@@ -297,7 +315,9 @@ describe('UserService', () => {
       };
 
       // Mock that user doesn't exist
-      userModel.findOne.mockReturnValue({ exec: jest.fn().mockResolvedValue(null) } as any);
+      userModel.findOne.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(null),
+      } as any);
 
       const result = await service.create(createUserDto);
 
@@ -314,9 +334,13 @@ describe('UserService', () => {
       };
 
       // Mock that username exists
-      userModel.findOne.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockUser) } as any);
+      userModel.findOne.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockUser),
+      } as any);
 
-      await expect(service.create(createUserDto)).rejects.toThrow(HttpException);
+      await expect(service.create(createUserDto)).rejects.toThrow(
+        HttpException,
+      );
     });
 
     it('should throw conflict error for existing email', async () => {
@@ -330,9 +354,13 @@ describe('UserService', () => {
       // Mock that username doesn't exist but email exists
       userModel.findOne
         .mockReturnValueOnce({ exec: jest.fn().mockResolvedValue(null) } as any)
-        .mockReturnValueOnce({ exec: jest.fn().mockResolvedValue(mockUser) } as any);
+        .mockReturnValueOnce({
+          exec: jest.fn().mockResolvedValue(mockUser),
+        } as any);
 
-      await expect(service.create(createUserDto)).rejects.toThrow(HttpException);
+      await expect(service.create(createUserDto)).rejects.toThrow(
+        HttpException,
+      );
     });
   });
 
@@ -344,15 +372,26 @@ describe('UserService', () => {
       };
 
       // Mock user exists
-      userModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockUser) } as any);
-      
+      userModel.findById.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockUser),
+      } as any);
+
       // Mock email doesn't exist for other users
-      userModel.findOne.mockReturnValue({ exec: jest.fn().mockResolvedValue(null) } as any);
+      userModel.findOne.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(null),
+      } as any);
 
-      const mockSelect = jest.fn().mockReturnValue({ exec: jest.fn().mockResolvedValue(mockUser) });
-      userModel.findByIdAndUpdate.mockReturnValue({ select: mockSelect } as any);
+      const mockSelect = jest
+        .fn()
+        .mockReturnValue({ exec: jest.fn().mockResolvedValue(mockUser) });
+      userModel.findByIdAndUpdate.mockReturnValue({
+        select: mockSelect,
+      } as any);
 
-      const result = await service.update('507f1f77bcf86cd799439011', updateUserDto);
+      const result = await service.update(
+        '507f1f77bcf86cd799439011',
+        updateUserDto,
+      );
 
       expect(result).toBeDefined();
     });
@@ -362,10 +401,13 @@ describe('UserService', () => {
         email: 'updated@example.com',
       };
 
-      userModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(null) } as any);
+      userModel.findById.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(null),
+      } as any);
 
-      await expect(service.update('507f1f77bcf86cd799439011', updateUserDto))
-        .rejects.toThrow(HttpException);
+      await expect(
+        service.update('507f1f77bcf86cd799439011', updateUserDto),
+      ).rejects.toThrow(HttpException);
     });
 
     it('should hash password when updating', async () => {
@@ -374,13 +416,19 @@ describe('UserService', () => {
       };
 
       // Mock user exists
-      userModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockUser) } as any);
+      userModel.findById.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockUser),
+      } as any);
 
       // Mock bcrypt
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashedpassword');
 
-      const mockSelect = jest.fn().mockReturnValue({ exec: jest.fn().mockResolvedValue(mockUser) });
-      userModel.findByIdAndUpdate.mockReturnValue({ select: mockSelect } as any);
+      const mockSelect = jest
+        .fn()
+        .mockReturnValue({ exec: jest.fn().mockResolvedValue(mockUser) });
+      userModel.findByIdAndUpdate.mockReturnValue({
+        select: mockSelect,
+      } as any);
 
       await service.update('507f1f77bcf86cd799439011', updateUserDto);
 
@@ -395,72 +443,102 @@ describe('UserService', () => {
 
       await service.remove('507f1f77bcf86cd799439011');
 
-      expect(userModel.findByIdAndDelete).toHaveBeenCalledWith('507f1f77bcf86cd799439011');
+      expect(userModel.findByIdAndDelete).toHaveBeenCalledWith(
+        '507f1f77bcf86cd799439011',
+      );
     });
 
     it('should throw not found error when user does not exist', async () => {
       const mockExec = jest.fn().mockResolvedValue(null);
       userModel.findByIdAndDelete.mockReturnValue({ exec: mockExec } as any);
 
-      await expect(service.remove('507f1f77bcf86cd799439011')).rejects.toThrow(HttpException);
+      await expect(service.remove('507f1f77bcf86cd799439011')).rejects.toThrow(
+        HttpException,
+      );
     });
   });
 
   describe('updateStatus', () => {
     it('should update user status successfully', async () => {
-      const mockSelect = jest.fn().mockReturnValue({ exec: jest.fn().mockResolvedValue(mockUser) });
-      userModel.findByIdAndUpdate.mockReturnValue({ select: mockSelect } as any);
+      const mockSelect = jest
+        .fn()
+        .mockReturnValue({ exec: jest.fn().mockResolvedValue(mockUser) });
+      userModel.findByIdAndUpdate.mockReturnValue({
+        select: mockSelect,
+      } as any);
 
-      const result = await service.updateStatus('507f1f77bcf86cd799439011', 'inactive');
+      const result = await service.updateStatus(
+        '507f1f77bcf86cd799439011',
+        'inactive',
+      );
 
       expect(userModel.findByIdAndUpdate).toHaveBeenCalledWith(
         '507f1f77bcf86cd799439011',
         { status: 'inactive' },
-        { new: true }
+        { new: true },
       );
       expect(result).toBeDefined();
     });
 
     it('should throw not found error when user does not exist', async () => {
-      const mockSelect = jest.fn().mockReturnValue({ exec: jest.fn().mockResolvedValue(null) });
-      userModel.findByIdAndUpdate.mockReturnValue({ select: mockSelect } as any);
+      const mockSelect = jest
+        .fn()
+        .mockReturnValue({ exec: jest.fn().mockResolvedValue(null) });
+      userModel.findByIdAndUpdate.mockReturnValue({
+        select: mockSelect,
+      } as any);
 
-      await expect(service.updateStatus('507f1f77bcf86cd799439011', 'inactive'))
-        .rejects.toThrow(HttpException);
+      await expect(
+        service.updateStatus('507f1f77bcf86cd799439011', 'inactive'),
+      ).rejects.toThrow(HttpException);
     });
   });
 
   describe('resetPassword', () => {
     it('should reset password successfully', async () => {
-      const resetPasswordDto: ResetPasswordDto = { 
+      const resetPasswordDto: ResetPasswordDto = {
         sendEmail: false,
-        newPassword: 'newpassword123'
+        newPassword: 'newpassword123',
       };
 
-      userModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockUser) } as any);
+      userModel.findById.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockUser),
+      } as any);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashedpassword');
 
       // Mock findByIdAndUpdate to return an object with exec method
-      userModel.findByIdAndUpdate.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockUser) } as any);
+      userModel.findByIdAndUpdate.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockUser),
+      } as any);
 
-      const result = await service.resetPassword('507f1f77bcf86cd799439011', resetPasswordDto);
+      const result = await service.resetPassword(
+        '507f1f77bcf86cd799439011',
+        resetPasswordDto,
+      );
 
       expect(result.message).toBe('密码重置成功');
     });
 
     it('should return new password when sendEmail is true', async () => {
-      const resetPasswordDto: ResetPasswordDto = { 
+      const resetPasswordDto: ResetPasswordDto = {
         sendEmail: true,
-        newPassword: 'newpassword123'
+        newPassword: 'newpassword123',
       };
 
-      userModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockUser) } as any);
+      userModel.findById.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockUser),
+      } as any);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashedpassword');
 
       // Mock findByIdAndUpdate to return an object with exec method
-      userModel.findByIdAndUpdate.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockUser) } as any);
+      userModel.findByIdAndUpdate.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockUser),
+      } as any);
 
-      const result = await service.resetPassword('507f1f77bcf86cd799439011', resetPasswordDto);
+      const result = await service.resetPassword(
+        '507f1f77bcf86cd799439011',
+        resetPasswordDto,
+      );
 
       expect(result.message).toBe('密码重置成功');
       expect(result.newPassword).toBeDefined();
@@ -471,15 +549,22 @@ describe('UserService', () => {
     it('should update user permissions successfully', async () => {
       const permissions = ['user:read', 'user:write'];
 
-      const mockSelect = jest.fn().mockReturnValue({ exec: jest.fn().mockResolvedValue(mockUser) });
-      userModel.findByIdAndUpdate.mockReturnValue({ select: mockSelect } as any);
+      const mockSelect = jest
+        .fn()
+        .mockReturnValue({ exec: jest.fn().mockResolvedValue(mockUser) });
+      userModel.findByIdAndUpdate.mockReturnValue({
+        select: mockSelect,
+      } as any);
 
-      const result = await service.updatePermissions('507f1f77bcf86cd799439011', permissions);
+      const result = await service.updatePermissions(
+        '507f1f77bcf86cd799439011',
+        permissions,
+      );
 
       expect(userModel.findByIdAndUpdate).toHaveBeenCalledWith(
         '507f1f77bcf86cd799439011',
         { permissions },
-        { new: true }
+        { new: true },
       );
       expect(result).toBeDefined();
     });
@@ -488,30 +573,49 @@ describe('UserService', () => {
   describe('hasPermission', () => {
     it('should return true for super admin', async () => {
       const superAdminUser = { ...mockUser, role: 'super_admin' };
-      const mockSelect = jest.fn().mockReturnValue({ exec: jest.fn().mockResolvedValue(superAdminUser) });
+      const mockSelect = jest
+        .fn()
+        .mockReturnValue({ exec: jest.fn().mockResolvedValue(superAdminUser) });
       userModel.findById.mockReturnValue({ select: mockSelect } as any);
 
-      const result = await service.hasPermission('507f1f77bcf86cd799439011', 'any:permission');
+      const result = await service.hasPermission(
+        '507f1f77bcf86cd799439011',
+        'any:permission',
+      );
 
       expect(result).toBe(true);
     });
 
     it('should return true when user has permission', async () => {
       const userWithPermission = { ...mockUser, permissions: ['user:read'] };
-      const mockSelect = jest.fn().mockReturnValue({ exec: jest.fn().mockResolvedValue(userWithPermission) });
+      const mockSelect = jest
+        .fn()
+        .mockReturnValue({
+          exec: jest.fn().mockResolvedValue(userWithPermission),
+        });
       userModel.findById.mockReturnValue({ select: mockSelect } as any);
 
-      const result = await service.hasPermission('507f1f77bcf86cd799439011', 'user:read');
+      const result = await service.hasPermission(
+        '507f1f77bcf86cd799439011',
+        'user:read',
+      );
 
       expect(result).toBe(true);
     });
 
     it('should return false when user does not have permission', async () => {
       const userWithoutPermission = { ...mockUser, permissions: ['user:read'] };
-      const mockSelect = jest.fn().mockReturnValue({ exec: jest.fn().mockResolvedValue(userWithoutPermission) });
+      const mockSelect = jest
+        .fn()
+        .mockReturnValue({
+          exec: jest.fn().mockResolvedValue(userWithoutPermission),
+        });
       userModel.findById.mockReturnValue({ select: mockSelect } as any);
 
-      const result = await service.hasPermission('507f1f77bcf86cd799439011', 'user:write');
+      const result = await service.hasPermission(
+        '507f1f77bcf86cd799439011',
+        'user:write',
+      );
 
       expect(result).toBe(false);
     });
@@ -522,11 +626,14 @@ describe('UserService', () => {
       const mockExec = jest.fn().mockResolvedValue({ modifiedCount: 2 });
       userModel.updateMany.mockReturnValue({ exec: mockExec } as any);
 
-      const result = await service.batchUpdateStatus(['id1', 'id2'], 'inactive');
+      const result = await service.batchUpdateStatus(
+        ['id1', 'id2'],
+        'inactive',
+      );
 
       expect(userModel.updateMany).toHaveBeenCalledWith(
         { _id: { $in: ['id1', 'id2'] } },
-        { status: 'inactive' }
+        { status: 'inactive' },
       );
       expect(result).toEqual({ modifiedCount: 2 });
     });
@@ -559,11 +666,15 @@ describe('UserService', () => {
 
   describe('getUserMenus', () => {
     it('should return user menus', async () => {
-      const mockSelect = jest.fn().mockReturnValue({ exec: jest.fn().mockResolvedValue(mockUser) });
+      const mockSelect = jest
+        .fn()
+        .mockReturnValue({ exec: jest.fn().mockResolvedValue(mockUser) });
       userModel.findById.mockReturnValue({ select: mockSelect } as any);
 
       // Mock getUserPermissions method
-      jest.spyOn(service, 'getUserPermissions').mockResolvedValue(['user:read', 'user:write']);
+      jest
+        .spyOn(service, 'getUserPermissions')
+        .mockResolvedValue(['user:read', 'user:write']);
 
       const result = await service.getUserMenus('507f1f77bcf86cd799439011');
 
@@ -575,10 +686,14 @@ describe('UserService', () => {
     });
 
     it('should throw not found error when user does not exist', async () => {
-      const mockSelect = jest.fn().mockReturnValue({ exec: jest.fn().mockResolvedValue(null) });
+      const mockSelect = jest
+        .fn()
+        .mockReturnValue({ exec: jest.fn().mockResolvedValue(null) });
       userModel.findById.mockReturnValue({ select: mockSelect } as any);
 
-      await expect(service.getUserMenus('507f1f77bcf86cd799439011')).rejects.toThrow(HttpException);
+      await expect(
+        service.getUserMenus('507f1f77bcf86cd799439011'),
+      ).rejects.toThrow(HttpException);
     });
   });
 });

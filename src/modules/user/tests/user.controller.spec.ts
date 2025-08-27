@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { UserController } from './user.controller';
+import { UserController } from '../controllers/user.controller';
 import { UserService } from '../services/user.service';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
@@ -8,7 +8,10 @@ import { QueryUserDto } from '../dto/query-user.dto';
 import { UpdateUserStatusDto } from '../dto/update-user-status.dto';
 import { ResetPasswordDto } from '../dto/reset-password.dto';
 import { UpdatePermissionsDto } from '../dto/update-permissions.dto';
-import { BatchOperationDto, BatchUpdateStatusDto } from '../dto/batch-operation.dto';
+import {
+  BatchOperationDto,
+  BatchUpdateStatusDto,
+} from '../dto/batch-operation.dto';
 
 describe('UserController', () => {
   let controller: UserController;
@@ -85,16 +88,18 @@ describe('UserController', () => {
 
       const result = await controller.findOne('507f1f77bcf86cd799439011');
 
-      expect(userService.findById).toHaveBeenCalledWith('507f1f77bcf86cd799439011');
+      expect(userService.findById).toHaveBeenCalledWith(
+        '507f1f77bcf86cd799439011',
+      );
       expect(result).toEqual(mockUser);
     });
 
     it('should throw HttpException when user not found', async () => {
       userService.findById.mockResolvedValue(null);
 
-      await expect(controller.findOne('507f1f77bcf86cd799439011')).rejects.toThrow(
-        new HttpException('用户不存在', HttpStatus.NOT_FOUND),
-      );
+      await expect(
+        controller.findOne('507f1f77bcf86cd799439011'),
+      ).rejects.toThrow(new HttpException('用户不存在', HttpStatus.NOT_FOUND));
     });
   });
 
@@ -131,7 +136,10 @@ describe('UserController', () => {
         'different-user-id',
       );
 
-      expect(userService.update).toHaveBeenCalledWith('507f1f77bcf86cd799439011', updateUserDto);
+      expect(userService.update).toHaveBeenCalledWith(
+        '507f1f77bcf86cd799439011',
+        updateUserDto,
+      );
       expect(result).toEqual(updatedUser);
     });
 
@@ -144,9 +152,16 @@ describe('UserController', () => {
       const expectedDto = { email: 'updated@example.com' };
       userService.update.mockResolvedValue(mockUser);
 
-      await controller.update('507f1f77bcf86cd799439011', updateUserDto, '507f1f77bcf86cd799439011');
+      await controller.update(
+        '507f1f77bcf86cd799439011',
+        updateUserDto,
+        '507f1f77bcf86cd799439011',
+      );
 
-      expect(userService.update).toHaveBeenCalledWith('507f1f77bcf86cd799439011', expectedDto);
+      expect(userService.update).toHaveBeenCalledWith(
+        '507f1f77bcf86cd799439011',
+        expectedDto,
+      );
     });
   });
 
@@ -154,16 +169,26 @@ describe('UserController', () => {
     it('should delete user successfully', async () => {
       userService.remove.mockResolvedValue();
 
-      const result = await controller.remove('507f1f77bcf86cd799439011', 'different-user-id');
+      const result = await controller.remove(
+        '507f1f77bcf86cd799439011',
+        'different-user-id',
+      );
 
-      expect(userService.remove).toHaveBeenCalledWith('507f1f77bcf86cd799439011');
+      expect(userService.remove).toHaveBeenCalledWith(
+        '507f1f77bcf86cd799439011',
+      );
       expect(result).toEqual({ message: '删除用户成功' });
     });
 
     it('should prevent user from deleting themselves', async () => {
       await expect(
-        controller.remove('507f1f77bcf86cd799439011', '507f1f77bcf86cd799439011'),
-      ).rejects.toThrow(new HttpException('不能删除自己的账户', HttpStatus.BAD_REQUEST));
+        controller.remove(
+          '507f1f77bcf86cd799439011',
+          '507f1f77bcf86cd799439011',
+        ),
+      ).rejects.toThrow(
+        new HttpException('不能删除自己的账户', HttpStatus.BAD_REQUEST),
+      );
     });
   });
 
@@ -179,7 +204,10 @@ describe('UserController', () => {
         'different-user-id',
       );
 
-      expect(userService.updateStatus).toHaveBeenCalledWith('507f1f77bcf86cd799439011', 'inactive');
+      expect(userService.updateStatus).toHaveBeenCalledWith(
+        '507f1f77bcf86cd799439011',
+        'inactive',
+      );
       expect(result).toEqual(updatedUser);
     });
 
@@ -187,8 +215,14 @@ describe('UserController', () => {
       const updateStatusDto: UpdateUserStatusDto = { status: 'inactive' };
 
       await expect(
-        controller.updateStatus('507f1f77bcf86cd799439011', updateStatusDto, '507f1f77bcf86cd799439011'),
-      ).rejects.toThrow(new HttpException('不能修改自己的状态', HttpStatus.BAD_REQUEST));
+        controller.updateStatus(
+          '507f1f77bcf86cd799439011',
+          updateStatusDto,
+          '507f1f77bcf86cd799439011',
+        ),
+      ).rejects.toThrow(
+        new HttpException('不能修改自己的状态', HttpStatus.BAD_REQUEST),
+      );
     });
   });
 
@@ -201,9 +235,15 @@ describe('UserController', () => {
       const resetResult = { message: '密码重置成功' };
       userService.resetPassword.mockResolvedValue(resetResult);
 
-      const result = await controller.resetPassword('507f1f77bcf86cd799439011', resetPasswordDto);
+      const result = await controller.resetPassword(
+        '507f1f77bcf86cd799439011',
+        resetPasswordDto,
+      );
 
-      expect(userService.resetPassword).toHaveBeenCalledWith('507f1f77bcf86cd799439011', resetPasswordDto);
+      expect(userService.resetPassword).toHaveBeenCalledWith(
+        '507f1f77bcf86cd799439011',
+        resetPasswordDto,
+      );
       expect(result).toEqual(resetResult);
     });
   });
@@ -213,10 +253,16 @@ describe('UserController', () => {
       const updatePermissionsDto: UpdatePermissionsDto = {
         permissions: ['user:read', 'user:write'],
       };
-      const updatedUser = { ...mockUser, permissions: ['user:read', 'user:write'] };
+      const updatedUser = {
+        ...mockUser,
+        permissions: ['user:read', 'user:write'],
+      };
       userService.updatePermissions.mockResolvedValue(updatedUser);
 
-      const result = await controller.updatePermissions('507f1f77bcf86cd799439011', updatePermissionsDto);
+      const result = await controller.updatePermissions(
+        '507f1f77bcf86cd799439011',
+        updatePermissionsDto,
+      );
 
       expect(userService.updatePermissions).toHaveBeenCalledWith(
         '507f1f77bcf86cd799439011',
@@ -231,9 +277,13 @@ describe('UserController', () => {
       const permissions = ['user:read', 'user:write'];
       userService.getUserPermissions.mockResolvedValue(permissions);
 
-      const result = await controller.getUserPermissions('507f1f77bcf86cd799439011');
+      const result = await controller.getUserPermissions(
+        '507f1f77bcf86cd799439011',
+      );
 
-      expect(userService.getUserPermissions).toHaveBeenCalledWith('507f1f77bcf86cd799439011');
+      expect(userService.getUserPermissions).toHaveBeenCalledWith(
+        '507f1f77bcf86cd799439011',
+      );
       expect(result).toEqual({ permissions });
     });
   });
@@ -247,7 +297,10 @@ describe('UserController', () => {
       const batchResult = { modifiedCount: 2 };
       userService.batchUpdateStatus.mockResolvedValue(batchResult);
 
-      const result = await controller.batchUpdateStatus(batchUpdateStatusDto, 'different-user-id');
+      const result = await controller.batchUpdateStatus(
+        batchUpdateStatusDto,
+        'different-user-id',
+      );
 
       expect(userService.batchUpdateStatus).toHaveBeenCalledWith(
         ['507f1f77bcf86cd799439011', '507f1f77bcf86cd799439012'],
@@ -267,9 +320,15 @@ describe('UserController', () => {
       const batchResult = { modifiedCount: 1 };
       userService.batchUpdateStatus.mockResolvedValue(batchResult);
 
-      await controller.batchUpdateStatus(batchUpdateStatusDto, '507f1f77bcf86cd799439011');
+      await controller.batchUpdateStatus(
+        batchUpdateStatusDto,
+        '507f1f77bcf86cd799439011',
+      );
 
-      expect(userService.batchUpdateStatus).toHaveBeenCalledWith(['507f1f77bcf86cd799439012'], 'inactive');
+      expect(userService.batchUpdateStatus).toHaveBeenCalledWith(
+        ['507f1f77bcf86cd799439012'],
+        'inactive',
+      );
     });
   });
 
@@ -281,7 +340,10 @@ describe('UserController', () => {
       const batchResult = { deletedCount: 2 };
       userService.batchDelete.mockResolvedValue(batchResult);
 
-      const result = await controller.batchDelete(batchOperationDto, 'different-user-id');
+      const result = await controller.batchDelete(
+        batchOperationDto,
+        'different-user-id',
+      );
 
       expect(userService.batchDelete).toHaveBeenCalledWith(
         ['507f1f77bcf86cd799439011', '507f1f77bcf86cd799439012'],
@@ -300,7 +362,9 @@ describe('UserController', () => {
 
       const result = await controller.findById('507f1f77bcf86cd799439011');
 
-      expect(userService.findById).toHaveBeenCalledWith('507f1f77bcf86cd799439011');
+      expect(userService.findById).toHaveBeenCalledWith(
+        '507f1f77bcf86cd799439011',
+      );
       expect(result).toEqual(mockUser);
     });
   });
@@ -309,16 +373,26 @@ describe('UserController', () => {
     it('should delete user by id successfully', async () => {
       userService.deleteById.mockResolvedValue();
 
-      const result = await controller.deleteById('507f1f77bcf86cd799439011', 'different-user-id');
+      const result = await controller.deleteById(
+        '507f1f77bcf86cd799439011',
+        'different-user-id',
+      );
 
-      expect(userService.deleteById).toHaveBeenCalledWith('507f1f77bcf86cd799439011');
+      expect(userService.deleteById).toHaveBeenCalledWith(
+        '507f1f77bcf86cd799439011',
+      );
       expect(result).toEqual({ message: '用户删除成功' });
     });
 
     it('should prevent user from deleting themselves', async () => {
       await expect(
-        controller.deleteById('507f1f77bcf86cd799439011', '507f1f77bcf86cd799439011'),
-      ).rejects.toThrow(new HttpException('不能删除自己的账户', HttpStatus.BAD_REQUEST));
+        controller.deleteById(
+          '507f1f77bcf86cd799439011',
+          '507f1f77bcf86cd799439011',
+        ),
+      ).rejects.toThrow(
+        new HttpException('不能删除自己的账户', HttpStatus.BAD_REQUEST),
+      );
     });
   });
 
@@ -334,7 +408,10 @@ describe('UserController', () => {
         'different-user-id',
       );
 
-      expect(userService.updateUserStatus).toHaveBeenCalledWith('507f1f77bcf86cd799439011', 'inactive');
+      expect(userService.updateUserStatus).toHaveBeenCalledWith(
+        '507f1f77bcf86cd799439011',
+        'inactive',
+      );
       expect(result).toEqual(updatedUser);
     });
   });
@@ -348,9 +425,15 @@ describe('UserController', () => {
       const resetResult = { message: '密码重置成功' };
       userService.resetUserPassword.mockResolvedValue(resetResult);
 
-      const result = await controller.resetUserPassword('507f1f77bcf86cd799439011', resetPasswordDto);
+      const result = await controller.resetUserPassword(
+        '507f1f77bcf86cd799439011',
+        resetPasswordDto,
+      );
 
-      expect(userService.resetUserPassword).toHaveBeenCalledWith('507f1f77bcf86cd799439011', resetPasswordDto);
+      expect(userService.resetUserPassword).toHaveBeenCalledWith(
+        '507f1f77bcf86cd799439011',
+        resetPasswordDto,
+      );
       expect(result).toEqual(resetResult);
     });
   });
@@ -363,7 +446,10 @@ describe('UserController', () => {
       const batchResult = { deletedCount: 2 };
       userService.batchDeleteUsers.mockResolvedValue(batchResult);
 
-      const result = await controller.batchDeleteUsers(batchOperationDto, 'different-user-id');
+      const result = await controller.batchDeleteUsers(
+        batchOperationDto,
+        'different-user-id',
+      );
 
       expect(userService.batchDeleteUsers).toHaveBeenCalledWith(
         ['507f1f77bcf86cd799439011', '507f1f77bcf86cd799439012'],
@@ -393,7 +479,9 @@ describe('UserController', () => {
 
       const result = await controller.getUserMenus('507f1f77bcf86cd799439011');
 
-      expect(userService.getUserMenus).toHaveBeenCalledWith('507f1f77bcf86cd799439011');
+      expect(userService.getUserMenus).toHaveBeenCalledWith(
+        '507f1f77bcf86cd799439011',
+      );
       expect(result).toEqual(menuResult);
     });
   });

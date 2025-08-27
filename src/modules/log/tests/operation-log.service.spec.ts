@@ -2,8 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
 import { NotFoundException } from '@nestjs/common';
 import { Model } from 'mongoose';
-import { OperationLogService } from './operation-log.service';
-import { OperationLog, OperationLogDocument } from '../entities/operation-log.entity';
+import { OperationLogService } from '../services/operation-log.service';
+import {
+  OperationLog,
+  OperationLogDocument,
+} from '../entities/operation-log.entity';
 import { CreateOperationLogDto } from '../dto/create-operation-log.dto';
 import { OperationLogQueryDto } from '../dto/operation-log-response.dto';
 
@@ -32,7 +35,9 @@ describe('OperationLogService', () => {
   };
 
   beforeEach(async () => {
-    const mockOperationLogModel = jest.fn().mockImplementation(() => mockLogDocument);
+    const mockOperationLogModel = jest
+      .fn()
+      .mockImplementation(() => mockLogDocument);
     mockOperationLogModel.find = jest.fn();
     mockOperationLogModel.findById = jest.fn();
     mockOperationLogModel.countDocuments = jest.fn();
@@ -288,20 +293,26 @@ describe('OperationLogService', () => {
 
   describe('findById', () => {
     it('should return operation log by id', async () => {
-      operationLogModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockOperationLog) } as any);
+      operationLogModel.findById.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockOperationLog),
+      } as any);
 
       const result = await service.findById('507f1f77bcf86cd799439011');
 
-      expect(operationLogModel.findById).toHaveBeenCalledWith('507f1f77bcf86cd799439011');
+      expect(operationLogModel.findById).toHaveBeenCalledWith(
+        '507f1f77bcf86cd799439011',
+      );
       expect(result).toEqual(mockOperationLog);
     });
 
     it('should throw NotFoundException when log not found', async () => {
-      operationLogModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(null) } as any);
+      operationLogModel.findById.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(null),
+      } as any);
 
-      await expect(service.findById('507f1f77bcf86cd799439011')).rejects.toThrow(
-        new NotFoundException('操作日志不存在'),
-      );
+      await expect(
+        service.findById('507f1f77bcf86cd799439011'),
+      ).rejects.toThrow(new NotFoundException('操作日志不存在'));
     });
   });
 
@@ -319,7 +330,10 @@ describe('OperationLogService', () => {
       operationLogModel.find.mockReturnValue({ sort: mockSort } as any);
       operationLogModel.countDocuments.mockReturnValue(1 as any);
 
-      const result = await service.findByUserId('507f1f77bcf86cd799439012', query);
+      const result = await service.findByUserId(
+        '507f1f77bcf86cd799439012',
+        query,
+      );
 
       expect(operationLogModel.find).toHaveBeenCalledWith(
         expect.objectContaining({

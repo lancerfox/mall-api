@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CallHandler, ExecutionContext } from '@nestjs/common';
 import { of } from 'rxjs';
-import { TransformInterceptor } from './transform.interceptor';
+import { TransformInterceptor } from '../interceptors/transform.interceptor';
 
 describe('TransformInterceptor', () => {
   let interceptor: TransformInterceptor<any>;
@@ -41,7 +41,10 @@ describe('TransformInterceptor', () => {
       const testData = { id: 1, name: 'test' };
       mockCallHandler.handle.mockReturnValue(of(testData));
 
-      const result = interceptor.intercept(mockExecutionContext, mockCallHandler);
+      const result = interceptor.intercept(
+        mockExecutionContext,
+        mockCallHandler,
+      );
 
       result.subscribe((transformedData) => {
         expect(transformedData).toEqual({
@@ -57,7 +60,10 @@ describe('TransformInterceptor', () => {
     it('should handle null data', (done) => {
       mockCallHandler.handle.mockReturnValue(of(null));
 
-      const result = interceptor.intercept(mockExecutionContext, mockCallHandler);
+      const result = interceptor.intercept(
+        mockExecutionContext,
+        mockCallHandler,
+      );
 
       result.subscribe((transformedData) => {
         expect(transformedData).toEqual({
@@ -73,7 +79,10 @@ describe('TransformInterceptor', () => {
     it('should handle undefined data', (done) => {
       mockCallHandler.handle.mockReturnValue(of(undefined));
 
-      const result = interceptor.intercept(mockExecutionContext, mockCallHandler);
+      const result = interceptor.intercept(
+        mockExecutionContext,
+        mockCallHandler,
+      );
 
       result.subscribe((transformedData) => {
         expect(transformedData).toEqual({
@@ -87,10 +96,16 @@ describe('TransformInterceptor', () => {
     });
 
     it('should handle array data', (done) => {
-      const testData = [{ id: 1, name: 'test1' }, { id: 2, name: 'test2' }];
+      const testData = [
+        { id: 1, name: 'test1' },
+        { id: 2, name: 'test2' },
+      ];
       mockCallHandler.handle.mockReturnValue(of(testData));
 
-      const result = interceptor.intercept(mockExecutionContext, mockCallHandler);
+      const result = interceptor.intercept(
+        mockExecutionContext,
+        mockCallHandler,
+      );
 
       result.subscribe((transformedData) => {
         expect(transformedData).toEqual({
@@ -107,7 +122,10 @@ describe('TransformInterceptor', () => {
       const testData = 'Hello World';
       mockCallHandler.handle.mockReturnValue(of(testData));
 
-      const result = interceptor.intercept(mockExecutionContext, mockCallHandler);
+      const result = interceptor.intercept(
+        mockExecutionContext,
+        mockCallHandler,
+      );
 
       result.subscribe((transformedData) => {
         expect(transformedData).toEqual({
@@ -124,7 +142,10 @@ describe('TransformInterceptor', () => {
       const testData = 42;
       mockCallHandler.handle.mockReturnValue(of(testData));
 
-      const result = interceptor.intercept(mockExecutionContext, mockCallHandler);
+      const result = interceptor.intercept(
+        mockExecutionContext,
+        mockCallHandler,
+      );
 
       result.subscribe((transformedData) => {
         expect(transformedData).toEqual({
@@ -141,7 +162,10 @@ describe('TransformInterceptor', () => {
       const testData = true;
       mockCallHandler.handle.mockReturnValue(of(testData));
 
-      const result = interceptor.intercept(mockExecutionContext, mockCallHandler);
+      const result = interceptor.intercept(
+        mockExecutionContext,
+        mockCallHandler,
+      );
 
       result.subscribe((transformedData) => {
         expect(transformedData).toEqual({
@@ -157,13 +181,18 @@ describe('TransformInterceptor', () => {
     it('should always use success code regardless of status code', (done) => {
       const testData = { id: 1, name: 'test' };
       mockCallHandler.handle.mockReturnValue(of(testData));
-      
-      // Mock different status code
-      mockExecutionContext.switchToHttp().getResponse = jest.fn().mockReturnValue({
-        statusCode: 201,
-      });
 
-      const result = interceptor.intercept(mockExecutionContext, mockCallHandler);
+      // Mock different status code
+      mockExecutionContext.switchToHttp().getResponse = jest
+        .fn()
+        .mockReturnValue({
+          statusCode: 201,
+        });
+
+      const result = interceptor.intercept(
+        mockExecutionContext,
+        mockCallHandler,
+      );
 
       result.subscribe((transformedData) => {
         expect(transformedData).toEqual({
@@ -180,7 +209,10 @@ describe('TransformInterceptor', () => {
       const testData = { id: 1, name: 'test' };
       mockCallHandler.handle.mockReturnValue(of(testData));
 
-      const result = interceptor.intercept(mockExecutionContext, mockCallHandler);
+      const result = interceptor.intercept(
+        mockExecutionContext,
+        mockCallHandler,
+      );
 
       result.subscribe((transformedData) => {
         const timestamp = new Date(transformedData.timestamp);

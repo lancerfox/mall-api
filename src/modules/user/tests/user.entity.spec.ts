@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User, UserDocument, UserSchema } from './user.entity';
+import { User, UserDocument, UserSchema } from '../entities/user.entity';
 import * as bcrypt from 'bcrypt';
 
 describe('User Entity', () => {
