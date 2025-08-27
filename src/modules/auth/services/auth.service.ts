@@ -104,7 +104,6 @@ export class AuthService {
       expiresIn: this.configService.get('JWT_EXPIRES_IN', '1h'),
     });
 
-
     // 获取更新后的用户信息
     const updatedUser = await this.userService.findById(user._id);
     if (!updatedUser) {
@@ -196,11 +195,9 @@ export class AuthService {
         updateData,
       );
 
-
       return this.formatUserInfo(updatedUser);
     } catch (error: unknown) {
       const user = await this.userService.findById(userId);
-
 
       throw error;
     }
@@ -254,10 +251,8 @@ export class AuthService {
 
       // 更新密码
       await this.userService.updatePassword(userId, newPassword);
-
     } catch (error: unknown) {
       const user = await this.userService.findById(userId);
-
 
       throw error;
     }

@@ -333,11 +333,14 @@ export class SecurityService {
 
       if (uniqueIPs.size >= this.config.suspiciousLoginThreshold) {
         // 记录可疑登录警告到控制台
-        console.warn(`检测到用户 ${username} 存在可疑登录行为：${uniqueIPs.size} 个不同IP地址`, {
-          username,
-          uniqueIPCount: uniqueIPs.size,
-          ips: Array.from(uniqueIPs),
-        });
+        console.warn(
+          `检测到用户 ${username} 存在可疑登录行为：${uniqueIPs.size} 个不同IP地址`,
+          {
+            username,
+            uniqueIPCount: uniqueIPs.size,
+            ips: Array.from(uniqueIPs),
+          },
+        );
       }
     } catch (error) {
       console.error('检查可疑登录行为时出错:', error);

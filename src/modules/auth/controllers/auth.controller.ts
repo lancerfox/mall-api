@@ -33,9 +33,7 @@ import type { JwtUser } from '../../../common/decorators/user.decorator';
 @ApiTags('认证')
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private authService: AuthService,
-  ) {}
+  constructor(private authService: AuthService) {}
 
   /**
    * 用户登录接口
