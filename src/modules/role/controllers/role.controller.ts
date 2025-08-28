@@ -1,12 +1,10 @@
-import { Controller, Get, Post, Body, UseGuards, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBody, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Permissions } from '../../../common/decorators/permissions.decorator';
 import { RoleService } from '../services/role.service';
 import { CreateRoleDto } from '../dto/create-role.dto';
-import { UpdateRoleWithIdDto } from '../dto/update-role-with-id.dto';
-import { UpdateRoleDto } from '../dto/update-role.dto';
 import { Role } from '../entities/role.entity';
 
 @ApiTags('角色管理')
