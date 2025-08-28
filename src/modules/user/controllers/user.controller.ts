@@ -129,7 +129,6 @@ export class UserController {
     return { message: '删除用户成功' };
   }
 
-
   @Get('menus')
   @ApiOperation({ summary: '获取用户菜单' })
   @ApiResponse({

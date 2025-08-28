@@ -167,7 +167,6 @@ describe('UserController', () => {
     });
   });
 
-
   describe('getUserMenus', () => {
     it('should return user menus', async () => {
       const menuResult = {

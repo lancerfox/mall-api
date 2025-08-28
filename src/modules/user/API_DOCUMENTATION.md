@@ -73,18 +73,19 @@
 
 #### 2. 更新用户信息
 - **路径**: `POST /users/update`
-- **描述**: 更新用户基本信息
+- **描述**: 更新用户基本信息（不包括密码）
 - **参数**: Body 参数 (`UpdateUserWithIdDto`)
   ```typescript
   {
     id: string;
-    username?: string;
-    email?: string;
     role?: string;
     status?: string;
+    avatar?: string;
+    permissions?: string[];
   }
   ```
 - **响应**: `UserResponseDto`
+- **注意**: 此接口不支持密码修改，密码修改需要使用专门的密码重置接口
 
 #### 3. 删除用户
 - **路径**: `POST /users/delete`

@@ -184,15 +184,6 @@ export class UserService {
       throw new HttpException('用户不存在', HttpStatus.NOT_FOUND);
     }
 
-    // 如果更新密码，需要加密
-    if (updateUserDto.password) {
-      const saltRounds = 10;
-      updateUserDto.password = await bcrypt.hash(
-        updateUserDto.password,
-        saltRounds,
-      );
-    }
-
     // 更新用户信息
     const updatedUser = await this.userModel
       .findByIdAndUpdate(id, updateUserDto, { new: true })
@@ -232,7 +223,6 @@ export class UserService {
     return password;
   }
 
-
   /**
    * 检查用户是否有指定权限
    * @param userId 用户ID
@@ -271,7 +261,6 @@ export class UserService {
 
     return roles.includes(user.role);
   }
-
 
   /**
    * 获取角色的默认权限

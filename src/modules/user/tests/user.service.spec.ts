@@ -360,31 +360,6 @@ describe('UserService', () => {
         service.update('507f1f77bcf86cd799439011', updateUserDto),
       ).rejects.toThrow(HttpException);
     });
-
-    it('should hash password when updating', async () => {
-      const updateUserDto: UpdateUserDto = {
-        password: 'newpassword',
-      };
-
-      // Mock user exists
-      userModel.findById.mockReturnValue({
-        exec: jest.fn().mockResolvedValue(mockUser),
-      } as any);
-
-      // Mock bcrypt
-      (bcrypt.hash as jest.Mock).mockResolvedValue('hashedpassword');
-
-      const mockSelect = jest
-        .fn()
-        .mockReturnValue({ exec: jest.fn().mockResolvedValue(mockUser) });
-      userModel.findByIdAndUpdate.mockReturnValue({
-        select: mockSelect,
-      } as any);
-
-      await service.update('507f1f77bcf86cd799439011', updateUserDto);
-
-      expect(bcrypt.hash).toHaveBeenCalledWith('newpassword', 10);
-    });
   });
 
   describe('remove', () => {
@@ -408,7 +383,6 @@ describe('UserService', () => {
       );
     });
   });
-
 
   describe('hasPermission', () => {
     it('should return true for super admin', async () => {

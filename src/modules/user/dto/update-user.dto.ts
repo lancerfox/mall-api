@@ -47,14 +47,4 @@ export class UpdateUserDto {
   @IsArray()
   @IsString({ each: true })
   permissions?: string[];
-
-  @ApiPropertyOptional({
-    description: '新密码',
-    example: 'newpassword123',
-    minLength: 6,
-  })
-  @IsOptional()
-  @IsString()
-  @MinLength(6)
-  password?: string;
 }
