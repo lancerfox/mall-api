@@ -40,28 +40,6 @@ export class RoleController {
     return this.roleService.findAll();
   }
 
-  @Get('detail')
-  @Permissions('role:read')
-  @ApiOperation({ summary: '根据ID获取角色详情' })
-  @ApiResponse({ status: 200, description: 'The role details.', type: Role })
-  findOne(@Query('id') id: string) {
-    return this.roleService.findById(id);
-  }
-
-  @Post('update')
-  @Permissions('role:update')
-  @ApiOperation({ summary: '更新角色信息' })
-  @ApiBody({ type: UpdateRoleWithIdDto })
-  @ApiResponse({
-    status: 200,
-    description: 'The role has been successfully updated.',
-    type: Role,
-  })
-  update(@Body() updateRoleWithIdDto: UpdateRoleWithIdDto) {
-    const { id, ...data } = updateRoleWithIdDto;
-    return this.roleService.update(id, data as UpdateRoleDto);
-  }
-
   @Post('delete')
   @Permissions('role:delete')
   @ApiOperation({ summary: '删除角色' })

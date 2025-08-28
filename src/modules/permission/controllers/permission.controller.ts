@@ -40,32 +40,6 @@ export class PermissionController {
     return this.permissionService.findAll();
   }
 
-  @Get('detail')
-  @Permissions('permission:read')
-  @ApiOperation({ summary: '根据ID获取权限详情' })
-  @ApiResponse({
-    status: 200,
-    description: 'The permission details.',
-    type: Permission,
-  })
-  findOne(@Query('id') id: string) {
-    return this.permissionService.findById(id);
-  }
-
-  @Post('update')
-  @Permissions('permission:update')
-  @ApiOperation({ summary: '更新权限信息' })
-  @ApiBody({ type: UpdatePermissionWithIdDto })
-  @ApiResponse({
-    status: 200,
-    description: 'The permission has been successfully updated.',
-    type: Permission,
-  })
-  update(@Body() updatePermissionWithIdDto: UpdatePermissionWithIdDto) {
-    const { id, ...data } = updatePermissionWithIdDto;
-    return this.permissionService.update(id, data as UpdatePermissionDto);
-  }
-
   @Post('delete')
   @Permissions('permission:delete')
   @ApiOperation({ summary: '删除权限' })
@@ -83,17 +57,5 @@ export class PermissionController {
   })
   remove(@Body('id') id: string) {
     return this.permissionService.remove(id);
-  }
-
-  @Get('list-by-module')
-  @Permissions('permission:read')
-  @ApiOperation({ summary: '根据模块名获取权限列表' })
-  @ApiResponse({
-    status: 200,
-    description: 'A list of permissions for a module.',
-    type: [Permission],
-  })
-  findByModule(@Query('module') module: string) {
-    return this.permissionService.findByModule(module);
   }
 }

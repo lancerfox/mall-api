@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { RoleController } from '../controllers/role.controller';
 import { RoleService } from '../services/role.service';
 import { CreateRoleDto } from '../dto/create-role.dto';
-import { UpdateRoleDto } from '../dto/update-role.dto';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 
@@ -13,8 +12,6 @@ describe('RoleController', () => {
   const mockRoleService = {
     create: jest.fn(),
     findAll: jest.fn(),
-    findById: jest.fn(),
-    update: jest.fn(),
     remove: jest.fn(),
     addPermissions: jest.fn(),
     removePermissions: jest.fn(),
@@ -65,29 +62,6 @@ describe('RoleController', () => {
 
       expect(await controller.findAll()).toBe(result);
       expect(service.findAll).toHaveBeenCalled();
-    });
-  });
-
-  describe('findOne', () => {
-    it('should return a single role', async () => {
-      const id = '1';
-      const result = { id, name: 'admin', description: 'Administrator' };
-      mockRoleService.findById.mockResolvedValue(result);
-
-      expect(await controller.findOne(id)).toBe(result);
-      expect(service.findById).toHaveBeenCalledWith(id);
-    });
-  });
-
-  describe('update', () => {
-    it('should update a role', async () => {
-      const updateDto: UpdateRoleDto = { id: '1', name: 'superadmin' };
-      const { id, ...data } = updateDto;
-      const result = { id, ...data };
-      mockRoleService.update.mockResolvedValue(result);
-
-      expect(await controller.update(updateDto)).toBe(result);
-      expect(service.update).toHaveBeenCalledWith(id, data);
     });
   });
 
