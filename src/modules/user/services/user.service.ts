@@ -480,19 +480,21 @@ export class UserService {
     const userObj = user.toObject<
       User & {
         _id: Types.ObjectId;
-        roles: { name: string }[];
+        roles: (Role & { _id: Types.ObjectId })[];
         createdAt: Date;
         updatedAt: Date;
       }
     >();
-    const roles = userObj.roles || [];
 
-    const roleName = roles.length > 0 && roles[0] ? roles[0].name : '';
+    const roles = (userObj.roles || []).map((role) => ({
+      id: role._id.toString(),
+      name: role.name,
+    }));
 
     return {
       id: userObj._id.toString(),
       username: userObj.username,
-      role: roleName,
+      roles,
       status: userObj.status,
       avatar: userObj.avatar,
       permissions: [], // 这里可以根据需要计算权限

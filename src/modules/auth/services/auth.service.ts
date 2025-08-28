@@ -10,6 +10,7 @@ import { SecurityService } from './security.service';
 import * as bcrypt from 'bcrypt';
 import { IUserWithoutPassword, ILoginResponse, IJwtPayload } from '../types';
 import { UserInfoDto } from '../dto/auth-response.dto';
+import { UserResponseDto } from '../../user/dto/user-response.dto';
 
 @Injectable()
 export class AuthService {
@@ -68,13 +69,9 @@ export class AuthService {
 
     if (user && isValid) {
       // 验证成功，返回用户信息（排除密码）
-      const userObj = user.toObject() as any;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { password: _password, _id, ...result } = userObj;
-      return {
-        ...result,
-        id: String(_id), // 将 _id 转换为 id
-      } as IUserWithoutPassword;
+      const userObj = user.toObject({ virtuals: true });
+      const { password: _password, ...result } = userObj;
+      return result as unknown as IUserWithoutPassword;
     }
 
     return null;
@@ -99,7 +96,7 @@ export class AuthService {
     const accessTokenPayload: IJwtPayload = {
       username: user.username,
       sub: user.id,
-      role: user.role,
+      role: user.roles && user.roles.length > 0 ? user.roles[0].name : '',
     };
 
     const accessToken = this.jwtService.sign(accessTokenPayload, {
@@ -143,11 +140,11 @@ export class AuthService {
    * @param user 用户实体
    * @returns 格式化后的用户信息
    */
-  private formatUserInfo(user: IUserWithoutPassword): UserInfoDto {
+  private formatUserInfo(user: UserResponseDto): UserInfoDto {
     return {
       id: user.id,
       username: user.username,
-      role: user.role,
+      roles: user.roles,
       status: user.status,
       avatar: user.avatar,
       permissions: user.permissions,

@@ -7,7 +7,7 @@ import { Document } from 'mongoose';
 export interface IUserWithoutPassword {
   id: string;
   username: string;
-  role: string;
+  roles: { id: string; name: string }[];
   status: string;
   avatar?: string;
   permissions: string[];
@@ -38,7 +38,7 @@ export interface ILoginResponse {
   user: {
     id: string;
     username: string;
-    role: string;
+    roles: { id: string; name: string }[];
     status: string;
     avatar?: string;
     permissions: string[];

@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { RoleResponseDto } from '../../role/dto/role-response.dto';
 
 /**
  * 用户响应数据传输对象
@@ -18,10 +19,9 @@ export class UserResponseDto {
 
   @ApiProperty({
     description: '用户角色',
-    example: 'admin',
-    enum: ['admin', 'super_admin', 'operator'],
+    type: [RoleResponseDto],
   })
-  role: string;
+  roles: RoleResponseDto[];
 
   @ApiProperty({
     description: '用户状态',
