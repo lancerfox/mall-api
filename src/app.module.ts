@@ -10,6 +10,7 @@ import { RoleModule } from './modules/role/role.module';
 import { PermissionModule } from './modules/permission/permission.module';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 
 @Module({
@@ -32,7 +33,13 @@ import { RolesGuard } from './common/guards/roles.guard';
   controllers: [AppController],
   providers: [
     AppService,
-    // 全局角色守卫
+    // 注册全局守卫，注意执行顺序
+    // 1. JwtAuthGuard：进行JWT身份验证，并将用户信息附加到request.user
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+    // 2. RolesGuard：在身份验证成功后，进行角色权限检查
     {
       provide: APP_GUARD,
       useClass: RolesGuard,

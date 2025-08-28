@@ -72,10 +72,17 @@ export class RolesGuard implements CanActivate {
     }
 
     // 获取用户所有权限
-    const userPermissions = await this.userService.getUserPermissions(userDoc);
+    const userPermissions = this.userService.getUserPermissions(userDoc);
 
     // 获取用户角色名称
-    const userRoles = (userDoc.roles as any[]).map((role) => role.name);
+    const userRoles = (userDoc.roles as { name: string }[]).map(
+      (role) => role.name,
+    );
+
+    // 如果是超级管理员，直接拥有所有权限
+    if (userRoles.includes('super_admin')) {
+      return true;
+    }
 
     // 检查角色权限
     if (requiredRoles && requiredRoles.length > 0) {

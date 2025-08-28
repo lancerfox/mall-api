@@ -45,27 +45,4 @@ export class PermissionsController {
       predefinedPermissions: PERMISSIONS,
     };
   }
-
-  @Get('roles')
-  @ApiOperation({ summary: '获取所有角色列表' })
-  @ApiResponse({
-    status: 200,
-    description: '获取角色列表成功',
-  })
-  @Roles(ROLES.SUPER_ADMIN, ROLES.ADMIN)
-  getAllRoles(): {
-    roles: Record<string, string>;
-    roleDescriptions: Record<string, string>;
-  } {
-    const roleDescriptions = {
-      [ROLES.SUPER_ADMIN]: '超级管理员 - 拥有所有权限',
-      [ROLES.ADMIN]: '管理员 - 拥有大部分管理权限',
-      [ROLES.OPERATOR]: '操作员 - 拥有基本操作权限',
-    };
-
-    return {
-      roles: ROLES,
-      roleDescriptions,
-    };
-  }
 }

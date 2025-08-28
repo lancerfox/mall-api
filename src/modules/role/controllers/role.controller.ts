@@ -1,5 +1,5 @@
-import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, UseGuards, Query } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBody, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Permissions } from '../../../common/decorators/permissions.decorator';
@@ -7,6 +7,7 @@ import { RoleService } from '../services/role.service';
 import { CreateRoleDto } from '../dto/create-role.dto';
 import { UpdateRoleWithIdDto } from '../dto/update-role-with-id.dto';
 import { UpdateRoleDto } from '../dto/update-role.dto';
+import { Role } from '../entities/role.entity';
 
 @ApiTags('角色管理')
 @Controller('roles')
@@ -17,6 +18,12 @@ export class RoleController {
   @Post('create')
   @Permissions('role:create')
   @ApiOperation({ summary: '创建新角色' })
+  @ApiBody({ type: CreateRoleDto })
+  @ApiResponse({
+    status: 201,
+    description: 'The role has been successfully created.',
+    type: Role,
+  })
   create(@Body() createRoleDto: CreateRoleDto) {
     return this.roleService.create(createRoleDto);
   }
@@ -24,6 +31,11 @@ export class RoleController {
   @Get('list')
   @Permissions('role:read')
   @ApiOperation({ summary: '获取所有角色列表' })
+  @ApiResponse({
+    status: 200,
+    description: 'A list of roles.',
+    type: [Role],
+  })
   findAll() {
     return this.roleService.findAll();
   }
@@ -31,13 +43,20 @@ export class RoleController {
   @Get('detail')
   @Permissions('role:read')
   @ApiOperation({ summary: '根据ID获取角色详情' })
-  findOne(@Body('id') id: string) {
+  @ApiResponse({ status: 200, description: 'The role details.', type: Role })
+  findOne(@Query('id') id: string) {
     return this.roleService.findById(id);
   }
 
   @Post('update')
   @Permissions('role:update')
   @ApiOperation({ summary: '更新角色信息' })
+  @ApiBody({ type: UpdateRoleWithIdDto })
+  @ApiResponse({
+    status: 200,
+    description: 'The role has been successfully updated.',
+    type: Role,
+  })
   update(@Body() updateRoleWithIdDto: UpdateRoleWithIdDto) {
     const { id, ...data } = updateRoleWithIdDto;
     return this.roleService.update(id, data as UpdateRoleDto);
@@ -46,6 +65,18 @@ export class RoleController {
   @Post('delete')
   @Permissions('role:delete')
   @ApiOperation({ summary: '删除角色' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'The role has been successfully deleted.',
+  })
   remove(@Body('id') id: string) {
     return this.roleService.remove(id);
   }
@@ -53,6 +84,20 @@ export class RoleController {
   @Post('add-permissions')
   @Permissions('role:update')
   @ApiOperation({ summary: '为角色添加权限' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        permissionIds: { type: 'array', items: { type: 'string' } },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Permissions have been successfully added to the role.',
+    type: Role,
+  })
   addPermissions(
     @Body('id') id: string,
     @Body('permissionIds') permissionIds: string[],
@@ -63,6 +108,20 @@ export class RoleController {
   @Post('remove-permissions')
   @Permissions('role:update')
   @ApiOperation({ summary: '从角色移除权限' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        permissionIds: { type: 'array', items: { type: 'string' } },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Permissions have been successfully removed from the role.',
+    type: Role,
+  })
   removePermissions(
     @Body('id') id: string,
     @Body('permissionIds') permissionIds: string[],

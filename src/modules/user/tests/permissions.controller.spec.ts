@@ -54,37 +54,4 @@ describe('PermissionsController', () => {
       expect(result.permissions).toEqual(uniquePermissions);
     });
   });
-
-  describe('getAllRoles', () => {
-    it('should return all roles with descriptions', () => {
-      const result = controller.getAllRoles();
-
-      expect(result).toHaveProperty('roles');
-      expect(result).toHaveProperty('roleDescriptions');
-      expect(result.roles).toEqual(ROLES);
-
-      // 验证角色描述
-      expect(result.roleDescriptions).toHaveProperty(ROLES.SUPER_ADMIN);
-      expect(result.roleDescriptions).toHaveProperty(ROLES.ADMIN);
-      expect(result.roleDescriptions).toHaveProperty(ROLES.OPERATOR);
-
-      expect(result.roleDescriptions[ROLES.SUPER_ADMIN]).toContain(
-        '超级管理员',
-      );
-      expect(result.roleDescriptions[ROLES.ADMIN]).toContain('管理员');
-      expect(result.roleDescriptions[ROLES.OPERATOR]).toContain('操作员');
-    });
-
-    it('should return correct role descriptions', () => {
-      const result = controller.getAllRoles();
-
-      const expectedDescriptions = {
-        [ROLES.SUPER_ADMIN]: '超级管理员 - 拥有所有权限',
-        [ROLES.ADMIN]: '管理员 - 拥有大部分管理权限',
-        [ROLES.OPERATOR]: '操作员 - 拥有基本操作权限',
-      };
-
-      expect(result.roleDescriptions).toEqual(expectedDescriptions);
-    });
-  });
 });
