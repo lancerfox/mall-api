@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 import * as bcrypt from 'bcrypt';
+import { Role } from '../../role/entities/role.entity';
 
 export type UserDocument = User & Document;
 
@@ -12,12 +13,8 @@ export class User {
   @Prop({ required: true })
   password: string;
 
-  @Prop({
-    type: String,
-    enum: ['admin', 'super_admin', 'operator'],
-    default: 'admin',
-  })
-  role: string;
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Role' }] })
+  roles: Role[] | Types.ObjectId[];
 
   @Prop({
     type: String,
@@ -34,9 +31,6 @@ export class User {
 
   @Prop()
   lastLoginIp?: string;
-
-  @Prop({ type: [String], default: [] })
-  permissions: string[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

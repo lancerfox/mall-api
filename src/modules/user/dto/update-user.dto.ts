@@ -13,13 +13,14 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
  */
 export class UpdateUserDto {
   @ApiPropertyOptional({
-    description: '用户角色',
-    example: 'admin',
-    enum: ['admin', 'super_admin', 'operator'],
+    description: '用户角色ID列表',
+    example: ['60f1b2b3b3b3b3b3b3b3b3b3'],
+    type: [String],
   })
   @IsOptional()
-  @IsEnum(['admin', 'super_admin', 'operator'])
-  role?: string;
+  @IsArray()
+  @IsString({ each: true })
+  roles?: string[];
 
   @ApiPropertyOptional({
     description: '用户状态',
@@ -37,14 +38,4 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString()
   avatar?: string;
-
-  @ApiPropertyOptional({
-    description: '用户权限列表',
-    example: ['user:read', 'user:write'],
-    type: [String],
-  })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  permissions?: string[];
 }

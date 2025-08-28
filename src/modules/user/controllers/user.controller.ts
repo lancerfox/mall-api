@@ -102,7 +102,7 @@ export class UserController {
 
     // 防止用户修改自己的角色和状态
     if (currentUserId === id) {
-      delete (updateUserDto as Partial<UpdateUserDto>).role;
+      delete (updateUserDto as Partial<UpdateUserDto>).roles;
       delete (updateUserDto as Partial<UpdateUserDto>).status;
     }
 

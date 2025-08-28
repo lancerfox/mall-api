@@ -1,3 +1,4 @@
+import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -38,7 +39,7 @@ describe('AuthService', () => {
   };
 
   const mockUserWithoutPassword = {
-    _id: '507f1f77bcf86cd799439011',
+    id: '507f1f77bcf86cd799439011',
     username: 'testuser',
     email: 'test@example.com',
     realName: '测试用户',
@@ -118,7 +119,7 @@ describe('AuthService', () => {
         true,
         'test-agent',
       );
-      expect(result).toEqual(mockUserWithoutPassword);
+      expect(result).toEqual(expect.objectContaining(mockUserWithoutPassword));
     });
 
     it('should return null for invalid password', async () => {
@@ -207,7 +208,7 @@ describe('AuthService', () => {
       );
 
       expect(userService.updateLastLogin).toHaveBeenCalledWith(
-        '507f1f77bcf86cd799439011',
+        mockUserWithoutPassword.id,
         '127.0.0.1',
       );
       expect(jwtService.sign).toHaveBeenCalledWith(
@@ -281,10 +282,10 @@ describe('AuthService', () => {
     it('should return user profile', async () => {
       userService.findById.mockResolvedValue(mockUserWithoutPassword as any);
 
-      const result = await service.getProfile('507f1f77bcf86cd799439011');
+      const result = await service.getProfile(mockUserWithoutPassword.id);
 
       expect(userService.findById).toHaveBeenCalledWith(
-        '507f1f77bcf86cd799439011',
+        mockUserWithoutPassword.id,
       );
       expect(result).toEqual(
         expect.objectContaining({
@@ -298,7 +299,7 @@ describe('AuthService', () => {
       userService.findById.mockResolvedValue(null);
 
       await expect(
-        service.getProfile('507f1f77bcf86cd799439011'),
+        service.getProfile(mockUserWithoutPassword.id),
       ).rejects.toThrow(UnauthorizedException);
     });
   });

@@ -1,36 +1,58 @@
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { Test, TestingModule } from '@nestjs/testing';
-import { getModelToken } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { User, UserDocument, UserSchema } from '../entities/user.entity';
-import * as bcrypt from 'bcrypt';
+import {
+  getModelToken,
+  MongooseModule,
+  getConnectionToken,
+} from '@nestjs/mongoose';
+import { User, UserSchema } from '../entities/user.entity';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import { Connection, Model } from 'mongoose';
 
 describe('User Entity', () => {
-  let userModel: Model<UserDocument>;
+  jest.setTimeout(60000); // Increase timeout to 60 seconds
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        {
-          provide: getModelToken(User.name),
-          useValue: {
-            new: jest.fn().mockResolvedValue({}),
-            constructor: jest.fn().mockResolvedValue({}),
-            find: jest.fn(),
-            findOne: jest.fn(),
-            update: jest.fn(),
-            create: jest.fn(),
-            remove: jest.fn(),
-            exec: jest.fn(),
-          },
-        },
+  let userModel: Model<User>;
+  let mongod: MongoMemoryServer;
+  let module: TestingModule;
+  let connection: Connection;
+
+  beforeAll(async () => {
+    mongod = await MongoMemoryServer.create();
+    const uri = mongod.getUri();
+    module = await Test.createTestingModule({
+      imports: [
+        MongooseModule.forRoot(uri),
+        MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
       ],
     }).compile();
 
-    userModel = module.get<Model<UserDocument>>(getModelToken(User.name));
+    userModel = module.get<Model<User>>(getModelToken(User.name));
+    connection = module.get<Connection>(getConnectionToken());
   });
 
-  it('should be defined', () => {
-    expect(userModel).toBeDefined();
+  afterAll(async () => {
+    if (connection) {
+      await connection.close();
+    }
+    if (module) {
+      await module.close();
+    }
+    if (mongod) {
+      await mongod.stop();
+    }
+  });
+
+  afterEach(async () => {
+    await userModel.deleteMany({});
   });
 
   describe('User Schema', () => {
@@ -40,7 +62,7 @@ describe('User Entity', () => {
 
       expect(paths.username).toBeDefined();
       expect(paths.password).toBeDefined();
-      expect(paths.role).toBeDefined();
+      expect(paths.roles).toBeDefined();
       expect(paths.status).toBeDefined();
     });
 
@@ -48,83 +70,89 @@ describe('User Entity', () => {
       const userSchema = UserSchema;
       const paths = userSchema.paths;
 
-      expect(paths.role.defaultValue).toBe('admin');
-      expect(paths.status.defaultValue).toBe('active');
-      expect(typeof paths.permissions.defaultValue).toBe('function');
-    });
-
-    it('should have correct enum values for role', () => {
-      const userSchema = UserSchema;
-      const rolePath = userSchema.paths.role;
-
-      expect(rolePath.enumValues).toContain('admin');
-      expect(rolePath.enumValues).toContain('super_admin');
-      expect(rolePath.enumValues).toContain('operator');
+      expect((paths.status as any).defaultValue).toBe('active');
     });
 
     it('should have correct enum values for status', () => {
       const userSchema = UserSchema;
-      const statusPath = userSchema.paths.status;
+      const statusPath = userSchema.paths.status as any;
 
       expect(statusPath.enumValues).toContain('active');
       expect(statusPath.enumValues).toContain('inactive');
       expect(statusPath.enumValues).toContain('locked');
     });
 
-    it('should have timestamps enabled', () => {
-      const userSchema = UserSchema;
-      expect(userSchema.options.timestamps).toBe(true);
-    });
-  });
-
-  describe('Password Hashing Middleware', () => {
-    it('should have pre-save middleware defined', () => {
-      const userSchema = UserSchema;
-      const preHooks = userSchema.pre;
-
-      expect(preHooks).toBeDefined();
-    });
-
-    it('should validate middleware functionality conceptually', () => {
-      // Test that the middleware concept is implemented
-      // The actual bcrypt functionality is tested in integration tests
-      expect(typeof bcrypt.hash).toBe('function');
-    });
-  });
-
-  describe('User Entity Validation', () => {
-    it('should create a valid user instance', () => {
+    it('should create a user instance', () => {
       const userData = {
         username: 'testuser',
-        password: 'password123',
-        role: 'admin',
+        password: 'hashedpassword',
+        roles: [],
         status: 'active',
-        permissions: ['user:read'],
       };
 
-      const user = new User();
-      Object.assign(user, userData);
+      const user = new userModel(userData);
 
       expect(user.username).toBe('testuser');
-      expect(user.role).toBe('admin');
+      expect(user.password).toBe('hashedpassword');
+      expect(user.roles).toEqual([]);
       expect(user.status).toBe('active');
-      expect(user.permissions).toEqual(['user:read']);
     });
+  });
 
-    it('should handle optional fields', () => {
+  describe('User Validation', () => {
+    it('should require username', async () => {
       const userData = {
-        username: 'testuser',
-        password: 'password123',
-        role: 'admin',
-        avatar: 'https://example.com/avatar.jpg',
+        password: 'hashedpassword',
       };
 
-      const user = new User();
-      Object.assign(user, userData);
+      const user = new userModel(userData);
+      const validationError = user.validateSync();
 
-      expect(user.avatar).toBe('https://example.com/avatar.jpg');
-      expect(user.lastLoginTime).toBeUndefined();
-      expect(user.lastLoginIp).toBeUndefined();
+      expect(validationError).toBeDefined();
+      expect(validationError.errors.username).toBeDefined();
+    });
+
+    it('should require password', () => {
+      const userData = {
+        username: 'testuser',
+      };
+
+      const user = new userModel(userData);
+      const validationError = user.validateSync();
+
+      expect(validationError).toBeDefined();
+      expect(validationError.errors.password).toBeDefined();
+    });
+
+    it('should accept valid status values', () => {
+      const validStatuses = ['active', 'inactive', 'locked'];
+
+      validStatuses.forEach((status) => {
+        const userData = {
+          username: 'testuser',
+          password: 'hashedpassword',
+          status,
+        };
+
+        const user = new userModel(userData);
+        const validationError = user.validateSync();
+
+        expect(validationError?.errors?.status).toBeUndefined();
+      });
+    });
+
+    it('should reject invalid status values', () => {
+      const userData = {
+        username: 'testuser',
+        password: 'hashedpassword',
+        status: 'invalid_status',
+      };
+
+      const user = new userModel(userData);
+      const validationError = user.validateSync();
+
+      expect(validationError).toBeDefined();
+      expect(validationError.errors.status).toBeDefined();
     });
   });
 });

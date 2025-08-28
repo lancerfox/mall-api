@@ -11,7 +11,6 @@ import type { Request } from 'express';
 interface JwtUser {
   username: string;
   sub: string;
-  role: string;
 }
 
 interface RequestWithUser extends Request {
@@ -19,7 +18,7 @@ interface RequestWithUser extends Request {
   fullUser?: {
     id: string;
     username: string;
-    role: string;
+    roles: string[];
     permissions: string[];
   };
 }
@@ -66,9 +65,21 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException('用户账户已被禁用');
     }
 
+    // 获取用户的完整信息（包含角色和权限）
+    const userDoc = await this.userService.findOne(user.username);
+    if (!userDoc) {
+      throw new ForbiddenException('用户信息获取失败');
+    }
+
+    // 获取用户所有权限
+    const userPermissions = await this.userService.getUserPermissions(userDoc);
+
+    // 获取用户角色名称
+    const userRoles = (userDoc.roles as any[]).map((role) => role.name);
+
     // 检查角色权限
     if (requiredRoles && requiredRoles.length > 0) {
-      const hasRole = this.checkRoles(user.role, requiredRoles);
+      const hasRole = this.checkRoles(userRoles, requiredRoles);
       if (!hasRole) {
         throw new ForbiddenException('用户角色权限不足');
       }
@@ -77,7 +88,7 @@ export class RolesGuard implements CanActivate {
     // 检查具体权限
     if (requiredPermissions && requiredPermissions.length > 0) {
       const hasPermission = this.checkPermissions(
-        user.permissions,
+        userPermissions,
         requiredPermissions,
       );
       if (!hasPermission) {
@@ -89,8 +100,8 @@ export class RolesGuard implements CanActivate {
     request.fullUser = {
       id: user.id.toString(),
       username: user.username,
-      role: user.role,
-      permissions: user.permissions || [],
+      roles: userRoles,
+      permissions: userPermissions,
     };
 
     return true;
@@ -98,18 +109,18 @@ export class RolesGuard implements CanActivate {
 
   /**
    * 检查用户角色是否满足要求
-   * @param userRole 用户角色
+   * @param userRoles 用户角色列表
    * @param requiredRoles 需要的角色列表
    * @returns 是否有权限
    */
-  private checkRoles(userRole: string, requiredRoles: string[]): boolean {
+  private checkRoles(userRoles: string[], requiredRoles: string[]): boolean {
     // 超级管理员拥有所有权限
-    if (userRole === 'super_admin') {
+    if (userRoles.includes('super_admin')) {
       return true;
     }
 
-    // 检查用户角色是否在要求的角色列表中
-    return requiredRoles.includes(userRole);
+    // 检查用户是否拥有任一要求的角色
+    return requiredRoles.some((role) => userRoles.includes(role));
   }
 
   /**

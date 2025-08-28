@@ -23,7 +23,7 @@ export class AppService implements OnModuleInit {
         const createUserDto: CreateUserDto = {
           username: adminUsername,
           password: adminPassword,
-          role: 'super_admin',
+          roles: ['super_admin'],
         };
         await this.userService.create(createUserDto);
         console.log('初始管理员账户创建成功: admin/admin');

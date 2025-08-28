@@ -1,18 +1,20 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, FilterQuery } from 'mongoose';
-// import * as bcrypt from 'bcrypt';
 import { User, UserDocument } from '../entities/user.entity';
-// import { IUserWithoutPassword } from '../../auth/types';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { QueryUserDto } from '../dto/query-user.dto';
 import { UserResponseDto } from '../dto/user-response.dto';
 import { UserListResponseDto } from '../dto/user-list-response.dto';
+import { RoleService } from '../../role/services/role.service';
 
 @Injectable()
 export class UserService {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
+  constructor(
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    private roleService: RoleService,
+  ) {}
 
   /**
    * 根据用户名查找用户
@@ -20,7 +22,7 @@ export class UserService {
    * @returns 用户信息或null
    */
   async findOne(username: string): Promise<UserDocument | null> {
-    return this.userModel.findOne({ username }).exec();
+    return this.userModel.findOne({ username }).populate('roles').exec();
   }
 
   /**
@@ -30,7 +32,11 @@ export class UserService {
    */
   async findById(id: string): Promise<UserResponseDto | null> {
     try {
-      const user = await this.userModel.findById(id).select('-password').exec();
+      const user = await this.userModel
+        .findById(id)
+        .select('-password')
+        .populate('roles')
+        .exec();
       if (!user) {
         console.log(`User not found with ID: ${id}`);
         return null;
@@ -75,6 +81,7 @@ export class UserService {
     const updatedUser = await this.userModel
       .findByIdAndUpdate(id, updateData, { new: true })
       .select('-password')
+      .populate('roles')
       .exec();
 
     if (!updatedUser) {
@@ -101,17 +108,13 @@ export class UserService {
    * @returns 用户列表和分页信息
    */
   async findAll(query: QueryUserDto): Promise<UserListResponseDto> {
-    const { page = 1, limit = 10, username, role, status } = query;
+    const { page = 1, limit = 10, username, status } = query;
 
     // 构建查询条件
     const filter: FilterQuery<UserDocument> = {};
 
     if (username) {
       filter.username = { $regex: username, $options: 'i' };
-    }
-
-    if (role) {
-      filter.role = role;
     }
 
     if (status) {
@@ -126,6 +129,7 @@ export class UserService {
       this.userModel
         .find(filter)
         .select('-password')
+        .populate('roles')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -161,11 +165,26 @@ export class UserService {
       throw new HttpException('用户名已存在', HttpStatus.CONFLICT);
     }
 
+    // 验证角色是否存在
+    if (createUserDto.roles && createUserDto.roles.length > 0) {
+      const roles = await this.roleService.findByIds(createUserDto.roles);
+      if (roles.length !== createUserDto.roles.length) {
+        throw new HttpException('部分角色不存在', HttpStatus.BAD_REQUEST);
+      }
+    }
+
     // 创建新用户
     const newUser = new this.userModel(createUserDto);
     const savedUser = await newUser.save();
 
-    return this.transformUserToResponse(savedUser);
+    // 重新查询以获取populated的数据
+    const userWithRoles = await this.userModel
+      .findById(savedUser._id)
+      .select('-password')
+      .populate('roles')
+      .exec();
+
+    return this.transformUserToResponse(userWithRoles!);
   }
 
   /**
@@ -184,10 +203,19 @@ export class UserService {
       throw new HttpException('用户不存在', HttpStatus.NOT_FOUND);
     }
 
+    // 验证角色是否存在
+    if (updateUserDto.roles && updateUserDto.roles.length > 0) {
+      const roles = await this.roleService.findByIds(updateUserDto.roles);
+      if (roles.length !== updateUserDto.roles.length) {
+        throw new HttpException('部分角色不存在', HttpStatus.BAD_REQUEST);
+      }
+    }
+
     // 更新用户信息
     const updatedUser = await this.userModel
       .findByIdAndUpdate(id, updateUserDto, { new: true })
       .select('-password')
+      .populate('roles')
       .exec();
 
     if (!updatedUser) {
@@ -230,68 +258,58 @@ export class UserService {
    * @returns 是否有权限
    */
   async hasPermission(userId: string, permission: string): Promise<boolean> {
-    const user = await this.userModel
-      .findById(userId)
-      .select('permissions role')
-      .exec();
+    const user = await this.userModel.findById(userId).populate('roles').exec();
     if (!user) {
       return false;
     }
 
-    // 超级管理员拥有所有权限
-    if (user.role === 'super_admin') {
-      return true;
-    }
-
-    // 检查用户是否有指定权限
-    return user.permissions.includes(permission);
+    // 获取用户所有权限
+    const permissions = await this.getUserPermissions(user);
+    return permissions.includes(permission);
   }
 
   /**
    * 检查用户是否有指定角色
    * @param userId 用户ID
-   * @param roles 角色列表
+   * @param roleNames 角色名称列表
    * @returns 是否有角色
    */
-  async hasRole(userId: string, roles: string[]): Promise<boolean> {
-    const user = await this.userModel.findById(userId).select('role').exec();
+  async hasRole(userId: string, roleNames: string[]): Promise<boolean> {
+    const user = await this.userModel.findById(userId).populate('roles').exec();
     if (!user) {
       return false;
     }
 
-    return roles.includes(user.role);
+    const userRoles = user.roles as any[];
+    const userRoleNames = userRoles.map((role) => role.name);
+
+    return roleNames.some((roleName) => userRoleNames.includes(roleName));
   }
 
   /**
-   * 获取角色的默认权限
-   * @param role 角色
+   * 获取用户所有权限
+   * @param user 用户文档
    * @returns 权限列表
    */
-  private getRoleDefaultPermissions(role: string): string[] {
-    const rolePermissionMap: Record<string, string[]> = {
-      super_admin: [
-        'user:read',
-        'user:write',
-        'user:delete',
-        'menu:read',
-        'menu:write',
-        'menu:delete',
-        'system:read',
-        'system:write',
-        'log:read',
-      ],
-      admin: [
-        'user:read',
-        'user:write',
-        'menu:read',
-        'menu:write',
-        'system:read',
-        'log:read',
-      ],
-      operator: ['user:read', 'menu:read', 'system:read', 'log:read'],
-    };
+  async getUserPermissions(user: UserDocument): Promise<string[]> {
+    const roles = user.roles as any[];
+    const allPermissions: string[] = [];
 
-    return rolePermissionMap[role] || [];
+    for (const role of roles) {
+      if (role.permissions) {
+        const permissions = role.permissions as any[];
+        permissions.forEach((permission) => {
+          if (typeof permission === 'string') {
+            allPermissions.push(permission);
+          } else if (permission.name) {
+            allPermissions.push(permission.name);
+          }
+        });
+      }
+    }
+
+    // 去重
+    return [...new Set(allPermissions)];
   }
 
   /**
@@ -303,19 +321,14 @@ export class UserService {
     permissions: string[];
     menus: any[];
   }> {
-    const user = await this.userModel
-      .findById(userId)
-      .select('permissions role')
-      .exec();
+    const user = await this.userModel.findById(userId).populate('roles').exec();
 
     if (!user) {
       throw new HttpException('用户不存在', HttpStatus.NOT_FOUND);
     }
 
     // 获取用户所有权限
-    let permissions = [...user.permissions];
-    const rolePermissions = this.getRoleDefaultPermissions(user.role);
-    permissions = [...new Set([...permissions, ...rolePermissions])];
+    const permissions = await this.getUserPermissions(user);
 
     // 根据权限生成菜单（这里是示例，实际应该从菜单表查询）
     const menus = this.generateMenusByPermissions(permissions);
@@ -345,6 +358,36 @@ export class UserService {
             name: '用户列表',
             path: '/user/list',
             permission: 'user:read',
+          },
+        ],
+      },
+      {
+        id: 'role',
+        name: '角色管理',
+        path: '/role',
+        icon: 'role',
+        permission: 'role:read',
+        children: [
+          {
+            id: 'role-list',
+            name: '角色列表',
+            path: '/role/list',
+            permission: 'role:read',
+          },
+        ],
+      },
+      {
+        id: 'permission',
+        name: '权限管理',
+        path: '/permission',
+        icon: 'permission',
+        permission: 'permission:read',
+        children: [
+          {
+            id: 'permission-list',
+            name: '权限列表',
+            path: '/permission/list',
+            permission: 'permission:read',
           },
         ],
       },
@@ -395,13 +438,15 @@ export class UserService {
    */
   private transformUserToResponse(user: UserDocument): UserResponseDto {
     const userObj = user.toObject();
+    const roles = userObj.roles as any[];
+
     return {
       id: String(userObj._id),
       username: userObj.username,
-      role: userObj.role,
+      role: roles && roles.length > 0 ? roles[0].name : '', // 兼容旧接口
       status: userObj.status,
       avatar: userObj.avatar,
-      permissions: userObj.permissions || [],
+      permissions: [], // 这里可以根据需要计算权限
       lastLoginTime: userObj.lastLoginTime,
       lastLoginIp: userObj.lastLoginIp,
       createdAt: userObj.createdAt,

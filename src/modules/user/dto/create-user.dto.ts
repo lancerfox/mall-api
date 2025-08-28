@@ -48,15 +48,15 @@ export class CreateUserDto {
   // )
   password: string;
 
-  @ApiProperty({
-    description: '用户角色',
-    example: 'admin',
-    enum: ['admin', 'super_admin', 'operator'],
+  @ApiPropertyOptional({
+    description: '用户角色ID列表',
+    example: ['60f1b2b3b3b3b3b3b3b3b3b3'],
+    type: [String],
   })
-  @IsEnum(['admin', 'super_admin', 'operator'], {
-    message: '用户角色必须是admin、super_admin或operator之一',
-  })
-  role: string;
+  @IsOptional()
+  @IsArray({ message: '角色列表必须是数组' })
+  @IsString({ each: true, message: '角色ID必须是字符串' })
+  roles?: string[];
 
   @ApiPropertyOptional({
     description: '头像URL',
@@ -67,14 +67,4 @@ export class CreateUserDto {
   @IsUrl({}, { message: '头像URL格式不正确' })
   @MaxLength(500, { message: '头像URL长度不能超过500位' })
   avatar?: string;
-
-  @ApiPropertyOptional({
-    description: '用户权限列表',
-    example: ['user:read', 'user:write'],
-    type: [String],
-  })
-  @IsOptional()
-  @IsArray({ message: '权限列表必须是数组' })
-  @IsString({ each: true, message: '权限项必须是字符串' })
-  permissions?: string[];
 }
