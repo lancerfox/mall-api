@@ -58,22 +58,6 @@ export class UserController {
     return await this.userService.findAll(query);
   }
 
-  @Get('detail')
-  @ApiOperation({ summary: '获取用户详情' })
-  @ApiResponse({
-    status: 200,
-    description: '获取用户详情成功',
-    type: UserResponseDto,
-  })
-  @Permissions(PERMISSIONS.USER_READ)
-  async findOne(@Query() query: UserIdQueryDto): Promise<UserResponseDto> {
-    const user = await this.userService.findById(query.id);
-    if (!user) {
-      throw new HttpException('用户不存在', HttpStatus.NOT_FOUND);
-    }
-    return user;
-  }
-
   @Post('create')
   @ApiOperation({ summary: '创建用户' })
   @ApiResponse({
@@ -128,19 +112,5 @@ export class UserController {
 
     await this.userService.remove(userIdDto.id);
     return { message: '删除用户成功' };
-  }
-
-  @Get('menus')
-  @ApiOperation({ summary: '获取用户菜单' })
-  @ApiResponse({
-    status: 200,
-    description: '获取用户菜单成功',
-  })
-  @Permissions(PERMISSIONS.USER_READ)
-  async getUserMenus(
-    @Query() query: UserIdQueryDto,
-  ): Promise<{ permissions: string[]; menus: any[] }> {
-    const result = await this.userService.getUserMenus(query.id);
-    return result;
   }
 }

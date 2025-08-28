@@ -66,29 +66,6 @@ describe('UserController', () => {
     });
   });
 
-  describe('findOne', () => {
-    it('should return user by id', async () => {
-      userService.findById.mockResolvedValue(mockUser);
-      const query: UserIdQueryDto = { id: '507f1f77bcf86cd799439011' };
-
-      const result = await controller.findOne(query);
-
-      expect(userService.findById).toHaveBeenCalledWith(
-        '507f1f77bcf86cd799439011',
-      );
-      expect(result).toEqual(mockUser);
-    });
-
-    it('should throw HttpException when user not found', async () => {
-      userService.findById.mockResolvedValue(null);
-      const query: UserIdQueryDto = { id: '507f1f77bcf86cd799439011' };
-
-      await expect(controller.findOne(query)).rejects.toThrow(
-        new HttpException('用户不存在', HttpStatus.NOT_FOUND),
-      );
-    });
-  });
-
   describe('create', () => {
     it('should create user successfully', async () => {
       const createUserDto: CreateUserDto = {
@@ -164,31 +141,6 @@ describe('UserController', () => {
       ).rejects.toThrow(
         new HttpException('不能删除自己的账户', HttpStatus.BAD_REQUEST),
       );
-    });
-  });
-
-  describe('getUserMenus', () => {
-    it('should return user menus', async () => {
-      const menuResult = {
-        permissions: ['user:read', 'user:write'],
-        menus: [
-          {
-            id: 'user',
-            name: '用户管理',
-            path: '/user',
-            children: [],
-          },
-        ],
-      };
-      const query: UserIdQueryDto = { id: '507f1f77bcf86cd799439011' };
-      userService.getUserMenus.mockResolvedValue(menuResult);
-
-      const result = await controller.getUserMenus(query);
-
-      expect(userService.getUserMenus).toHaveBeenCalledWith(
-        '507f1f77bcf86cd799439011',
-      );
-      expect(result).toEqual(menuResult);
     });
   });
 });
