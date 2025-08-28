@@ -1,68 +1,70 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Permissions } from '../../../common/decorators/permissions.decorator';
 import { RoleService } from '../services/role.service';
 import { CreateRoleDto } from '../dto/create-role.dto';
+import { UpdateRoleWithIdDto } from '../dto/update-role-with-id.dto';
 import { UpdateRoleDto } from '../dto/update-role.dto';
 
+@ApiTags('角色管理')
 @Controller('roles')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class RoleController {
   constructor(private readonly roleService: RoleService) {}
 
-  @Post()
+  @Post('create')
   @Permissions('role:create')
+  @ApiOperation({ summary: '创建新角色' })
   create(@Body() createRoleDto: CreateRoleDto) {
     return this.roleService.create(createRoleDto);
   }
 
-  @Get()
+  @Get('list')
   @Permissions('role:read')
+  @ApiOperation({ summary: '获取所有角色列表' })
   findAll() {
     return this.roleService.findAll();
   }
 
-  @Get(':id')
+  @Get('detail')
   @Permissions('role:read')
-  findOne(@Param('id') id: string) {
+  @ApiOperation({ summary: '根据ID获取角色详情' })
+  findOne(@Body('id') id: string) {
     return this.roleService.findById(id);
   }
 
-  @Patch(':id')
+  @Post('update')
   @Permissions('role:update')
-  update(@Param('id') id: string, @Body() updateRoleDto: UpdateRoleDto) {
-    return this.roleService.update(id, updateRoleDto);
+  @ApiOperation({ summary: '更新角色信息' })
+  update(@Body() updateRoleWithIdDto: UpdateRoleWithIdDto) {
+    const { id, ...data } = updateRoleWithIdDto;
+    return this.roleService.update(id, data as UpdateRoleDto);
   }
 
-  @Delete(':id')
+  @Post('delete')
   @Permissions('role:delete')
-  remove(@Param('id') id: string) {
+  @ApiOperation({ summary: '删除角色' })
+  remove(@Body('id') id: string) {
     return this.roleService.remove(id);
   }
 
-  @Post(':id/permissions')
+  @Post('add-permissions')
   @Permissions('role:update')
+  @ApiOperation({ summary: '为角色添加权限' })
   addPermissions(
-    @Param('id') id: string,
+    @Body('id') id: string,
     @Body('permissionIds') permissionIds: string[],
   ) {
     return this.roleService.addPermissions(id, permissionIds);
   }
 
-  @Delete(':id/permissions')
+  @Post('remove-permissions')
   @Permissions('role:update')
+  @ApiOperation({ summary: '从角色移除权限' })
   removePermissions(
-    @Param('id') id: string,
+    @Body('id') id: string,
     @Body('permissionIds') permissionIds: string[],
   ) {
     return this.roleService.removePermissions(id, permissionIds);
