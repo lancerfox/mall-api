@@ -5,5 +5,4 @@ export * from './query-user.dto';
 export * from './user-list-response.dto';
 export * from './update-user-status.dto';
 export * from './reset-password.dto';
-export * from './update-permissions.dto';
 export * from './batch-operation.dto';

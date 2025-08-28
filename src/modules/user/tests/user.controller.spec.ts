@@ -5,8 +5,6 @@ import { UserService } from '../services/user.service';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { QueryUserDto } from '../dto/query-user.dto';
-import { UpdatePermissionsDto } from '../dto/update-permissions.dto';
-import { UpdatePermissionsWithIdDto } from '../dto/update-permissions-with-id.dto';
 import { UserIdQueryDto } from '../dto/user-id-query.dto';
 import { UserIdBodyDto } from '../dto/user-id-body.dto';
 import { UpdateUserWithIdDto } from '../dto/update-user-with-id.dto';
@@ -40,8 +38,6 @@ describe('UserController', () => {
       create: jest.fn(),
       update: jest.fn(),
       remove: jest.fn(),
-      updatePermissions: jest.fn(),
-      getUserPermissions: jest.fn(),
       getUserMenus: jest.fn(),
     };
 
@@ -171,42 +167,6 @@ describe('UserController', () => {
     });
   });
 
-  describe('updatePermissions', () => {
-    it('should update user permissions successfully', async () => {
-      const updatePermissionsDto: UpdatePermissionsWithIdDto = {
-        id: '507f1f77bcf86cd799439011',
-        permissions: ['user:read', 'user:write'],
-      };
-      const updatedUser = {
-        ...mockUser,
-        permissions: ['user:read', 'user:write'],
-      };
-      userService.updatePermissions.mockResolvedValue(updatedUser);
-
-      const result = await controller.updatePermissions(updatePermissionsDto);
-
-      expect(userService.updatePermissions).toHaveBeenCalledWith(
-        '507f1f77bcf86cd799439011',
-        ['user:read', 'user:write'],
-      );
-      expect(result).toEqual(updatedUser);
-    });
-  });
-
-  describe('getUserPermissions', () => {
-    it('should return user permissions', async () => {
-      const permissions = ['user:read', 'user:write'];
-      const query: UserIdQueryDto = { id: '507f1f77bcf86cd799439011' };
-      userService.getUserPermissions.mockResolvedValue(permissions);
-
-      const result = await controller.getUserPermissions(query);
-
-      expect(userService.getUserPermissions).toHaveBeenCalledWith(
-        '507f1f77bcf86cd799439011',
-      );
-      expect(result).toEqual({ permissions });
-    });
-  });
 
   describe('getUserMenus', () => {
     it('should return user menus', async () => {

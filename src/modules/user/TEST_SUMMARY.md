@@ -17,37 +17,7 @@
 
 ### UserController 测试更新
 
-#### 1. 导入更新
-```typescript
-// 新增导入
-import { UpdatePermissionsWithIdDto } from '../dto/update-permissions-with-id.dto';
-```
 
-#### 2. updatePermissions 测试更新
-```typescript
-// 更新前
-const result = await controller.updatePermissions(
-  '507f1f77bcf86cd799439011',
-  updatePermissionsDto,
-);
-
-// 更新后  
-const updatePermissionsDto: UpdatePermissionsWithIdDto = {
-  id: '507f1f77bcf86cd799439011',
-  permissions: ['user:read', 'user:write'],
-};
-const result = await controller.updatePermissions(updatePermissionsDto);
-```
-
-#### 3. getUserPermissions 测试更新
-```typescript
-// 更新前
-const result = await controller.getUserPermissions('507f1f77bcf86cd799439011');
-
-// 更新后
-const query: UserIdQueryDto = { id: '507f1f77bcf86cd799439011' };
-const result = await controller.getUserPermissions(query);
-```
 
 #### 4. getUserMenus 测试更新
 ```typescript
@@ -75,7 +45,6 @@ const result = await controller.getUserMenus(query);
   - `POST /users/create` - 创建用户
   - `POST /users/update` - 更新用户
   - `POST /users/delete` - 删除用户
-  - `POST /users/update-permissions` - 更新权限
 
 #### ✅ 参数传递标准化
 - 测试验证 GET 请求使用 query 参数

@@ -409,30 +409,6 @@ describe('UserService', () => {
     });
   });
 
-  describe('updatePermissions', () => {
-    it('should update user permissions successfully', async () => {
-      const permissions = ['user:read', 'user:write'];
-
-      const mockSelect = jest
-        .fn()
-        .mockReturnValue({ exec: jest.fn().mockResolvedValue(mockUser) });
-      userModel.findByIdAndUpdate.mockReturnValue({
-        select: mockSelect,
-      } as any);
-
-      const result = await service.updatePermissions(
-        '507f1f77bcf86cd799439011',
-        permissions,
-      );
-
-      expect(userModel.findByIdAndUpdate).toHaveBeenCalledWith(
-        '507f1f77bcf86cd799439011',
-        { permissions },
-        { new: true },
-      );
-      expect(result).toBeDefined();
-    });
-  });
 
   describe('hasPermission', () => {
     it('should return true for super admin', async () => {
@@ -487,11 +463,6 @@ describe('UserService', () => {
         .fn()
         .mockReturnValue({ exec: jest.fn().mockResolvedValue(mockUser) });
       userModel.findById.mockReturnValue({ select: mockSelect } as any);
-
-      // Mock getUserPermissions method
-      jest
-        .spyOn(service, 'getUserPermissions')
-        .mockResolvedValue(['user:read', 'user:write']);
 
       const result = await service.getUserMenus('507f1f77bcf86cd799439011');
 

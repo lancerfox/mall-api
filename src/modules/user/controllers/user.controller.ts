@@ -33,8 +33,6 @@ import { UpdateUserDto } from '../dto/update-user.dto';
 import { QueryUserDto } from '../dto/query-user.dto';
 import { UserResponseDto } from '../dto/user-response.dto';
 import { UserListResponseDto } from '../dto/user-list-response.dto';
-// import { UpdatePermissionsDto } from '../dto/update-permissions.dto';
-import { UpdatePermissionsWithIdDto } from '../dto/update-permissions-with-id.dto';
 // import { MongoIdValidationPipe } from '../../../common/pipes/mongo-id-validation.pipe';
 import { UserIdQueryDto } from '../dto/user-id-query.dto';
 import { UserIdBodyDto } from '../dto/user-id-body.dto';
@@ -131,34 +129,6 @@ export class UserController {
     return { message: '删除用户成功' };
   }
 
-  @Post('update-permissions')
-  @ApiOperation({ summary: '更新用户权限' })
-  @ApiResponse({
-    status: 200,
-    description: '更新用户权限成功',
-    type: UserResponseDto,
-  })
-  @Permissions(PERMISSIONS.PERMISSION_ASSIGN)
-  async updatePermissions(
-    @Body() updatePermissionsDto: UpdatePermissionsWithIdDto,
-  ): Promise<UserResponseDto> {
-    const { id, permissions } = updatePermissionsDto;
-    return await this.userService.updatePermissions(id, permissions);
-  }
-
-  @Get('permissions')
-  @ApiOperation({ summary: '获取用户权限' })
-  @ApiResponse({
-    status: 200,
-    description: '获取用户权限成功',
-  })
-  @Permissions(PERMISSIONS.PERMISSION_VIEW)
-  async getUserPermissions(
-    @Query() query: UserIdQueryDto,
-  ): Promise<{ permissions: string[] }> {
-    const permissions = await this.userService.getUserPermissions(query.id);
-    return { permissions };
-  }
 
   @Get('menus')
   @ApiOperation({ summary: '获取用户菜单' })

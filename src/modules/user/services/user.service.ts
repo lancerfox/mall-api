@@ -232,27 +232,6 @@ export class UserService {
     return password;
   }
 
-  /**
-   * 更新用户权限
-   * @param id 用户ID
-   * @param permissions 权限列表
-   * @returns 更新后的用户信息
-   */
-  async updatePermissions(
-    id: string,
-    permissions: string[],
-  ): Promise<UserResponseDto> {
-    const updatedUser = await this.userModel
-      .findByIdAndUpdate(id, { permissions }, { new: true })
-      .select('-password')
-      .exec();
-
-    if (!updatedUser) {
-      throw new HttpException('用户不存在', HttpStatus.NOT_FOUND);
-    }
-
-    return this.transformUserToResponse(updatedUser);
-  }
 
   /**
    * 检查用户是否有指定权限
@@ -293,28 +272,6 @@ export class UserService {
     return roles.includes(user.role);
   }
 
-  /**
-   * 获取用户的所有权限（包括角色默认权限）
-   * @param userId 用户ID
-   * @returns 权限列表
-   */
-  async getUserPermissions(userId: string): Promise<string[]> {
-    const user = await this.userModel
-      .findById(userId)
-      .select('permissions role')
-      .exec();
-    if (!user) {
-      return [];
-    }
-
-    let permissions = [...user.permissions];
-
-    // 根据角色添加默认权限
-    const rolePermissions = this.getRoleDefaultPermissions(user.role);
-    permissions = [...new Set([...permissions, ...rolePermissions])];
-
-    return permissions;
-  }
 
   /**
    * 获取角色的默认权限
@@ -367,7 +324,9 @@ export class UserService {
     }
 
     // 获取用户所有权限
-    const permissions = await this.getUserPermissions(userId);
+    let permissions = [...user.permissions];
+    const rolePermissions = this.getRoleDefaultPermissions(user.role);
+    permissions = [...new Set([...permissions, ...rolePermissions])];
 
     // 根据权限生成菜单（这里是示例，实际应该从菜单表查询）
     const menus = this.generateMenusByPermissions(permissions);

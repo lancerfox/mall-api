@@ -36,21 +36,6 @@
   ```
 - **响应**: `UserResponseDto`
 
-#### 3. 获取用户权限
-- **路径**: `GET /users/permissions`
-- **描述**: 获取指定用户的权限列表
-- **参数**: Query 参数
-  ```typescript
-  {
-    id: string; // 用户ID
-  }
-  ```
-- **响应**: 
-  ```typescript
-  {
-    permissions: string[];
-  }
-  ```
 
 #### 4. 获取用户菜单
 - **路径**: `GET /users/menus`
@@ -117,17 +102,6 @@
   }
   ```
 
-#### 4. 更新用户权限
-- **路径**: `POST /users/update-permissions`
-- **描述**: 更新用户权限列表
-- **参数**: Body 参数 (`UpdatePermissionsWithIdDto`)
-  ```typescript
-  {
-    id: string;
-    permissions: string[];
-  }
-  ```
-- **响应**: `UserResponseDto`
 
 ## 权限管理接口 (PermissionsController)
 
@@ -164,8 +138,6 @@
 | 创建用户 | `POST /users` | `POST /users/create` |
 | 更新用户 | `PUT /users` | `POST /users/update` |
 | 删除用户 | `DELETE /users` | `POST /users/delete` |
-| 获取用户权限 | `GET /users/:id/permissions` | `GET /users/permissions` |
-| 更新用户权限 | `PUT /users/:id/permissions` | `POST /users/update-permissions` |
 | 获取用户菜单 | `GET /users/:id/menus` | `GET /users/menus` |
 
 ## 使用示例
