@@ -1,6 +1,6 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, FilterQuery } from 'mongoose';
+import { Model, FilterQuery, Types } from 'mongoose';
 import { User, UserDocument } from '../entities/user.entity';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
@@ -8,6 +8,7 @@ import { QueryUserDto } from '../dto/query-user.dto';
 import { UserResponseDto } from '../dto/user-response.dto';
 import { UserListResponseDto } from '../dto/user-list-response.dto';
 import { RoleService } from '../../role/services/role.service';
+import { Role, RoleDocument } from '../../role/entities/role.entity';
 
 @Injectable()
 export class UserService {
@@ -264,7 +265,7 @@ export class UserService {
     }
 
     // 获取用户所有权限
-    const permissions = await this.getUserPermissions(user);
+    const permissions = this.getUserPermissions(user);
     return permissions.includes(permission);
   }
 
@@ -291,25 +292,30 @@ export class UserService {
    * @param user 用户文档
    * @returns 权限列表
    */
-  async getUserPermissions(user: UserDocument): Promise<string[]> {
-    const roles = user.roles as any[];
-    const allPermissions: string[] = [];
+  getUserPermissions(user: UserDocument): string[] {
+    const roles = (user.roles as Role[]) || [];
+    const allPermissions = new Set<string>();
 
     for (const role of roles) {
-      if (role.permissions) {
-        const permissions = role.permissions as any[];
-        permissions.forEach((permission) => {
-          if (typeof permission === 'string') {
-            allPermissions.push(permission);
-          } else if (permission.name) {
-            allPermissions.push(permission.name);
+      if (role?.permissions) {
+        // Assuming permissions can be populated Permission documents or just strings
+        const permissions = role.permissions as (
+          | { name: string }
+          | string
+          | { toObject: () => { name: string } }
+        )[];
+        permissions.forEach((p) => {
+          if (typeof p === 'string') {
+            allPermissions.add(p);
+          } else if (p && 'name' in p) {
+            allPermissions.add(p.name);
           }
         });
       }
     }
 
     // 去重
-    return [...new Set(allPermissions)];
+    return [...allPermissions];
   }
 
   /**
@@ -432,18 +438,61 @@ export class UserService {
   }
 
   /**
+   * 创建初始管理员用户
+   * 此方法用于应用启动时检查和创建默认管理员
+   */
+  async createInitialAdmin(): Promise<void> {
+    const adminUsername = 'admin';
+    const existingAdmin = await this.findOne(adminUsername);
+
+    if (existingAdmin) {
+      console.log('管理员账户已存在');
+      return;
+    }
+
+    const superAdminRole = (await this.roleService.findByName(
+      'super_admin',
+    )) as RoleDocument;
+
+    if (!superAdminRole) {
+      console.error(
+        '未找到 "super_admin" 角色，无法创建初始管理员。请先运行 init-rbac 脚本。',
+      );
+      return;
+    }
+
+    const createUserDto: CreateUserDto = {
+      username: adminUsername,
+      password: 'admin',
+      roles: [String(superAdminRole._id)],
+    };
+
+    await this.create(createUserDto);
+    console.log('初始管理员账户创建成功: admin/admin');
+  }
+
+  /**
    * 转换用户文档为响应格式
    * @param user 用户文档
    * @returns 用户响应数据
    */
   private transformUserToResponse(user: UserDocument): UserResponseDto {
-    const userObj = user.toObject();
-    const roles = userObj.roles as any[];
+    const userObj = user.toObject<
+      User & {
+        _id: Types.ObjectId;
+        roles: { name: string }[];
+        createdAt: Date;
+        updatedAt: Date;
+      }
+    >();
+    const roles = userObj.roles || [];
+
+    const roleName = roles.length > 0 && roles[0] ? roles[0].name : '';
 
     return {
-      id: String(userObj._id),
+      id: userObj._id.toString(),
       username: userObj.username,
-      role: roles && roles.length > 0 ? roles[0].name : '', // 兼容旧接口
+      role: roleName,
       status: userObj.status,
       avatar: userObj.avatar,
       permissions: [], // 这里可以根据需要计算权限

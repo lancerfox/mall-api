@@ -1,10 +1,15 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { UserService } from './modules/user/services/user.service';
 import { CreateUserDto } from './modules/user/dto/create-user.dto';
+import { RoleService } from './modules/role/services/role.service';
+import { RoleDocument } from './modules/role/entities/role.entity';
 
 @Injectable()
 export class AppService implements OnModuleInit {
-  constructor(private userService: UserService) {}
+  constructor(
+    private userService: UserService,
+    private roleService: RoleService,
+  ) {}
 
   /**
    * 模块初始化时执行
@@ -19,11 +24,23 @@ export class AppService implements OnModuleInit {
       const existingAdmin = await this.userService.findOne(adminUsername);
 
       if (!existingAdmin) {
+        // 查找 super_admin 角色
+        const superAdminRole = (await this.roleService.findByName(
+          'super_admin',
+        )) as RoleDocument;
+
+        if (!superAdminRole) {
+          console.error(
+            '未找到 "super_admin" 角色，无法创建初始管理员。请先运行 init-rbac 脚本。',
+          );
+          return;
+        }
+
         // 创建初始管理员账户
         const createUserDto: CreateUserDto = {
           username: adminUsername,
           password: adminPassword,
-          roles: ['super_admin'],
+          roles: [String(superAdminRole._id)],
         };
         await this.userService.create(createUserDto);
         console.log('初始管理员账户创建成功: admin/admin');
