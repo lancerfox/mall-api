@@ -87,7 +87,7 @@ export class RolesGuard implements CanActivate {
 
     // 将完整的用户信息添加到请求对象中，供后续使用
     request.fullUser = {
-      id: user._id.toString(),
+      id: user.id.toString(),
       username: user.username,
       role: user.role,
       permissions: user.permissions || [],

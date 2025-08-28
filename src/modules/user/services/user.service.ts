@@ -394,9 +394,9 @@ export class UserService {
    * @returns 用户响应数据
    */
   private transformUserToResponse(user: UserDocument): UserResponseDto {
-    const userObj = user.toObject();
+    const userObj = user.toObject() as any;
     return {
-      _id: String(userObj._id),
+      id: String(userObj._id),
       username: userObj.username,
       role: userObj.role,
       status: userObj.status,

@@ -8,7 +8,7 @@ export class UserResponseDto {
     description: '用户ID',
     example: '507f1f77bcf86cd799439011',
   })
-  _id: string;
+  id: string;
 
   @ApiProperty({
     description: '用户名',

@@ -90,12 +90,12 @@ export class AuthService {
     userAgent?: string,
   ): Promise<ILoginResponse> {
     // 更新用户最后登录时间和IP
-    await this.userService.updateLastLogin(user._id, ip);
+    await this.userService.updateLastLogin(user.id, ip);
 
     // 生成访问令牌
     const accessTokenPayload: IJwtPayload = {
       username: user.username,
-      sub: user._id,
+      sub: user.id,
       role: user.role,
     };
 
@@ -105,7 +105,7 @@ export class AuthService {
     });
 
     // 获取更新后的用户信息
-    const updatedUser = await this.userService.findById(user._id);
+    const updatedUser = await this.userService.findById(user.id);
     if (!updatedUser) {
       throw new UnauthorizedException('用户不存在');
     }
@@ -142,7 +142,7 @@ export class AuthService {
    */
   private formatUserInfo(user: IUserWithoutPassword): UserInfoDto {
     return {
-      id: user._id,
+      id: user.id,
       username: user.username,
       role: user.role,
       status: user.status,

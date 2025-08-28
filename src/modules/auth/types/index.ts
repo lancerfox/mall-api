@@ -5,7 +5,7 @@ import { Document } from 'mongoose';
  * 用于认证服务中返回的用户信息
  */
 export interface IUserWithoutPassword {
-  _id: string;
+  id: string;
   username: string;
   role: string;
   status: string;
@@ -53,7 +53,7 @@ export interface ILoginResponse {
  * 扩展Mongoose Document，包含用户实体的所有字段
  */
 export interface IUserDocument extends Document {
-  _id: string;
+  id: string;
   username: string;
   password: string;
   email?: string;
