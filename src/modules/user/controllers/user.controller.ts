@@ -120,6 +120,7 @@ export class UserController {
     @Body() userIdDto: UserIdBodyDto,
     @CurrentUser('id') currentUserId: string,
   ): Promise<{ message: string }> {
+    console.log(userIdDto);
     // 防止用户删除自己
     if (currentUserId === userIdDto.id) {
       throw new HttpException('不能删除自己的账户', HttpStatus.BAD_REQUEST);

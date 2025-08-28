@@ -68,10 +68,13 @@ export class AuthService {
 
     if (user && isValid) {
       // 验证成功，返回用户信息（排除密码）
-      const userObj = user.toObject() as Record<string, unknown>;
+      const userObj = user.toObject() as any;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { password: _password, ...result } = userObj;
-      return result as unknown as IUserWithoutPassword;
+      const { password: _password, _id, ...result } = userObj;
+      return {
+        ...result,
+        id: String(_id), // 将 _id 转换为 id
+      } as IUserWithoutPassword;
     }
 
     return null;

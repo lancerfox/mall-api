@@ -1,7 +1,7 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, FilterQuery } from 'mongoose';
-import * as bcrypt from 'bcrypt';
+// import * as bcrypt from 'bcrypt';
 import { User, UserDocument } from '../entities/user.entity';
 // import { IUserWithoutPassword } from '../../auth/types';
 import { CreateUserDto } from '../dto/create-user.dto';
@@ -394,7 +394,7 @@ export class UserService {
    * @returns 用户响应数据
    */
   private transformUserToResponse(user: UserDocument): UserResponseDto {
-    const userObj = user.toObject() as any;
+    const userObj = user.toObject();
     return {
       id: String(userObj._id),
       username: userObj.username,
