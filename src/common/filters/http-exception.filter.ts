@@ -108,7 +108,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       errorResponse.errors = errors;
     }
 
-    response.status(status).json(errorResponse);
+    response.status(HttpStatus.OK).json(errorResponse);
   }
 
   /**
