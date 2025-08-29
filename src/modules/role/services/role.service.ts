@@ -10,6 +10,7 @@ import { Role, RoleDocument } from '../entities/role.entity';
 import { CreateRoleDto } from '../dto/create-role.dto';
 import { UpdateRoleDto } from '../dto/update-role.dto';
 import { PermissionService } from '../../permission/services/permission.service';
+import { Permission } from '../../permission/entities/permission.entity';
 
 @Injectable()
 export class RoleService {
@@ -30,7 +31,7 @@ export class RoleService {
 
     // 验证权限是否存在
     if (createRoleDto.permissions && createRoleDto.permissions.length > 0) {
-      const permissions = await this.permissionService.findByNames(
+      const permissions = await this.permissionService.findByIds(
         createRoleDto.permissions,
       );
       if (permissions.length !== createRoleDto.permissions.length) {
@@ -96,7 +97,7 @@ export class RoleService {
 
     // 验证权限是否存在
     if (updateRoleDto.permissions && updateRoleDto.permissions.length > 0) {
-      const permissions = await this.permissionService.findByNames(
+      const permissions = await this.permissionService.findByIds(
         updateRoleDto.permissions,
       );
       if (permissions.length !== updateRoleDto.permissions.length) {
@@ -132,7 +133,7 @@ export class RoleService {
     }
 
     // 验证权限是否存在
-    const permissions = await this.permissionService.findByNames(permissionIds);
+    const permissions = await this.permissionService.findByIds(permissionIds);
     if (permissions.length !== permissionIds.length) {
       throw new BadRequestException('部分权限不存在');
     }
@@ -162,8 +163,7 @@ export class RoleService {
 
     // 验证权限是否存在
     if (permissionIds.length > 0) {
-      const permissions =
-        await this.permissionService.findByNames(permissionIds);
+      const permissions = await this.permissionService.findByIds(permissionIds);
       if (permissions.length !== permissionIds.length) {
         throw new BadRequestException('部分权限不存在');
       }
@@ -176,7 +176,11 @@ export class RoleService {
       .exec() as Promise<Role>;
   }
 
-  async findPermissionsByRoleId(roleId: string): Promise<any[]> {
+  async findPermissionsByRoleId(
+    roleId: string,
+  ): Promise<
+    Array<{ id: string; name?: string; description?: string; code?: string }>
+  > {
     const role = await this.roleModel
       .findById(roleId)
       .populate('permissions')
@@ -187,11 +191,18 @@ export class RoleService {
     }
 
     // 返回权限信息
-    return role.permissions.map((permission: any) => ({
-      id: permission._id || permission.id,
-      name: permission.name,
-      description: permission.description,
-      code: permission.code,
-    }));
+    return role.permissions.map((permission: any) => {
+      if (permission && typeof permission === 'object') {
+        // 处理Mongoose文档对象
+        return {
+          id: permission._id?.toString() || permission.id,
+          name: permission.name,
+          description: permission.description,
+          code: permission.name, // 使用name作为code
+        };
+      }
+      // 如果是ObjectId，只返回id
+      return { id: permission?.toString() };
+    });
   }
 }

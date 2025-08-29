@@ -56,6 +56,7 @@ describe('RoleService', () => {
 
     mockPermissionService = {
       findByNames: jest.fn(),
+      findByIds: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -88,12 +89,12 @@ describe('RoleService', () => {
       };
 
       mockRoleModel.findOne.mockResolvedValue(null);
-      mockPermissionService.findByNames.mockResolvedValue([mockPermission]);
+      mockPermissionService.findByIds.mockResolvedValue([mockPermission]);
 
       await service.create(createRoleDto);
 
       expect(mockRoleModel.findOne).toHaveBeenCalledWith({ name: 'test_role' });
-      expect(mockPermissionService.findByNames).toHaveBeenCalledWith([
+      expect(mockPermissionService.findByIds).toHaveBeenCalledWith([
         'user:read',
       ]);
       expect(mockRoleModel).toHaveBeenCalledWith(createRoleDto);
@@ -121,7 +122,7 @@ describe('RoleService', () => {
       };
 
       mockRoleModel.findOne.mockResolvedValue(null);
-      mockPermissionService.findByNames.mockResolvedValue([mockPermission]); // 只返回一个权限
+      mockPermissionService.findByIds.mockResolvedValue([mockPermission]); // 只返回一个权限
 
       await expect(service.create(createRoleDto)).rejects.toThrow(
         BadRequestException,
@@ -243,7 +244,7 @@ describe('RoleService', () => {
         ...mockRole,
         permissions: [mockPermission._id],
       };
-      mockPermissionService.findByNames.mockResolvedValue([mockPermission]);
+      mockPermissionService.findByIds.mockResolvedValue([mockPermission]);
       mockRoleModel.findById.mockResolvedValue(roleWithPermissions);
       mockRoleModel.findByIdAndUpdate.mockReturnValue({
         populate: jest.fn().mockReturnThis(),
@@ -277,7 +278,7 @@ describe('RoleService', () => {
         permissions: [mockPermission._id],
       };
       mockRoleModel.findById.mockResolvedValue(roleWithPermissions);
-      mockPermissionService.findByNames.mockResolvedValue([]); // 没有找到权限
+      mockPermissionService.findByIds.mockResolvedValue([]); // 没有找到权限
 
       await expect(
         service.updatePermissions('507f1f77bcf86cd799439011', ['user:read']),

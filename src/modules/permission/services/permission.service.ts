@@ -53,6 +53,10 @@ export class PermissionService {
     return this.permissionModel.find({ name: { $in: names } }).exec();
   }
 
+  async findByIds(ids: string[]): Promise<Permission[]> {
+    return this.permissionModel.find({ _id: { $in: ids } }).exec();
+  }
+
   async update(
     id: string,
     updatePermissionDto: UpdatePermissionDto,
