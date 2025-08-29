@@ -2,15 +2,11 @@ import {
   Controller,
   Get,
   Post,
-  Put,
-  Delete,
   Body,
-  Param,
   Query,
   UseGuards,
   HttpStatus,
   HttpException,
-  Request,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
@@ -33,8 +29,6 @@ import { UpdateUserDto } from '../dto/update-user.dto';
 import { QueryUserDto } from '../dto/query-user.dto';
 import { UserResponseDto } from '../dto/user-response.dto';
 import { UserListResponseDto } from '../dto/user-list-response.dto';
-// import { MongoIdValidationPipe } from '../../../common/pipes/mongo-id-validation.pipe';
-import { UserIdQueryDto } from '../dto/user-id-query.dto';
 import { UserIdBodyDto } from '../dto/user-id-body.dto';
 import { UpdateUserWithIdDto } from '../dto/update-user-with-id.dto';
 

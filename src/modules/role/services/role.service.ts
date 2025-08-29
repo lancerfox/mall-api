@@ -138,9 +138,9 @@ export class RoleService {
     }
 
     // 添加权限（去重）
-    const currentPermissionIds = (role.permissions as any[]).map((p) =>
-      p.toString(),
-    );
+    const currentPermissionIds = (
+      role.permissions as { toString(): string }[]
+    ).map((p) => p.toString());
     const newPermissions = [
       ...new Set([...currentPermissionIds, ...permissionIds]),
     ];
@@ -161,9 +161,9 @@ export class RoleService {
     }
 
     // 移除权限
-    const currentPermissionIds = (role.permissions as any[]).map((p) =>
-      p.toString(),
-    );
+    const currentPermissionIds = (
+      role.permissions as { toString(): string }[]
+    ).map((p) => p.toString());
     const newPermissions = currentPermissionIds.filter(
       (p) => !permissionIds.includes(p),
     );
