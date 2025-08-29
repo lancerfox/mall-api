@@ -8,9 +8,6 @@
 
 确保 `mall-api/.env` 文件中配置了正确的 MongoDB 连接字符串：
 
-```env
-MONGODB_URI=mongodb+srv://your-username:your-password@your-cluster.mongodb.net/your-database
-```
 
 ### 2. 运行脚本
 

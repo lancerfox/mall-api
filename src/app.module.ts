@@ -20,9 +20,7 @@ import { RolesGuard } from './common/guards/roles.guard';
     // MongoDB数据库连接配置
     MongooseModule.forRootAsync({
       useFactory: () => ({
-        uri:
-          process.env.DATABASE_URL ||
-          'mongodb+srv://xiesp01:xie123456@cluster0.l63pjew.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0',
+        uri: process.env.DATABASE_URL,
       }),
     }),
     UserModule,
