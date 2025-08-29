@@ -15,6 +15,7 @@ describe('RoleController', () => {
     remove: jest.fn(),
     addPermissions: jest.fn(),
     removePermissions: jest.fn(),
+    findPermissionsByRoleId: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -109,6 +110,30 @@ describe('RoleController', () => {
         result,
       );
       expect(service.removePermissions).toHaveBeenCalledWith(id, permissionIds);
+    });
+  });
+
+  describe('getPermissions', () => {
+    it('should return permissions for a role', async () => {
+      const id = '1';
+      const result = [
+        {
+          id: 'p1',
+          name: 'product:create',
+          description: '创建商品',
+          code: 'product:create',
+        },
+        {
+          id: 'p2',
+          name: 'product:edit',
+          description: '编辑商品',
+          code: 'product:edit',
+        },
+      ];
+      mockRoleService.findPermissionsByRoleId.mockResolvedValue(result);
+
+      expect(await controller.getPermissions(id)).toBe(result);
+      expect(service.findPermissionsByRoleId).toHaveBeenCalledWith(id);
     });
   });
 });

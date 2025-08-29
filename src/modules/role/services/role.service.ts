@@ -175,4 +175,23 @@ export class RoleService {
       .populate('permissions')
       .exec() as Promise<Role>;
   }
+
+  async findPermissionsByRoleId(roleId: string): Promise<any[]> {
+    const role = await this.roleModel
+      .findById(roleId)
+      .populate('permissions')
+      .exec();
+
+    if (!role) {
+      throw new NotFoundException('角色不存在');
+    }
+
+    // 返回权限信息
+    return role.permissions.map((permission: any) => ({
+      id: permission._id || permission.id,
+      name: permission.name,
+      description: permission.description,
+      code: permission.code,
+    }));
+  }
 }

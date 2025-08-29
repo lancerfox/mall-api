@@ -309,4 +309,63 @@ describe('RoleService', () => {
       );
     });
   });
+
+  describe('findPermissionsByRoleId', () => {
+    it('should return permissions for a role', async () => {
+      const roleWithPermissions = {
+        ...mockRole,
+        permissions: [mockPermission],
+      };
+
+      mockRoleModel.findById.mockReturnValue({
+        populate: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue(roleWithPermissions),
+      });
+
+      const result = await service.findPermissionsByRoleId(
+        '507f1f77bcf86cd799439011',
+      );
+
+      expect(result).toEqual([
+        {
+          id: mockPermission._id,
+          name: mockPermission.name,
+          description: mockPermission.description,
+          code: mockPermission.name, // 使用name作为code
+        },
+      ]);
+      expect(mockRoleModel.findById).toHaveBeenCalledWith(
+        '507f1f77bcf86cd799439011',
+      );
+    });
+
+    it('should throw NotFoundException if role not found', async () => {
+      mockRoleModel.findById.mockReturnValue({
+        populate: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue(null),
+      });
+
+      await expect(
+        service.findPermissionsByRoleId('507f1f77bcf86cd799439011'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should return empty array if role has no permissions', async () => {
+      const roleWithoutPermissions = {
+        ...mockRole,
+        permissions: [],
+      };
+
+      mockRoleModel.findById.mockReturnValue({
+        populate: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue(roleWithoutPermissions),
+      });
+
+      const result = await service.findPermissionsByRoleId(
+        '507f1f77bcf86cd799439011',
+      );
+
+      expect(result).toEqual([]);
+    });
+  });
 });

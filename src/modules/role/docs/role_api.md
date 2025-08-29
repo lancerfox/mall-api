@@ -196,3 +196,43 @@
 **失败响应**:
 - `404 Not Found`: 如果角色ID不存在。
 - `400 Bad Request`: 如果 `permissionIds` 中有不存在的权限ID。
+
+---
+
+## 5. 获取角色权限列表
+
+- **接口说明**: 根据角色ID获取该角色的所有权限信息。
+- **接口地址**: `GET /roles/permissions`
+- **所需权限**: `role:read`
+
+### 请求参数
+
+| 参数名 | 类型   | 是否必填 | 说明     | 位置   |
+| ------ | ------ | -------- | -------- | ------ |
+| `id`   | string | 是       | 角色的 ID | Query参数 |
+
+### 响应 (Response)
+
+**成功响应 (200 OK)**:
+返回该角色关联的所有权限对象数组。
+
+**响应示例**:
+```json
+[
+  {
+    "id": "60d0fe4f5311236168a109ca",
+    "name": "product:create",
+    "description": "创建商品",
+    "code": "product:create"
+  },
+  {
+    "id": "60d0fe4f5311236168a109cb",
+    "name": "product:edit", 
+    "description": "编辑商品",
+    "code": "product:edit"
+  }
+]
+```
+
+**失败响应**:
+- `404 Not Found`: 如果角色ID不存在。

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBody, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
@@ -79,5 +79,28 @@ export class RoleController {
     @Body('permissionIds') permissionIds: string[],
   ) {
     return this.roleService.updatePermissions(id, permissionIds);
+  }
+
+  @Get('permissions')
+  @Permissions('role:read')
+  @ApiOperation({ summary: '获取角色权限列表' })
+  @ApiResponse({
+    status: 200,
+    description: 'The permissions of the role.',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          name: { type: 'string' },
+          description: { type: 'string' },
+          code: { type: 'string' },
+        },
+      },
+    },
+  })
+  getPermissions(@Query('id') id: string) {
+    return this.roleService.findPermissionsByRoleId(id);
   }
 }
