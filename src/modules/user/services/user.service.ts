@@ -109,7 +109,7 @@ export class UserService {
    * @returns 用户列表和分页信息
    */
   async findAll(query: QueryUserDto): Promise<UserListResponseDto> {
-    const { page = 1, limit = 10, username, status } = query;
+    const { page = 1, limit = 10, username, status, roles } = query;
 
     // 构建查询条件
     const filter: FilterQuery<UserDocument> = {};
@@ -120,6 +120,10 @@ export class UserService {
 
     if (status) {
       filter.status = status;
+    }
+
+    if (roles) {
+      filter.roles = roles;
     }
 
     // 计算跳过的文档数量
@@ -281,7 +285,7 @@ export class UserService {
       return false;
     }
 
-    const userRoles = user.roles as any[];
+    const userRoles = user.roles as RoleDocument[];
     const userRoleNames = userRoles.map((role) => role.name);
 
     return roleNames.some((roleName) => userRoleNames.includes(roleName));
@@ -334,7 +338,7 @@ export class UserService {
     }
 
     // 获取用户所有权限
-    const permissions = await this.getUserPermissions(user);
+    const permissions = this.getUserPermissions(user);
 
     // 根据权限生成菜单（这里是示例，实际应该从菜单表查询）
     const menus = this.generateMenusByPermissions(permissions);

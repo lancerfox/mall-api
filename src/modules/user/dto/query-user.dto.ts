@@ -89,14 +89,13 @@ export class QueryUserDto {
   username?: string;
 
   @ApiPropertyOptional({
-    description: '角色筛选',
-    example: 'admin',
-    enum: UserRole,
+    description: '角色ID筛选',
+    example: '60c72b9b9b1e8a001f8e8b8b',
   })
   @Transform(emptyStringToUndefined)
   @IsOptional()
-  @IsEnum(UserRole)
-  role?: UserRole;
+  @IsString()
+  roles?: string;
 
   @ApiPropertyOptional({
     description: '状态筛选',
