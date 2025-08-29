@@ -5,7 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Role, RoleDocument } from '../entities/role.entity';
 import { CreateRoleDto } from '../dto/create-role.dto';
 import { UpdateRoleDto } from '../dto/update-role.dto';
@@ -191,18 +191,29 @@ export class RoleService {
     }
 
     // 返回权限信息
-    return role.permissions.map((permission: any) => {
-      if (permission && typeof permission === 'object') {
-        // 处理Mongoose文档对象
-        return {
-          id: permission._id?.toString() || permission.id,
-          name: permission.name,
-          description: permission.description,
-          code: permission.name, // 使用name作为code
-        };
-      }
-      // 如果是ObjectId，只返回id
-      return { id: permission?.toString() };
-    });
+    return role.permissions.map(
+      (permission: Permission | Types.ObjectId | any) => {
+        if (
+          permission &&
+          typeof permission === 'object' &&
+          'name' in permission
+        ) {
+          // 处理Mongoose文档对象
+          const permissionDoc = permission as Permission & {
+            _id?: Types.ObjectId;
+            id?: string;
+          };
+          return {
+            id: permissionDoc._id?.toString() || permissionDoc.id || '',
+            name: permissionDoc.name,
+            description: permissionDoc.description,
+            code: permissionDoc.name, // 使用name作为code
+          };
+        }
+        // 如果是ObjectId，只返回id
+        const objectId = permission as Types.ObjectId;
+        return { id: objectId?.toString() || '' };
+      },
+    );
   }
 }
