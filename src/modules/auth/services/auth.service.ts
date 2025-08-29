@@ -11,6 +11,7 @@ import * as bcrypt from 'bcrypt';
 import { IUserWithoutPassword, ILoginResponse, IJwtPayload } from '../types';
 import { UserInfoDto } from '../dto/auth-response.dto';
 import { UserResponseDto } from '../../user/dto/user-response.dto';
+import { User } from '../../user/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -69,8 +70,9 @@ export class AuthService {
 
     if (user && isValid) {
       // 验证成功，返回用户信息（排除密码）
-      const userObj = user.toObject({ virtuals: true });
-      const { password: _password, ...result } = userObj;
+      const { ...result } = user.toObject({
+        virtuals: true,
+      }) as User;
       return result as unknown as IUserWithoutPassword;
     }
 
@@ -205,8 +207,7 @@ export class AuthService {
       // 更新密码
       await this.userService.updatePassword(userId, newPassword);
     } catch (error: unknown) {
-      const user = await this.userService.findById(userId);
-
+      console.log(error);
       throw error;
     }
   }

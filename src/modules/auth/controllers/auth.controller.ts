@@ -14,7 +14,6 @@ import {
   ApiTags,
   ApiOperation,
   ApiResponse,
-  ApiBody,
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import type { Request } from 'express';
@@ -26,7 +25,6 @@ import { LoginDto } from '../dto/login.dto';
 import { ChangePasswordDto } from '../dto/change-password.dto';
 import { AuthResponseDto, UserInfoDto } from '../dto/auth-response.dto';
 import { ILoginResponse } from '../types';
-// import type { IJwtPayload } from '../types';
 import type { JwtUser } from '../../../common/decorators/user.decorator';
 
 @ApiTags('认证')
