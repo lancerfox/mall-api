@@ -146,24 +146,24 @@
 
 ---
 
-## 4. 为角色添加权限
+## 4. 更新角色权限
 
-- **接口说明**: 为指定角色批量添加一个或多个权限。
-- **接口地址**: `POST /roles/add-permissions`
+- **接口说明**: 更新指定角色的权限集合。此接口会完全替换角色的现有权限列表。
+- **接口地址**: `POST /roles/update-permissions`
 - **所需权限**: `role:update`
 
 ### 请求参数 (Request Body)
 
-| 参数名          | 类型     | 是否必填 | 说明             |
-| --------------- | -------- | -------- | ---------------- |
-| `id`            | string   | 是       | 角色的 ID        |
-| `permissionIds` | string[] | 是       | 要添加的权限ID列表 |
+| 参数名          | 类型     | 是否必填 | 说明                             |
+| --------------- | -------- | -------- | -------------------------------- |
+| `id`            | string   | 是       | 角色的 ID                        |
+| `permissionIds` | string[] | 是       | 更新后的权限ID列表（会完全替换现有权限） |
 
 **请求示例**:
 ```json
 {
   "id": "60d21b4667d0d8992e610c85",
-  "permissionIds": ["60d0fe4f5311236168a109cc"]
+  "permissionIds": ["60d0fe4f5311236168a109ca", "60d0fe4f5311236168a109cc"]
 }
 ```
 
@@ -196,51 +196,3 @@
 **失败响应**:
 - `404 Not Found`: 如果角色ID不存在。
 - `400 Bad Request`: 如果 `permissionIds` 中有不存在的权限ID。
-
----
-
-## 5. 从角色移除权限
-
-- **接口说明**: 从指定角色批量移除一个或多个权限。
-- **接口地址**: `POST /roles/remove-permissions`
-- **所需权限**: `role:update`
-
-### 请求参数 (Request Body)
-
-| 参数名          | 类型     | 是否必填 | 说明             |
-| --------------- | -------- | -------- | ---------------- |
-| `id`            | string   | 是       | 角色的 ID        |
-| `permissionIds` | string[] | 是       | 要移除的权限ID列表 |
-
-**请求示例**:
-```json
-{
-  "id": "60d21b4667d0d8992e610c85",
-  "permissionIds": ["60d0fe4f5311236168a109cc"]
-}
-```
-
-### 响应 (Response)
-
-**成功响应 (200 OK)**:
-返回更新后的角色对象，包含最新的权限列表。
-
-**响应示例**:
-```json
-{
-    "id": "60d21b4667d0d8992e610c85",
-    "name": "ProductManager",
-    "description": "产品管理员，负责管理商品",
-    "permissions": [
-        {
-            "id": "60d0fe4f5311236168a109ca",
-            "name": "product:create"
-        }
-    ],
-    "status": "active",
-    "isSystem": false
-}
-```
-
-**失败响应**:
-- `404 Not Found`: 如果角色ID不存在。

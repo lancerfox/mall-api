@@ -237,8 +237,8 @@ describe('RoleService', () => {
     });
   });
 
-  describe('addPermissions', () => {
-    it('should add permissions to role successfully', async () => {
+  describe('updatePermissions', () => {
+    it('should update role permissions successfully', async () => {
       const roleWithPermissions = {
         ...mockRole,
         permissions: [mockPermission._id],
@@ -250,35 +250,63 @@ describe('RoleService', () => {
         exec: jest.fn().mockResolvedValue(roleWithPermissions),
       });
 
-      const result = await service.addPermissions('507f1f77bcf86cd799439011', [
-        'user:read',
-      ]);
+      const result = await service.updatePermissions(
+        '507f1f77bcf86cd799439011',
+        ['user:read'],
+      );
 
       expect(result).toEqual(roleWithPermissions);
+      expect(mockRoleModel.findByIdAndUpdate).toHaveBeenCalledWith(
+        '507f1f77bcf86cd799439011',
+        { permissions: ['user:read'] },
+        { new: true },
+      );
     });
-  });
 
-  describe('removePermissions', () => {
-    it('should remove permissions from role successfully', async () => {
+    it('should throw NotFoundException if role not found', async () => {
+      mockRoleModel.findById.mockResolvedValue(null);
+
+      await expect(
+        service.updatePermissions('507f1f77bcf86cd799439011', ['user:read']),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw BadRequestException if some permissions do not exist', async () => {
       const roleWithPermissions = {
         ...mockRole,
         permissions: [mockPermission._id],
       };
+      mockRoleModel.findById.mockResolvedValue(roleWithPermissions);
+      mockPermissionService.findByNames.mockResolvedValue([]); // 没有找到权限
 
+      await expect(
+        service.updatePermissions('507f1f77bcf86cd799439011', ['user:read']),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should clear all permissions when empty array provided', async () => {
+      const roleWithPermissions = {
+        ...mockRole,
+        permissions: [mockPermission._id],
+      };
+      const updatedRole = { ...roleWithPermissions, permissions: [] };
       mockRoleModel.findById.mockResolvedValue(roleWithPermissions);
       mockRoleModel.findByIdAndUpdate.mockReturnValue({
         populate: jest.fn().mockReturnThis(),
-        exec: jest
-          .fn()
-          .mockResolvedValue({ ...roleWithPermissions, permissions: [] }),
+        exec: jest.fn().mockResolvedValue(updatedRole),
       });
 
-      const result = await service.removePermissions(
+      const result = await service.updatePermissions(
         '507f1f77bcf86cd799439011',
-        [mockPermission._id],
+        [],
       );
 
       expect(result.permissions).toEqual([]);
+      expect(mockRoleModel.findByIdAndUpdate).toHaveBeenCalledWith(
+        '507f1f77bcf86cd799439011',
+        { permissions: [] },
+        { new: true },
+      );
     });
   });
 });

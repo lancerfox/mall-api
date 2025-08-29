@@ -57,9 +57,9 @@ export class RoleController {
     return this.roleService.remove(id);
   }
 
-  @Post('add-permissions')
+  @Post('update-permissions')
   @Permissions('role:update')
-  @ApiOperation({ summary: '为角色添加权限' })
+  @ApiOperation({ summary: '更新角色权限' })
   @ApiBody({
     schema: {
       type: 'object',
@@ -71,37 +71,13 @@ export class RoleController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Permissions have been successfully added to the role.',
+    description: 'Permissions have been successfully updated for the role.',
     type: Role,
   })
-  addPermissions(
+  updatePermissions(
     @Body('id') id: string,
     @Body('permissionIds') permissionIds: string[],
   ) {
-    return this.roleService.addPermissions(id, permissionIds);
-  }
-
-  @Post('remove-permissions')
-  @Permissions('role:update')
-  @ApiOperation({ summary: '从角色移除权限' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        id: { type: 'string' },
-        permissionIds: { type: 'array', items: { type: 'string' } },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Permissions have been successfully removed from the role.',
-    type: Role,
-  })
-  removePermissions(
-    @Body('id') id: string,
-    @Body('permissionIds') permissionIds: string[],
-  ) {
-    return this.roleService.removePermissions(id, permissionIds);
+    return this.roleService.updatePermissions(id, permissionIds);
   }
 }

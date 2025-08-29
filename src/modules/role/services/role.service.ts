@@ -151,7 +151,7 @@ export class RoleService {
       .exec() as Promise<Role>;
   }
 
-  async removePermissions(
+  async updatePermissions(
     roleId: string,
     permissionIds: string[],
   ): Promise<Role> {
@@ -160,16 +160,18 @@ export class RoleService {
       throw new NotFoundException('角色不存在');
     }
 
-    // 移除权限
-    const currentPermissionIds = (
-      role.permissions as { toString(): string }[]
-    ).map((p) => p.toString());
-    const newPermissions = currentPermissionIds.filter(
-      (p) => !permissionIds.includes(p),
-    );
+    // 验证权限是否存在
+    if (permissionIds.length > 0) {
+      const permissions =
+        await this.permissionService.findByNames(permissionIds);
+      if (permissions.length !== permissionIds.length) {
+        throw new BadRequestException('部分权限不存在');
+      }
+    }
 
+    // 更新权限（完全替换）
     return this.roleModel
-      .findByIdAndUpdate(roleId, { permissions: newPermissions }, { new: true })
+      .findByIdAndUpdate(roleId, { permissions: permissionIds }, { new: true })
       .populate('permissions')
       .exec() as Promise<Role>;
   }
