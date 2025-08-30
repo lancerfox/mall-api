@@ -51,13 +51,16 @@ export class PermissionController {
 
   @Get('list')
   @Permissions('permission:read')
-  @ApiOperation({ summary: '获取所有权限列表' })
+  @ApiOperation({ summary: '获取权限列表' })
   @ApiResponse({
     status: 200,
     description: 'A list of permissions.',
     type: [Permission],
   })
-  findAll() {
+  findAll(@Query('type') type?: string) {
+    if (type) {
+      return this.permissionService.findByType(type);
+    }
     return this.permissionService.findAll();
   }
 
@@ -78,26 +81,6 @@ export class PermissionController {
   })
   remove(@Body('id') id: string) {
     return this.permissionService.remove(id);
-  }
-
-  @Get('predefined')
-  @ApiOperation({ summary: '获取所有预定义权限列表' })
-  @ApiResponse({
-    status: 200,
-    description: '获取预定义权限列表成功',
-  })
-  @Roles(ROLES.SUPER_ADMIN, ROLES.ADMIN)
-  getAllPermissions(): {
-    permissions: string[];
-    predefinedPermissions: Record<string, string>;
-  } {
-    // 去重并排序
-    const uniquePermissions = [...new Set(Object.values(PERMISSIONS))].sort();
-
-    return {
-      permissions: uniquePermissions,
-      predefinedPermissions: PERMISSIONS,
-    };
   }
 
   @Get('type/:type')

@@ -64,20 +64,22 @@
 
 ---
 
-## 2. 获取所有权限列表
+## 2. 获取权限列表
 
-- **接口说明**: 获取系统中存在的所有权限的列表。
+- **接口说明**: 获取权限列表，支持按类型筛选。
 - **接口地址**: `GET /permissions/list`
 - **所需权限**: `permission:read`
 
 ### 请求参数
 
-无
+| 参数名 | 类型   | 是否必填 | 说明                                       | 可选值                                  |
+| ------ | ------ | -------- | ------------------------------------------ | --------------------------------------- |
+| `type` | string | 否       | 权限类型筛选参数，不传则返回所有类型权限 | `API`, `PAGE`, `OPERATION`, `DATA` |
 
 ### 响应 (Response)
 
 **成功响应 (200 OK)**:
-返回一个包含所有权限对象的数组。
+返回一个包含权限对象的数组。如果指定了类型参数，则只返回该类型的权限；否则返回所有权限。
 
 **响应示例**:
 ```json
@@ -86,6 +88,7 @@
     "name": "user:create",
     "description": "允许创建新用户",
     "module": "UserManagement",
+    "type": "API",
     "status": "active",
     "_id": "60d0fe4f5311236168a109ca",
     "createdAt": "2023-08-29T14:30:00.000Z",
@@ -95,6 +98,33 @@
     "name": "user:delete",
     "description": "允许删除用户",
     "module": "UserManagement",
+    "type": "API",
+    "status": "active",
+    "_id": "60d0fe4f5311236168a109cb",
+    "createdAt": "2023-08-29T14:31:00.000Z",
+    "updatedAt": "2023-08-29T14:31:00.000Z"
+  },
+  {
+    "name": "user:list:view",
+    "description": "查看用户列表页面",
+    "module": "UserManagement",
+    "type": "PAGE",
+    "status": "active",
+    "_id": "60d0fe4f5311236168a109cc",
+    "createdAt": "2023-08-29T14:32:00.000Z",
+    "updatedAt": "2023-08-29T14:32:00.000Z"
+  },
+  {
+    "name": "user:export",
+    "description": "导出用户数据",
+    "module": "UserManagement",
+    "type": "OPERATION",
+    "status": "active",
+    "_id": "60d0fe4f5311236168a109cd",
+    "createdAt": "2023-08-29T14:33:00.000Z",
+    "updatedAt": "2023-08-29T14:33:00.000Z"
+  }
+]
     "status": "active",
     "_id": "60d0fe4f5311236168a109cb",
     "createdAt": "2023-08-29T14:31:00.000Z",
@@ -205,48 +235,3 @@
 
 ---
 
-## 4. 获取所有预定义权限列表
-
-- **接口说明**: 获取代码中预定义的所有权限常量。这对于前端构建权限选择界面非常有用。
-- **接口地址**: `GET /permissions/predefined`
-- **所需角色**: `SUPER_ADMIN` 或 `ADMIN`
-
-### 请求参数
-
-无
-
-### 响应 (Response)
-
-**成功响应 (200 OK)**:
-返回一个对象，包含两个字段：
-- `permissions`: 一个去重并排序后的权限字符串列表。
-- `predefinedPermissions`: 一个 key-value 形式的权限常量映射表。
-
-**响应示例**:
-```json
-{
-  "permissions": [
-    "permission:create",
-    "permission:delete",
-    "permission:read",
-    "role:create",
-    "role:delete",
-    "role:read",
-    "user:create",
-    "user:delete",
-    "user:read",
-    "user:update"
-  ],
-  "predefinedPermissions": {
-    "PERMISSION_CREATE": "permission:create",
-    "PERMISSION_DELETE": "permission:delete",
-    "PERMISSION_READ": "permission:read",
-    "ROLE_CREATE": "role:create",
-    "ROLE_DELETE": "role:delete",
-    "ROLE_READ": "role:read",
-    "USER_CREATE": "user:create",
-    "USER_DELETE": "user:delete",
-    "USER_READ": "user:read",
-    "USER_UPDATE": "user:update"
-  }
-}
