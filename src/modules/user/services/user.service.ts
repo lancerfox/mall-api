@@ -495,6 +495,9 @@ export class UserService {
       name: role.name,
     }));
 
+    // 判断是否是超级管理员（拥有super_admin角色）
+    const isSuperAdmin = roles.some((role) => role.name === 'super_admin');
+
     return {
       id: userObj._id.toString(),
       username: userObj.username,
@@ -506,6 +509,7 @@ export class UserService {
       lastLoginIp: userObj.lastLoginIp,
       createdAt: userObj.createdAt,
       updatedAt: userObj.updatedAt,
+      isSuperAdmin,
     };
   }
 }
