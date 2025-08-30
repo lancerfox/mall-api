@@ -13,6 +13,7 @@ import { RoleService } from '../services/role.service';
 import { CreateRoleDto } from '../dto/create-role.dto';
 import { UpdateRoleWithIdDto } from '../dto/update-role-with-id.dto';
 import { Role } from '../entities/role.entity';
+import { RoleListResponseDto } from '../dto/role-list-response.dto';
 
 @ApiTags('角色管理')
 @Controller('roles')
@@ -42,7 +43,7 @@ export class RoleController {
   @ApiResponse({
     status: 200,
     description: 'A list of roles.',
-    type: [Role],
+    type: [RoleListResponseDto],
   })
   findAll() {
     return this.roleService.findAll();

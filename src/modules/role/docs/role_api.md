@@ -73,7 +73,7 @@
 
 ## 2. 获取所有角色列表
 
-- **接口说明**: 获取系统中所有角色的列表，并会填充每个角色关联的权限信息。
+- **接口说明**: 获取系统中所有角色的列表。
 - **接口地址**: `GET /roles/list`
 - **所需权限**: `role:read`
 
@@ -93,13 +93,6 @@
     "id": "60d21b4667d0d8992e610c85",
     "name": "ProductManager",
     "description": "产品管理员，负责管理商品",
-    "permissions": [
-      {
-        "id": "60d0fe4f5311236168a109ca",
-        "name": "product:create",
-        "description": "创建商品"
-      }
-    ],
     "status": "active",
     "isSystem": false
   },
@@ -107,7 +100,6 @@
     "id": "60d21b4667d0d8992e610c86",
     "name": "OrderManager",
     "description": "订单管理员",
-    "permissions": [],
     "status": "active",
     "isSystem": false
   }

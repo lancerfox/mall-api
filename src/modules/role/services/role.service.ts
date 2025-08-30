@@ -12,6 +12,7 @@ import { CreateRoleDto } from '../dto/create-role.dto';
 import { UpdateRoleDto } from '../dto/update-role.dto';
 import { PermissionService } from '../../permission/services/permission.service';
 import { Permission } from '../../permission/entities/permission.entity';
+import { RoleListResponseDto } from '../dto/role-list-response.dto';
 
 @Injectable()
 export class RoleService {
@@ -51,8 +52,8 @@ export class RoleService {
     return role.save();
   }
 
-  async findAll(): Promise<Role[]> {
-    return this.roleModel.find().populate('permissions').exec();
+  async findAll(): Promise<RoleListResponseDto[]> {
+    return this.roleModel.find().exec() as unknown as RoleListResponseDto[];
   }
 
   async findOne(id: string): Promise<Role> {
