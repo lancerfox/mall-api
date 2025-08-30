@@ -53,7 +53,7 @@ export class RoleService {
   }
 
   async findAll(): Promise<RoleListResponseDto[]> {
-    return this.roleModel.find().exec() as unknown as RoleListResponseDto[];
+    return this.roleModel.find().select('-permissions').exec() as unknown as RoleListResponseDto[];
   }
 
   async findOne(id: string): Promise<Role> {
