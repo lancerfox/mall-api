@@ -19,11 +19,6 @@ import {
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Permissions } from '../../../common/decorators/permissions.decorator';
-import {
-  Roles,
-  ROLES,
-  PERMISSIONS,
-} from '../../../common/decorators/roles.decorator';
 import { PermissionService } from '../services/permission.service';
 import { CreatePermissionDto } from '../dto/create-permission.dto';
 import { Permission } from '../entities/permission.entity';
