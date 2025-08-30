@@ -2,7 +2,6 @@ import { IsString, IsNotEmpty, IsOptional, IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import {
   PermissionType,
-  ModuleType,
 } from '../../../common/decorators/roles.decorator';
 
 export class CreatePermissionDto {
@@ -26,12 +25,11 @@ export class CreatePermissionDto {
 
   @ApiProperty({
     description: 'The module of the permission',
-    enum: ModuleType,
     required: false,
   })
-  @IsEnum(ModuleType)
+  @IsString()
   @IsOptional()
-  module?: ModuleType;
+  module?: string;
 
   @ApiProperty({
     description: 'The status of the permission',

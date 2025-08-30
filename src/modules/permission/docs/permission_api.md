@@ -28,7 +28,7 @@
 | ----------- | ------ | -------- | -------------- |
 | `name`      | string | 是       | 权限的唯一名称 |
 | `description` | string | 是       | 权限的详细描述 |
-| `module`    | string | 否       | 权限所属的模块 |
+| `module`    | string | 否       | 权限所属的模块（可自定义） |
 | `status`    | string | 否       | 权限状态 (`active` 或 `inactive`)，默认为 `active` |
 | `type`      | string | 否       | 权限类型 (`API`, `PAGE`, `OPERATION`, `DATA`)，默认为 `API` |
 

@@ -3,7 +3,6 @@ import { Document } from 'mongoose';
 import { ApiProperty } from '@nestjs/swagger';
 import {
   PermissionType,
-  ModuleType,
 } from '../../../common/decorators/roles.decorator';
 
 export type PermissionDocument = Permission & Document;
@@ -32,14 +31,12 @@ export class Permission {
 
   @ApiProperty({
     description: 'The module of the permission',
-    enum: ModuleType,
     required: false,
   })
   @Prop({
     type: String,
-    enum: ModuleType,
   })
-  module?: ModuleType;
+  module?: string;
 
   @ApiProperty({
     description: 'The status of the permission',
