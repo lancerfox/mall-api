@@ -16,6 +16,7 @@ describe('RoleController', () => {
     addPermissions: jest.fn(),
     removePermissions: jest.fn(),
     findPermissionsByRoleId: jest.fn(),
+    getRoleTypes: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -135,6 +136,20 @@ describe('RoleController', () => {
 
       expect(await controller.getPermissions(id)).toBe(result);
       expect(service.findPermissionsByRoleId).toHaveBeenCalledWith(id);
+    });
+  });
+
+  describe('getRoleTypes', () => {
+    it('should return all role types', async () => {
+      const result = [
+        { value: 'super_admin', label: '超级管理员' },
+        { value: 'admin', label: '管理员' },
+        { value: 'operator', label: '操作员' },
+      ];
+      mockRoleService.getRoleTypes.mockResolvedValue(result);
+
+      expect(await controller.getRoleTypes()).toBe(result);
+      expect(service.getRoleTypes).toHaveBeenCalled();
     });
   });
 });

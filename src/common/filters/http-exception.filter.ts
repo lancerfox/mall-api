@@ -119,7 +119,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
    */
   private getErrorCode(status: number, message?: string): number {
     const statusCode = status as HttpStatus;
-    
+
     // 处理认证相关的错误码映射
     if (statusCode === HttpStatus.UNAUTHORIZED && message) {
       if (message.includes('用户名或密码错误')) {
@@ -132,7 +132,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
         return ERROR_CODES.TOKEN_EXPIRED;
       }
     }
-    
+
     switch (statusCode) {
       case HttpStatus.UNAUTHORIZED:
         return ERROR_CODES.UNAUTHORIZED;

@@ -137,4 +137,28 @@ export class RoleController {
   getPermissions(@Query('id') id: string, @Query('type') type?: string) {
     return this.roleService.findPermissionsByRoleId(id, type);
   }
+
+  @Get('types')
+  @Permissions('role:read')
+  @ApiOperation({
+    summary: '获取所有角色类型',
+    description: '获取系统中定义的所有角色类型枚举值，用于前端下拉选择',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '角色类型列表',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          value: { type: 'string', description: '角色类型值' },
+          label: { type: 'string', description: '角色类型中文描述' },
+        },
+      },
+    },
+  })
+  getRoleTypes() {
+    return this.roleService.getRoleTypes();
+  }
 }
