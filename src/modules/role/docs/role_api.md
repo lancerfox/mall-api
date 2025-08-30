@@ -12,7 +12,7 @@
 
 ## 1. 创建新角色
 
-- **接口说明**: 用于创建一个新的角色。可以同时关联一组权限。
+- **接口说明**: 用于创建一个新的角色。可以同时关联一组权限。角色类型一旦创建后不可修改。
 - **接口地址**: `POST /roles/create`
 - **所需权限**: `role:create`
 
@@ -21,6 +21,7 @@
 | 参数名        | 类型     | 是否必填 | 说明                                   |
 | ------------- | -------- | -------- | -------------------------------------- |
 | `name`        | string   | 是       | 角色的唯一名称                         |
+| `type`        | string   | 是       | 角色类型枚举值                         |
 | `description` | string   | 是       | 角色的详细描述                         |
 | `permissions` | string[] | 否       | 与该角色关联的权限ID列表               |
 | `status`      | string   | 否       | 角色状态 (`active` 或 `inactive`)，默认为 `active` |
@@ -30,6 +31,7 @@
 ```json
 {
   "name": "ProductManager",
+  "type": "product_manager",
   "description": "产品管理员，负责管理商品",
   "permissions": ["60d0fe4f5311236168a109ca", "60d0fe4f5311236168a109cb"]
 }
@@ -45,6 +47,7 @@
 {
     "id": "60d21b4667d0d8992e610c85",
     "name": "ProductManager",
+    "type": "product_manager",
     "description": "产品管理员，负责管理商品",
     "permissions": [
         {
@@ -67,7 +70,7 @@
 
 **失败响应**:
 - `409 Conflict`: 如果角色名称 `name` 已存在。
-- `400 Bad Request`: 如果 `permissions` 数组中包含不存在的权限ID。
+- `400 Bad Request`: 如果 `permissions` 数组中包含不存在的权限ID或角色类型无效。
 
 ---
 
@@ -92,16 +95,22 @@
   {
     "id": "60d21b4667d0d8992e610c85",
     "name": "ProductManager",
+    "type": "operator",
     "description": "产品管理员，负责管理商品",
     "status": "active",
-    "isSystem": false
+    "isSystem": false,
+    "createdAt": "2023-08-29T15:00:00.000Z",
+    "updatedAt": "2023-08-29T15:00:00.000Z"
   },
   {
     "id": "60d21b4667d0d8992e610c86",
     "name": "OrderManager",
+    "type": "operator",
     "description": "订单管理员",
     "status": "active",
-    "isSystem": false
+    "isSystem": false,
+    "createdAt": "2023-08-29T15:00:00.000Z",
+    "updatedAt": "2023-08-29T15:00:00.000Z"
   }
 ]
 ```
@@ -138,7 +147,56 @@
 
 ---
 
-## 4. 更新角色权限
+## 4. 更新角色信息
+
+- **接口说明**: 更新指定角色的基本信息。角色名称和描述可修改，但角色类型不可修改。
+- **接口地址**: `POST /roles/update`
+- **所需权限**: `role:update`
+
+### 请求参数 (Request Body)
+
+| 参数名        | 类型     | 是否必填 | 说明                                   |
+| ------------- | -------- | -------- | -------------------------------------- |
+| `id`          | string   | 是       | 角色的 ID                              |
+| `name`        | string   | 否       | 角色的唯一名称                         |
+| `description` | string   | 否       | 角色的详细描述                         |
+| `status`      | string   | 否       | 角色状态 (`active` 或 `inactive`)      |
+| `isSystem`    | boolean  | 否       | 是否为系统角色                         |
+
+**请求示例**:
+```json
+{
+  "id": "60d21b4667d0d8992e610c85",
+  "name": "SeniorProductManager",
+  "description": "高级产品管理员",
+  "status": "active"
+}
+```
+
+### 响应 (Response)
+
+**成功响应 (200 OK)**:
+返回更新后的角色对象。
+
+**响应示例**:
+```json
+{
+    "id": "60d21b4667d0d8992e610c85",
+    "name": "SeniorProductManager",
+    "type": "product_manager",
+    "description": "高级产品管理员",
+    "status": "active",
+    "isSystem": false,
+    "createdAt": "2023-08-29T15:00:00.000Z",
+    "updatedAt": "2023-08-30T10:00:00.000Z"
+}
+```
+
+**失败响应**:
+- `404 Not Found`: 如果角色ID不存在。
+- `409 Conflict`: 如果角色名称 `name` 已存在。
+
+## 5. 更新角色权限
 
 - **接口说明**: 更新指定角色的权限集合。此接口会完全替换角色的现有权限列表。
 - **接口地址**: `POST /roles/update-permissions`
@@ -169,6 +227,7 @@
 {
     "id": "60d21b4667d0d8992e610c85",
     "name": "ProductManager",
+    "type": "product_manager",
     "description": "产品管理员，负责管理商品",
     "permissions": [
         {
@@ -191,7 +250,7 @@
 
 ---
 
-## 5. 获取角色权限列表
+## 6. 获取角色权限列表
 
 - **接口说明**: 根据角色ID获取该角色的权限信息。支持按权限类型筛选。
 - **接口地址**: `GET /roles/permissions`
@@ -246,7 +305,7 @@
 
 ---
 
-## 6. 获取所有角色类型
+## 7. 获取所有角色类型
 
 - **接口说明**: 获取系统中定义的所有角色类型枚举值，用于前端下拉选择等场景
 - **接口地址**: `GET /roles/types`
@@ -280,7 +339,7 @@
 ```
 
 **字段说明**:
-- `value`: 角色类型枚举值，用于程序逻辑处理
+- `value`: 角色类型枚举值，用于程序逻辑处理。可选值：`super_admin`(超级管理员), `admin`(管理员), `operator`(操作员)
 - `label`: 角色类型的中文描述，用于界面显示
 
 **使用场景**:
