@@ -97,7 +97,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     // 构造错误响应
     const errorResponse: IApiResponse<null> = {
-      code: this.getErrorCode(status),
+      code: this.getErrorCode(status, message),
       message,
       data: null,
       timestamp: new Date().toISOString(),
@@ -112,12 +112,27 @@ export class HttpExceptionFilter implements ExceptionFilter {
   }
 
   /**
-   * 根据HTTP状态码获取错误码
+   * 根据HTTP状态码和错误消息获取错误码
    * @param status HTTP状态码
+   * @param message 错误消息
    * @returns 错误码
    */
-  private getErrorCode(status: number): number {
+  private getErrorCode(status: number, message?: string): number {
     const statusCode = status as HttpStatus;
+    
+    // 处理认证相关的错误码映射
+    if (statusCode === HttpStatus.UNAUTHORIZED && message) {
+      if (message.includes('用户名或密码错误')) {
+        return ERROR_CODES.INVALID_CREDENTIALS;
+      }
+      if (message.includes('无效的访问令牌')) {
+        return ERROR_CODES.INVALID_TOKEN;
+      }
+      if (message.includes('访问令牌已过期')) {
+        return ERROR_CODES.TOKEN_EXPIRED;
+      }
+    }
+    
     switch (statusCode) {
       case HttpStatus.UNAUTHORIZED:
         return ERROR_CODES.UNAUTHORIZED;
