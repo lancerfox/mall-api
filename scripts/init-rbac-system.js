@@ -1,57 +1,67 @@
+require('dotenv').config(); // 加载环境变量
 const { MongoClient } = require('mongodb');
-const bcrypt = require('bcrypt');
+
 
 // 数据库连接配置
-const DATABASE_URL = process.env.DATABASE_URL || 
-  'mongodb+srv://xiesp01:xie123456@cluster0.l63pjew.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+const DATABASE_URL = process.env.DATABASE_URL;
 
-// 默认权限列表
+// 默认权限列表 - 根据系统权限常量定义
 const DEFAULT_PERMISSIONS = [
-  // 用户管理权限
-  { name: 'user:create', description: '创建用户', module: 'user' },
-  { name: 'user:read', description: '查看用户', module: 'user' },
-  { name: 'user:update', description: '更新用户', module: 'user' },
-  { name: 'user:delete', description: '删除用户', module: 'user' },
+  // API权限 - 用户管理
+  { name: 'api:user:create', description: '创建用户', type: 'api', module: 'user' },
+  { name: 'api:user:read', description: '查看用户', type: 'api', module: 'user' },
+  { name: 'api:user:update', description: '更新用户', type: 'api', module: 'user' },
+  { name: 'api:user:delete', description: '删除用户', type: 'api', module: 'user' },
+  { name: 'api:user:reset-password', description: '重置密码', type: 'api', module: 'user' },
+  { name: 'api:user:update-status', description: '更新用户状态', type: 'api', module: 'user' },
   
-  // 角色管理权限
-  { name: 'role:create', description: '创建角色', module: 'role' },
-  { name: 'role:read', description: '查看角色', module: 'role' },
-  { name: 'role:update', description: '更新角色', module: 'role' },
-  { name: 'role:delete', description: '删除角色', module: 'role' },
+  // API权限 - 权限管理
+  { name: 'api:permission:create', description: '创建权限', type: 'api', module: 'permission' },
+  { name: 'api:permission:read', description: '查看权限', type: 'api', module: 'permission' },
+  { name: 'api:permission:update', description: '更新权限', type: 'api', module: 'permission' },
+  { name: 'api:permission:delete', description: '删除权限', type: 'api', module: 'permission' },
   
-  // 权限管理权限
-  { name: 'permission:create', description: '创建权限', module: 'permission' },
-  { name: 'permission:read', description: '查看权限', module: 'permission' },
-  { name: 'permission:update', description: '更新权限', module: 'permission' },
-  { name: 'permission:delete', description: '删除权限', module: 'permission' },
+  // API权限 - 系统管理
+  { name: 'api:system:config', description: '系统配置', type: 'api', module: 'system' },
+  { name: 'api:system:log', description: '系统日志', type: 'api', module: 'system' },
   
-  // 系统管理权限
-  { name: 'system:config', description: '系统配置', module: 'system' },
-  { name: 'system:log', description: '系统日志', module: 'system' },
+  // 页面权限
+  { name: 'page:user:management', description: '用户管理页面', type: 'page', module: 'user' },
+  { name: 'page:user:detail', description: '用户详情页面', type: 'page', module: 'user' },
+  { name: 'page:user:create', description: '用户创建页面', type: 'page', module: 'user' },
+  { name: 'page:permission:management', description: '权限管理页面', type: 'page', module: 'permission' },
+  { name: 'page:system:management', description: '系统管理页面', type: 'page', module: 'system' },
+  
+  // 操作权限
+  // { name: 'operation:user:export', description: '用户导出', type: 'operation', module: 'user' },
+  // { name: 'operation:user:import', description: '用户导入', type: 'operation', module: 'user' },
+  // { name: 'operation:user:batch-delete', description: '用户批量删除', type: 'operation', module: 'user' },
+  // { name: 'operation:permission:assign', description: '权限分配', type: 'operation', module: 'permission' },
+  // { name: 'operation:permission:batch-update', description: '权限批量更新', type: 'operation', module: 'permission' }
 ];
 
-// 默认角色配置
+// 默认角色配置 - 修复超级管理员权限问题
 const DEFAULT_ROLES = [
   {
     name: 'super_admin',
     description: '超级管理员',
     isSystem: true,
-    permissions: [
-      'user:create', 'user:read', 'user:update', 'user:delete',
-      'role:create', 'role:read', 'role:update', 'role:delete',
-      'permission:create', 'permission:read', 'permission:update', 'permission:delete',
-      'system:config', 'system:log'
-    ]
+    // 超级管理员应该拥有所有权限
+    permissions: DEFAULT_PERMISSIONS.map(p => p.name)
   },
   {
     name: 'admin',
     description: '管理员',
     isSystem: true,
     permissions: [
-      'user:read', 'user:update',
-      'role:read',
-      'permission:read',
-      'system:config'
+      'api:user:create', 'api:user:read', 'api:user:update', 'api:user:delete',
+      'api:user:reset-password', 'api:user:update-status',
+      'api:permission:read',
+      'api:system:config', 'api:system:log',
+      'page:user:management', 'page:user:detail', 'page:user:create',
+      'page:permission:management', 'page:system:management',
+      'operation:user:export', 'operation:user:import', 'operation:user:batch-delete',
+      'operation:permission:assign', 'operation:permission:batch-update'
     ]
   },
   {
@@ -59,11 +69,12 @@ const DEFAULT_ROLES = [
     description: '操作员',
     isSystem: true,
     permissions: [
-      'user:read',
-      'role:read',
-      'permission:read'
+      'api:user:read', 'api:user:update',
+      'api:permission:read',
+      'page:user:management', 'page:user:detail',
+      'operation:user:export'
     ]
-  }
+  },
 ];
 
 async function initRBACSystem() {
@@ -112,14 +123,15 @@ async function initRBACSystem() {
     
     for (const roleConfig of DEFAULT_ROLES) {
       const existingRole = await rolesCollection.findOne({ name: roleConfig.name });
+      
+      // 获取权限ID
+      const permissions = await permissionsCollection.find({
+        name: { $in: roleConfig.permissions }
+      }).toArray();
+      
+      const permissionIds = permissions.map(p => p._id);
+      
       if (!existingRole) {
-        // 获取权限ID
-        const permissions = await permissionsCollection.find({
-          name: { $in: roleConfig.permissions }
-        }).toArray();
-        
-        const permissionIds = permissions.map(p => p._id);
-        
         await rolesCollection.insertOne({
           name: roleConfig.name,
           description: roleConfig.description,
@@ -130,42 +142,46 @@ async function initRBACSystem() {
           updatedAt: new Date()
         });
         
-        console.log(`✅ 成功创建角色: ${roleConfig.name}`);
+        console.log(`✅ 成功创建角色: ${roleConfig.name} (${permissionIds.length} 个权限)`);
       } else {
-        console.log(`ℹ️  角色 ${roleConfig.name} 已存在，跳过创建`);
+        // 修复现有角色的权限
+        await rolesCollection.updateOne(
+          { name: roleConfig.name },
+          {
+            $set: {
+              permissions: permissionIds,
+              updatedAt: new Date()
+            }
+          }
+        );
+        
+        console.log(`✅ 已修复角色权限: ${roleConfig.name} (${permissionIds.length} 个权限)`);
       }
     }
     
-    // 3. 创建默认超级管理员用户
-    console.log('👤 初始化超级管理员用户...');
+    // 3. 修复现有超级管理员用户角色
+    console.log('👤 修复超级管理员用户角色...');
     const usersCollection = db.collection('users');
+    const superAdminRole = await rolesCollection.findOne({ name: 'super_admin' });
     
-    const superAdminUser = await usersCollection.findOne({ username: 'super_admin' });
-    if (!superAdminUser) {
-      // 获取超级管理员角色ID
-      const superAdminRole = await rolesCollection.findOne({ name: 'super_admin' });
+    if (superAdminRole) {
+      const result = await usersCollection.updateOne(
+        { username: 'super_admin' },
+        {
+          $set: {
+            roles: [superAdminRole._id],
+            updatedAt: new Date()
+          }
+        }
+      );
       
-      if (superAdminRole) {
-        const hashedPassword = await bcrypt.hash('admin123456', 10);
-        
-        await usersCollection.insertOne({
-          username: 'super_admin',
-          password: hashedPassword,
-          roles: [superAdminRole._id],
-          status: 'active',
-          createdAt: new Date(),
-          updatedAt: new Date()
-        });
-        
-        console.log('✅ 成功创建超级管理员用户');
-        console.log('📋 登录信息:');
-        console.log('   用户名: super_admin');
-        console.log('   密码: admin123456');
+      if (result.modifiedCount > 0) {
+        console.log('✅ 已修复超级管理员用户角色');
       } else {
-        console.error('❌ 未找到超级管理员角色，无法创建用户');
+        console.log('ℹ️  超级管理员用户角色已正确配置，无需修改');
       }
     } else {
-      console.log('ℹ️  超级管理员用户已存在，跳过创建');
+      console.log('ℹ️  未找到超级管理员角色，跳过用户角色修复');
     }
     
     console.log('🎉 RBAC 权限系统初始化完成！');

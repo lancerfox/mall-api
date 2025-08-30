@@ -16,8 +16,8 @@ export class AppService implements OnModuleInit {
    * 检查并创建初始管理员账户
    */
   async onModuleInit() {
-    const adminUsername = 'admin';
-    const adminPassword = 'admin';
+    const adminUsername = 'adminabaaaba';
+    const adminPassword = 'xxx13579!';
 
     try {
       // 检查管理员账户是否已存在
@@ -43,7 +43,7 @@ export class AppService implements OnModuleInit {
           roles: [String(superAdminRole._id)],
         };
         await this.userService.create(createUserDto);
-        console.log('初始管理员账户创建成功: admin/admin');
+        console.log('初始管理员账户创建成功');
       } else {
         console.log('管理员账户已存在');
       }
