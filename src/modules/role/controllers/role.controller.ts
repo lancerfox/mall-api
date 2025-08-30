@@ -1,5 +1,11 @@
 import { Controller, Get, Post, Body, UseGuards, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBody, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBody,
+  ApiResponse,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Permissions } from '../../../common/decorators/permissions.decorator';
@@ -83,7 +89,14 @@ export class RoleController {
 
   @Get('permissions')
   @Permissions('role:read')
-  @ApiOperation({ summary: '获取角色权限列表' })
+  @ApiOperation({ summary: '获取角色权限列表（支持按类型筛选）' })
+  @ApiQuery({ name: 'id', required: true, description: '角色ID' })
+  @ApiQuery({
+    name: 'type',
+    required: false,
+    description: '权限类型筛选',
+    enum: ['API', 'PAGE', 'OPERATION', 'DATA'],
+  })
   @ApiResponse({
     status: 200,
     description: 'The permissions of the role.',
@@ -96,11 +109,12 @@ export class RoleController {
           name: { type: 'string' },
           description: { type: 'string' },
           code: { type: 'string' },
+          type: { type: 'string' },
         },
       },
     },
   })
-  getPermissions(@Query('id') id: string) {
-    return this.roleService.findPermissionsByRoleId(id);
+  getPermissions(@Query('id') id: string, @Query('type') type?: string) {
+    return this.roleService.findPermissionsByRoleId(id, type);
   }
 }

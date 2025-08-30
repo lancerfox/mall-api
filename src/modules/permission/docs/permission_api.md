@@ -8,6 +8,12 @@
 - 所有接口都需要有效的 `JWT Token` 进行认证，请在请求头中加入 `Authorization: Bearer <Your_Token>`。
 - 接口会根据用户角色和权限进行访问控制。
 
+**权限类型说明**:
+- `API`: 后端接口权限，控制API访问
+- `PAGE`: 前端页面权限，控制页面访问  
+- `OPERATION`: 操作权限，控制页面内操作按钮
+- `DATA`: 数据权限，控制数据访问范围
+
 ---
 
 ## 1. 创建新权限
@@ -24,6 +30,7 @@
 | `description` | string | 是       | 权限的详细描述 |
 | `module`    | string | 否       | 权限所属的模块 |
 | `status`    | string | 否       | 权限状态 (`active` 或 `inactive`)，默认为 `active` |
+| `type`      | string | 否       | 权限类型 (`API`, `PAGE`, `OPERATION`, `DATA`)，默认为 `API` |
 
 **请求示例**:
 ```json
@@ -124,6 +131,77 @@
 
 **失败响应**:
 - `404 Not Found`: 如果提供的 `id` 找不到对应的权限。
+
+---
+
+## 5. 按类型获取权限列表
+
+- **接口说明**: 根据权限类型获取权限列表。
+- **接口地址**: `GET /permissions/type/:type`
+- **所需权限**: `permission:read`
+
+### 请求参数
+
+| 参数名 | 类型   | 是否必填 | 说明     | 可选值 |
+| ------ | ------ | -------- | -------- | ------ |
+| `type` | string | 是       | 权限类型 | `API`, `PAGE`, `OPERATION`, `DATA` |
+
+### 响应 (Response)
+
+**成功响应 (200 OK)**:
+返回指定类型的所有权限对象数组。
+
+**响应示例**:
+```json
+[
+  {
+    "name": "user:create",
+    "description": "允许创建新用户",
+    "module": "UserManagement",
+    "type": "API",
+    "status": "active",
+    "_id": "60d0fe4f5311236168a109ca",
+    "createdAt": "2023-08-29T14:30:00.000Z",
+    "updatedAt": "2023-08-29T14:30:00.000Z"
+  }
+]
+```
+
+---
+
+## 6. 按模块和类型获取权限列表
+
+- **接口说明**: 根据模块和权限类型组合获取权限列表。
+- **接口地址**: `GET /permissions/module/:module/type/:type`
+- **所需权限**: `permission:read`
+
+### 请求参数
+
+| 参数名   | 类型   | 是否必填 | 说明     | 可选值 |
+| -------- | ------ | -------- | -------- | ------ |
+| `module` | string | 是       | 模块名称 | 任意字符串 |
+| `type`   | string | 是       | 权限类型 | `API`, `PAGE`, `OPERATION`, `DATA` |
+
+### 响应 (Response)
+
+**成功响应 (200 OK)**:
+返回指定模块和类型的所有权限对象数组。
+
+**响应示例**:
+```json
+[
+  {
+    "name": "user:list",
+    "description": "查看用户列表页面",
+    "module": "UserManagement",
+    "type": "PAGE",
+    "status": "active",
+    "_id": "60d0fe4f5311236168a109cb",
+    "createdAt": "2023-08-29T14:31:00.000Z",
+    "updatedAt": "2023-08-29T14:31:00.000Z"
+  }
+]
+```
 
 ---
 

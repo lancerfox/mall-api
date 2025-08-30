@@ -178,8 +178,15 @@ export class RoleService {
 
   async findPermissionsByRoleId(
     roleId: string,
+    type?: string,
   ): Promise<
-    Array<{ id: string; name?: string; description?: string; code?: string }>
+    Array<{
+      id: string;
+      name?: string;
+      description?: string;
+      code?: string;
+      type?: string;
+    }>
   > {
     const role = await this.roleModel
       .findById(roleId)
@@ -190,30 +197,38 @@ export class RoleService {
       throw new NotFoundException('角色不存在');
     }
 
-    // 返回权限信息
-    return role.permissions.map(
+    // 首先过滤出已填充的权限对象（包含type字段）
+    const populatedPermissions = role.permissions.filter(
       (permission: Permission | Types.ObjectId | any) => {
-        if (
-          permission &&
-          typeof permission === 'object' &&
-          'name' in permission
-        ) {
-          // 处理Mongoose文档对象
-          const permissionDoc = permission as Permission & {
-            _id?: Types.ObjectId;
-            id?: string;
-          };
-          return {
-            id: permissionDoc._id?.toString() || permissionDoc.id || '',
-            name: permissionDoc.name,
-            description: permissionDoc.description,
-            code: permissionDoc.name, // 使用name作为code
-          };
-        }
-        // 如果是ObjectId，只返回id
-        const objectId = permission as Types.ObjectId;
-        return { id: objectId?.toString() || '' };
+        return (
+          permission && typeof permission === 'object' && 'type' in permission
+        );
       },
-    );
+    ) as Permission[];
+
+    // 然后根据类型进行过滤（如果指定了类型）
+    let filteredPermissions = populatedPermissions;
+    if (type) {
+      filteredPermissions = populatedPermissions.filter(
+        (permission: Permission) => {
+          return permission.type === type;
+        },
+      );
+    }
+
+    // 返回权限信息（只返回完整的权限对象）
+    return filteredPermissions.map((permission: Permission) => {
+      const permissionDoc = permission as Permission & {
+        _id?: Types.ObjectId;
+        id?: string;
+      };
+      return {
+        id: permissionDoc._id?.toString() || permissionDoc.id || '',
+        name: permissionDoc.name,
+        description: permissionDoc.description,
+        code: permissionDoc.name, // 使用name作为code
+        type: permissionDoc.type, // 添加权限类型
+      };
+    });
   }
 }

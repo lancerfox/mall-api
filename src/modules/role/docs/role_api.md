@@ -201,20 +201,21 @@
 
 ## 5. 获取角色权限列表
 
-- **接口说明**: 根据角色ID获取该角色的所有权限信息。
+- **接口说明**: 根据角色ID获取该角色的权限信息。支持按权限类型筛选。
 - **接口地址**: `GET /roles/permissions`
 - **所需权限**: `role:read`
 
 ### 请求参数
 
-| 参数名 | 类型   | 是否必填 | 说明     | 位置   |
-| ------ | ------ | -------- | -------- | ------ |
-| `id`   | string | 是       | 角色的 ID | Query参数 |
+| 参数名 | 类型   | 是否必填 | 说明                                                                 | 位置   |
+| ------ | ------ | -------- | -------------------------------------------------------------------- | ------ |
+| `id`   | string | 是       | 角色的 ID                                                              | Query参数 |
+| `type` | string | 否       | 权限类型筛选，可选值：`API`(接口权限), `PAGE`(页面权限), `OPERATION`(操作权限), `DATA`(数据权限) | Query参数 |
 
 ### 响应 (Response)
 
 **成功响应 (200 OK)**:
-返回该角色关联的所有权限对象数组。
+返回该角色关联的权限对象数组，包含权限类型信息。
 
 **响应示例**:
 ```json
@@ -222,17 +223,31 @@
   {
     "id": "60d0fe4f5311236168a109ca",
     "name": "product:create",
-    "description": "创建商品",
-    "code": "product:create"
+    "description": "创建商品权限",
+    "code": "product:create",
+    "type": "API"
   },
   {
     "id": "60d0fe4f5311236168a109cb",
     "name": "product:edit", 
-    "description": "编辑商品",
-    "code": "product:edit"
+    "description": "编辑商品权限",
+    "code": "product:edit",
+    "type": "API"
+  },
+  {
+    "id": "60d0fe4f5311236168a109cc",
+    "name": "商品管理页面",
+    "description": "访问商品管理页面",
+    "code": "page:product:manage",
+    "type": "PAGE"
   }
 ]
 ```
+
+**使用示例**:
+- `/roles/permissions?id=60d21b4667d0d8992e610c85` - 获取角色的所有权限
+- `/roles/permissions?id=60d21b4667d0d8992e610c85&type=API` - 只获取API类型的权限
+- `/roles/permissions?id=60d21b4667d0d8992e610c85&type=PAGE` - 只获取页面类型的权限
 
 **失败响应**:
 - `404 Not Found`: 如果角色ID不存在。
