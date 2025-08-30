@@ -29,11 +29,13 @@ describe('RoleService', () => {
     name: 'user:read',
     description: '查看用户',
     category: 'user',
+    type: 'read',
   };
 
   const mockRole = {
     _id: '507f1f77bcf86cd799439011',
     name: 'admin',
+    type: 'admin',
     description: '管理员角色',
     permissions: ['507f1f77bcf86cd799439012'],
     isSystem: false,
@@ -84,6 +86,7 @@ describe('RoleService', () => {
     it('should create a role successfully', async () => {
       const createRoleDto: CreateRoleDto = {
         name: 'test_role',
+        type: 'admin',
         description: '测试角色',
         permissions: ['user:read'],
       };
@@ -103,6 +106,7 @@ describe('RoleService', () => {
     it('should throw ConflictException if role name already exists', async () => {
       const createRoleDto: CreateRoleDto = {
         name: 'admin',
+        type: 'admin',
         description: '管理员角色',
         permissions: ['user:read'],
       };
@@ -117,6 +121,7 @@ describe('RoleService', () => {
     it('should throw BadRequestException if some permissions do not exist', async () => {
       const createRoleDto: CreateRoleDto = {
         name: 'test_role',
+        type: 'admin',
         description: '测试角色',
         permissions: ['user:read', 'user:write'],
       };
@@ -191,6 +196,18 @@ describe('RoleService', () => {
       );
 
       expect(result).toEqual(updatedRole);
+    });
+
+    it('should throw BadRequestException when trying to update role type', async () => {
+      const updateRoleDto: UpdateRoleDto = {
+        type: 'operator',
+      };
+
+      mockRoleModel.findById.mockResolvedValue(mockRole);
+
+      await expect(
+        service.update('507f1f77bcf86cd799439011', updateRoleDto),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw NotFoundException if role not found', async () => {
@@ -333,6 +350,7 @@ describe('RoleService', () => {
           name: mockPermission.name,
           description: mockPermission.description,
           code: mockPermission.name, // 使用name作为code
+          type: mockPermission.type,
         },
       ]);
       expect(mockRoleModel.findById).toHaveBeenCalledWith(

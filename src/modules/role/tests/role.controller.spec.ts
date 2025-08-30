@@ -46,6 +46,7 @@ describe('RoleController', () => {
     it('should create a new role', async () => {
       const createDto: CreateRoleDto = {
         name: 'admin',
+        type: 'admin',
         description: 'Administrator',
       };
       const result = { id: '1', ...createDto };

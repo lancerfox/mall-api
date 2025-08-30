@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { UserService } from '../../modules/user/services/user.service';
+import { RoleType } from '../../common/enums/role-type.enum';
 import type { Request } from 'express';
 
 interface JwtUser {
@@ -80,7 +81,7 @@ export class RolesGuard implements CanActivate {
     );
 
     // 如果是超级管理员，直接拥有所有权限
-    if (userRoles.includes('super_admin')) {
+    if (userRoles.includes(RoleType.SUPER_ADMIN)) {
       return true;
     }
 
@@ -122,7 +123,7 @@ export class RolesGuard implements CanActivate {
    */
   private checkRoles(userRoles: string[], requiredRoles: string[]): boolean {
     // 超级管理员拥有所有权限
-    if (userRoles.includes('super_admin')) {
+    if (userRoles.includes(RoleType.SUPER_ADMIN)) {
       return true;
     }
 

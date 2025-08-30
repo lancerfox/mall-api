@@ -44,6 +44,7 @@ const DEFAULT_PERMISSIONS = [
 const DEFAULT_ROLES = [
   {
     name: 'super_admin',
+    type: 'super_admin',
     description: '超级管理员',
     isSystem: true,
     // 超级管理员应该拥有所有权限
@@ -51,6 +52,7 @@ const DEFAULT_ROLES = [
   },
   {
     name: 'admin',
+    type: 'admin',
     description: '管理员',
     isSystem: true,
     permissions: [
@@ -66,6 +68,7 @@ const DEFAULT_ROLES = [
   },
   {
     name: 'operator',
+    type: 'operator',
     description: '操作员',
     isSystem: true,
     permissions: [
@@ -134,6 +137,7 @@ async function initRBACSystem() {
       if (!existingRole) {
         await rolesCollection.insertOne({
           name: roleConfig.name,
+          type: roleConfig.type,
           description: roleConfig.description,
           permissions: permissionIds,
           status: 'active',
@@ -144,18 +148,19 @@ async function initRBACSystem() {
         
         console.log(`✅ 成功创建角色: ${roleConfig.name} (${permissionIds.length} 个权限)`);
       } else {
-        // 修复现有角色的权限
+        // 修复现有角色的权限和类型
         await rolesCollection.updateOne(
           { name: roleConfig.name },
           {
             $set: {
+              type: roleConfig.type,
               permissions: permissionIds,
               updatedAt: new Date()
             }
           }
         );
         
-        console.log(`✅ 已修复角色权限: ${roleConfig.name} (${permissionIds.length} 个权限)`);
+        console.log(`✅ 已修复角色权限和类型: ${roleConfig.name} (${permissionIds.length} 个权限)`);
       }
     }
     

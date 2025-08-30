@@ -7,6 +7,7 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Role, RoleDocument } from '../entities/role.entity';
+import { RoleType } from '../../../common/enums/role-type.enum';
 import { CreateRoleDto } from '../dto/create-role.dto';
 import { UpdateRoleDto } from '../dto/update-role.dto';
 import { PermissionService } from '../../permission/services/permission.service';
@@ -29,12 +30,19 @@ export class RoleService {
       throw new ConflictException('角色名称已存在');
     }
 
+    // 验证角色类型是否合法
+    const validRoleTypes = Object.values(RoleType) as RoleType[];
+    if (!validRoleTypes.includes(createRoleDto.type)) {
+      throw new BadRequestException('无效的角色类型');
+    }
+
     // 验证权限是否存在
     if (createRoleDto.permissions && createRoleDto.permissions.length > 0) {
       const permissions = await this.permissionService.findByIds(
         createRoleDto.permissions,
       );
-      if (permissions.length !== createRoleDto.permissions.length) {
+      const permissionIds = createRoleDto.permissions as string[];
+      if (permissions.length !== permissionIds.length) {
         throw new BadRequestException('部分权限不存在');
       }
     }
@@ -66,6 +74,10 @@ export class RoleService {
     return this.roleModel.findOne({ name }).populate('permissions').exec();
   }
 
+  async findByType(type: RoleType): Promise<Role | null> {
+    return this.roleModel.findOne({ type }).populate('permissions').exec();
+  }
+
   async findByIds(ids: string[]): Promise<Role[]> {
     return this.roleModel
       .find({ _id: { $in: ids } })
@@ -84,6 +96,11 @@ export class RoleService {
       throw new BadRequestException('不能修改系统角色的系统标识');
     }
 
+    // 角色类型不允许修改
+    if (updateRoleDto.type && updateRoleDto.type !== existingRole.type) {
+      throw new BadRequestException('角色类型不允许修改');
+    }
+
     if (updateRoleDto.name) {
       const duplicateRole = await this.roleModel.findOne({
         name: updateRoleDto.name,
@@ -100,7 +117,8 @@ export class RoleService {
       const permissions = await this.permissionService.findByIds(
         updateRoleDto.permissions,
       );
-      if (permissions.length !== updateRoleDto.permissions.length) {
+      const permissionIds = updateRoleDto.permissions as string[];
+      if (permissions.length !== permissionIds.length) {
         throw new BadRequestException('部分权限不存在');
       }
     }

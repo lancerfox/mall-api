@@ -9,6 +9,7 @@ import { UserResponseDto } from '../dto/user-response.dto';
 import { UserListResponseDto } from '../dto/user-list-response.dto';
 import { RoleService } from '../../role/services/role.service';
 import { Role, RoleDocument } from '../../role/entities/role.entity';
+import { RoleType } from '../../../common/enums/role-type.enum';
 
 @Injectable()
 export class UserService {
@@ -454,8 +455,8 @@ export class UserService {
       return;
     }
 
-    const superAdminRole = (await this.roleService.findByName(
-      'super_admin',
+    const superAdminRole = (await this.roleService.findByType(
+      RoleType.SUPER_ADMIN,
     )) as RoleDocument;
 
     if (!superAdminRole) {
@@ -493,10 +494,13 @@ export class UserService {
     const roles = (userObj.roles || []).map((role) => ({
       id: role._id.toString(),
       name: role.name,
+      type: role.type,
     }));
 
-    // 判断是否是超级管理员（拥有super_admin角色）
-    const isSuperAdmin = roles.some((role) => role.name === 'super_admin');
+    // 判断是否是超级管理员（拥有super_admin角色类型）
+    const isSuperAdmin = roles.some(
+      (role) => role.type === RoleType.SUPER_ADMIN,
+    );
 
     return {
       id: userObj._id.toString(),

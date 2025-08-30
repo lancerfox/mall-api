@@ -11,6 +11,7 @@ import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Permissions } from '../../../common/decorators/permissions.decorator';
 import { RoleService } from '../services/role.service';
 import { CreateRoleDto } from '../dto/create-role.dto';
+import { UpdateRoleWithIdDto } from '../dto/update-role-with-id.dto';
 import { Role } from '../entities/role.entity';
 
 @ApiTags('角色管理')
@@ -21,7 +22,10 @@ export class RoleController {
 
   @Post('create')
   @Permissions('role:create')
-  @ApiOperation({ summary: '创建新角色' })
+  @ApiOperation({
+    summary: '创建新角色',
+    description: '创建新角色，角色类型一旦创建后不可修改',
+  })
   @ApiBody({ type: CreateRoleDto })
   @ApiResponse({
     status: 201,
@@ -85,6 +89,22 @@ export class RoleController {
     @Body('permissionIds') permissionIds: string[],
   ) {
     return this.roleService.updatePermissions(id, permissionIds);
+  }
+
+  @Post('update')
+  @Permissions('role:update')
+  @ApiOperation({
+    summary: '更新角色信息',
+    description: '更新角色信息，角色名称和描述可修改，但角色类型不可修改',
+  })
+  @ApiBody({ type: UpdateRoleWithIdDto })
+  @ApiResponse({
+    status: 200,
+    description: 'The role has been successfully updated.',
+    type: Role,
+  })
+  update(@Body() updateRoleDto: UpdateRoleWithIdDto) {
+    return this.roleService.update(updateRoleDto.id, updateRoleDto);
   }
 
   @Get('permissions')

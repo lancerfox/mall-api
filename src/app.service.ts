@@ -3,6 +3,7 @@ import { UserService } from './modules/user/services/user.service';
 import { CreateUserDto } from './modules/user/dto/create-user.dto';
 import { RoleService } from './modules/role/services/role.service';
 import { RoleDocument } from './modules/role/entities/role.entity';
+import { RoleType } from './common/enums/role-type.enum';
 
 @Injectable()
 export class AppService implements OnModuleInit {
@@ -25,8 +26,8 @@ export class AppService implements OnModuleInit {
 
       if (!existingAdmin) {
         // 查找 super_admin 角色
-        const superAdminRole = (await this.roleService.findByName(
-          'super_admin',
+        const superAdminRole = (await this.roleService.findByType(
+          RoleType.SUPER_ADMIN,
         )) as RoleDocument;
 
         if (!superAdminRole) {

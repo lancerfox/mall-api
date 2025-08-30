@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { Permission } from '../../permission/entities/permission.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { RoleType } from '../../../common/enums/role-type.enum';
 
 export type RoleDocument = Role & Document;
 
@@ -22,6 +23,19 @@ export class Role {
   @ApiProperty({ description: 'The name of the role' })
   @Prop({ required: true, unique: true })
   name: string;
+
+  @ApiProperty({
+    description: 'The type of the role',
+    enum: RoleType,
+    enumName: 'RoleType',
+  })
+  @Prop({
+    type: String,
+    enum: RoleType,
+    required: true,
+    default: RoleType.OPERATOR,
+  })
+  type: RoleType;
 
   @ApiProperty({ description: 'The description of the role' })
   @Prop({ required: true })

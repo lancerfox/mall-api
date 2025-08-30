@@ -1,6 +1,7 @@
 import { IsOptional, IsString, IsEnum, IsInt, Min } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
+import { RoleType } from '../../../common/enums/role-type.enum';
 
 // 辅助函数：将空字符串转换为 undefined
 const emptyStringToUndefined = ({ value }: { value: unknown }) =>
@@ -32,15 +33,6 @@ const safeTransformToInt = ({
   // 其他类型不支持转换，返回 undefined
   return undefined;
 };
-
-/**
- * 用户角色
- */
-export enum UserRole {
-  ADMIN = 'admin',
-  SUPER_ADMIN = 'super_admin',
-  OPERATOR = 'operator',
-}
 
 /**
  * 用户状态

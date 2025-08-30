@@ -1,4 +1,5 @@
 import { SetMetadata } from '@nestjs/common';
+import { RoleType } from '../enums/role-type.enum';
 
 /**
  * 权限类型枚举
@@ -41,12 +42,12 @@ export const Permissions = (...permissions: string[]) =>
 export const Public = () => SetMetadata('isPublic', true);
 
 /**
- * 预定义的角色常量
+ * 预定义的角色常量（向后兼容）
  */
 export const ROLES = {
-  SUPER_ADMIN: 'super_admin',
-  ADMIN: 'admin',
-  OPERATOR: 'operator',
+  SUPER_ADMIN: RoleType.SUPER_ADMIN,
+  ADMIN: RoleType.ADMIN,
+  OPERATOR: RoleType.OPERATOR,
 } as const;
 
 /**
