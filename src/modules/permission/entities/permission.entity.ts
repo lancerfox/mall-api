@@ -1,9 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  PermissionType,
-} from '../../../common/decorators/roles.decorator';
+import { PermissionType } from '../../../common/decorators/roles.decorator';
 
 export type PermissionDocument = Permission & Document;
 

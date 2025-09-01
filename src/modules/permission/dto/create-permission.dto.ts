@@ -1,8 +1,6 @@
 import { IsString, IsNotEmpty, IsOptional, IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  PermissionType,
-} from '../../../common/decorators/roles.decorator';
+import { PermissionType } from '../../../common/decorators/roles.decorator';
 
 export class CreatePermissionDto {
   @ApiProperty({ description: 'The name of the permission' })
