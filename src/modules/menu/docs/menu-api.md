@@ -23,7 +23,7 @@
 {
   "data": [
     {
-      "_id": "60d21b4667d0d8992e610c85",
+      "id": "60d21b4667d0d8992e610c85",
       "parentId": null,
       "path": "/system",
       "name": "System",
@@ -77,7 +77,7 @@
 ```json
 {
   "data": {
-    "_id": "60d21b4667d0d8992e610c85",
+    "id": "60d21b4667d0d8992e610c85",
     "parentId": null,
     "path": "/system",
     "name": "System",
@@ -164,7 +164,7 @@
 ### MenuResponseDto
 | 字段 | 类型 | 必填 | 描述 |
 |------|------|------|------|
-| _id | string | 是 | 菜单ID |
+| id | string | 是 | 菜单ID |
 | parentId | string | 否 | 父级菜单ID |
 | path | string | 是 | 菜单路径 |
 | name | string | 是 | 菜单名称 |

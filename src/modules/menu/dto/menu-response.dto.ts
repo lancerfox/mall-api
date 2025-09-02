@@ -1,8 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsMongoId } from 'class-validator';
 
 export class MenuResponseDto {
   @ApiProperty({ description: '菜单ID' })
-  _id: string;
+  id: string;
 
   @ApiProperty({ description: '父级菜单ID', required: false })
   parentId?: string;
@@ -59,11 +60,13 @@ export class MenuDetailResponseDto {
 
 export class DeleteMenuRequestDto {
   @ApiProperty({ description: '菜单ID' })
+  @IsMongoId()
   id: string;
 }
 
 export class MenuDetailRequestDto {
   @ApiProperty({ description: '菜单ID' })
+  @IsMongoId()
   id: string;
 }
 

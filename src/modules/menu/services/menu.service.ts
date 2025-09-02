@@ -103,7 +103,7 @@ export class MenuService {
 
   private convertToResponseDto(menuTree: MenuTree): any {
     return {
-      _id: menuTree._id.toString(),
+      id: menuTree._id.toString(),
       parentId: menuTree.parentId?.toString(),
       path: menuTree.path,
       name: menuTree.name,
