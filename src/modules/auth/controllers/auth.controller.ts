@@ -70,11 +70,6 @@ export class AuthController {
         throw new UnauthorizedException('用户名或密码错误');
       }
 
-      // 检查用户状态
-      if (user.status !== 'active') {
-        throw new UnauthorizedException('用户账户已被禁用或锁定');
-      }
-
       return await this.authService.login(user, ip, userAgent);
     } catch (error: unknown) {
       if (error instanceof UnauthorizedException) {

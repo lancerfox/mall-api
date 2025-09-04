@@ -22,6 +22,7 @@ describe('AuthService', () => {
     findById: jest.fn(),
     updateLastLogin: jest.fn(),
     updatePassword: jest.fn(),
+    transformUserToResponse: jest.fn(),
   };
 
   const mockJwtService = {
@@ -152,7 +153,8 @@ describe('AuthService', () => {
     it('应该成功登录并生成访问令牌', async () => {
       mockUserService.updateLastLogin.mockResolvedValue(undefined);
       mockJwtService.sign.mockReturnValue('mock-jwt-token');
-      mockUserService.findById.mockResolvedValue(mockUserWithPassword);
+      mockUserService.findOne.mockResolvedValue(mockUserWithPassword);
+      mockUserService.transformUserToResponse.mockReturnValue(mockUser);
 
       const result = await authService.login(mockUser, '127.0.0.1');
 
@@ -168,7 +170,7 @@ describe('AuthService', () => {
 
     it('登录时应该处理用户不存在', async () => {
       mockUserService.updateLastLogin.mockResolvedValue(undefined);
-      mockUserService.findById.mockResolvedValue(null);
+      mockUserService.findOne.mockResolvedValue(null);
 
       await expect(authService.login(mockUser, '127.0.0.1')).rejects.toThrow(
         '用户不存在',

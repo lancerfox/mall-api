@@ -11,7 +11,6 @@ import * as bcrypt from 'bcrypt';
 import { IUserWithoutPassword, ILoginResponse, IJwtPayload } from '../types';
 import { UserInfoDto } from '../dto/auth-response.dto';
 import { UserResponseDto } from '../../user/dto/user-response.dto';
-import { User } from '../../user/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -70,8 +69,14 @@ export class AuthService {
 
     if (user && isValid) {
       // 验证成功，返回用户信息（排除密码）
-      const { password: _, ...result } = user as any;
-      return result as IUserWithoutPassword;
+      const userObj = user.toObject ? user.toObject() : user;
+      const { password: _, ...result } = userObj;
+
+      // 确保返回的对象包含正确的id字段
+      return {
+        ...result,
+        id: result._id ? result._id.toString() : result.id,
+      } as IUserWithoutPassword;
     }
 
     return null;
@@ -89,13 +94,21 @@ export class AuthService {
     ip?: string,
     userAgent?: string,
   ): Promise<ILoginResponse> {
-    // 更新用户最后登录时间和IP
-    await this.userService.updateLastLogin(user.id, ip);
+    // 使用username作为备用标识符，如果id不存在
+    const userId =
+      user.id ||
+      (await this.userService.findOne(user.username))?._id?.toString();
+
+    if (!userId) {
+      throw new UnauthorizedException('无法确定用户ID');
+    }
+
+    await this.userService.updateLastLogin(userId, ip);
 
     // 生成访问令牌
     const accessTokenPayload: IJwtPayload = {
       username: user.username,
-      sub: user.id,
+      sub: userId,
       role: user.roles && user.roles.length > 0 ? user.roles[0].name : '',
     };
 
@@ -103,13 +116,15 @@ export class AuthService {
       secret: this.configService.get('JWT_SECRET'),
       expiresIn: this.configService.get('JWT_EXPIRES_IN', '1h'),
     });
-
     // 获取更新后的用户信息
-    const updatedUser = await this.userService.findById(user.id);
+    const updatedUser = await this.userService.findOne(user.username);
     if (!updatedUser) {
       throw new UnauthorizedException('用户不存在');
     }
-    const userInfo = this.formatUserInfo(updatedUser);
+    // 将UserDocument转换为UserResponseDto类型
+    const userResponse = this.userService.transformUserToResponse(updatedUser);
+
+    const userInfo = this.formatUserInfo(userResponse);
     return {
       access_token: accessToken,
       user: userInfo,

@@ -480,7 +480,7 @@ export class UserService {
    * @param user 用户文档
    * @returns 用户响应数据
    */
-  private transformUserToResponse(user: UserDocument): UserResponseDto {
+  public transformUserToResponse(user: UserDocument): UserResponseDto {
     const userObj = user.toObject<
       User & {
         _id: Types.ObjectId;
