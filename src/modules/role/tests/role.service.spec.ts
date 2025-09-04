@@ -18,6 +18,7 @@ import { PermissionService } from '../../permission/services/permission.service'
 import { Role } from '../entities/role.entity';
 import { CreateRoleDto } from '../dto/create-role.dto';
 import { UpdateRoleDto } from '../dto/update-role.dto';
+import { RoleType } from '../../../common/enums/role-type.enum';
 
 describe('RoleService', () => {
   let service: RoleService;
@@ -35,7 +36,7 @@ describe('RoleService', () => {
   const mockRole = {
     _id: '507f1f77bcf86cd799439011',
     name: 'admin',
-    type: 'admin',
+    type: RoleType.ADMIN,
     description: '管理员角色',
     permissions: ['507f1f77bcf86cd799439012'],
     isSystem: false,
@@ -83,7 +84,7 @@ describe('RoleService', () => {
   });
 
   describe('create', () => {
-    it('should create a role successfully', async () => {
+    it('应该成功创建角色', async () => {
       const createRoleDto: CreateRoleDto = {
         name: 'test_role',
         type: 'admin',
@@ -103,7 +104,7 @@ describe('RoleService', () => {
       expect(mockRoleModel).toHaveBeenCalledWith(createRoleDto);
     });
 
-    it('should throw ConflictException if role name already exists', async () => {
+    it('当角色名称已存在时应抛出ConflictException', async () => {
       const createRoleDto: CreateRoleDto = {
         name: 'admin',
         type: 'admin',
@@ -118,7 +119,7 @@ describe('RoleService', () => {
       );
     });
 
-    it('should throw BadRequestException if some permissions do not exist', async () => {
+    it('当某些权限不存在时应抛出BadRequestException', async () => {
       const createRoleDto: CreateRoleDto = {
         name: 'test_role',
         type: 'admin',
@@ -136,10 +137,10 @@ describe('RoleService', () => {
   });
 
   describe('findAll', () => {
-    it('should return all roles', async () => {
+    it('应该返回所有角色', async () => {
       const mockRoles = [mockRole];
       mockRoleModel.find.mockReturnValue({
-        populate: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
         exec: jest.fn().mockResolvedValue(mockRoles),
       });
 
@@ -147,11 +148,12 @@ describe('RoleService', () => {
 
       expect(result).toEqual(mockRoles);
       expect(mockRoleModel.find).toHaveBeenCalled();
+      expect(mockRoleModel.find().select).toHaveBeenCalledWith('-permissions');
     });
   });
 
   describe('findOne', () => {
-    it('should return a role by id', async () => {
+    it('应该通过ID返回角色', async () => {
       mockRoleModel.findById.mockReturnValue({
         populate: jest.fn().mockReturnThis(),
         exec: jest.fn().mockResolvedValue(mockRole),
@@ -165,7 +167,7 @@ describe('RoleService', () => {
       );
     });
 
-    it('should throw NotFoundException if role not found', async () => {
+    it('当角色未找到时应抛出NotFoundException', async () => {
       mockRoleModel.findById.mockReturnValue({
         populate: jest.fn().mockReturnThis(),
         exec: jest.fn().mockResolvedValue(null),
@@ -178,7 +180,7 @@ describe('RoleService', () => {
   });
 
   describe('update', () => {
-    it('should update a role successfully', async () => {
+    it('应该成功更新角色', async () => {
       const updateRoleDto: UpdateRoleDto = {
         description: '更新后的描述',
       };
@@ -198,9 +200,9 @@ describe('RoleService', () => {
       expect(result).toEqual(updatedRole);
     });
 
-    it('should throw BadRequestException when trying to update role type', async () => {
+    it('当尝试更新角色类型时应抛出BadRequestException', async () => {
       const updateRoleDto: UpdateRoleDto = {
-        type: 'operator',
+        type: RoleType.OPERATOR,
       };
 
       mockRoleModel.findById.mockResolvedValue(mockRole);
@@ -210,7 +212,7 @@ describe('RoleService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('should throw NotFoundException if role not found', async () => {
+    it('当角色未找到时应抛出NotFoundException', async () => {
       const updateRoleDto: UpdateRoleDto = {
         description: '更新后的描述',
       };
@@ -224,7 +226,7 @@ describe('RoleService', () => {
   });
 
   describe('remove', () => {
-    it('should remove a role successfully', async () => {
+    it('应该成功删除角色', async () => {
       mockRoleModel.findById.mockResolvedValue(mockRole);
       mockRoleModel.findByIdAndDelete.mockReturnValue({
         exec: jest.fn().mockResolvedValue(mockRole),
@@ -237,7 +239,7 @@ describe('RoleService', () => {
       );
     });
 
-    it('should throw NotFoundException if role not found', async () => {
+    it('当角色未找到时应抛出NotFoundException', async () => {
       mockRoleModel.findById.mockResolvedValue(null);
 
       await expect(service.remove('507f1f77bcf86cd799439011')).rejects.toThrow(
@@ -245,7 +247,7 @@ describe('RoleService', () => {
       );
     });
 
-    it('should throw BadRequestException when trying to delete system role', async () => {
+    it('当尝试删除系统角色时应抛出BadRequestException', async () => {
       const systemRole = { ...mockRole, isSystem: true };
       mockRoleModel.findById.mockResolvedValue(systemRole);
 
@@ -256,7 +258,7 @@ describe('RoleService', () => {
   });
 
   describe('updatePermissions', () => {
-    it('should update role permissions successfully', async () => {
+    it('应该成功更新角色权限', async () => {
       const roleWithPermissions = {
         ...mockRole,
         permissions: [mockPermission._id],
@@ -281,7 +283,7 @@ describe('RoleService', () => {
       );
     });
 
-    it('should throw NotFoundException if role not found', async () => {
+    it('当角色未找到时应抛出NotFoundException', async () => {
       mockRoleModel.findById.mockResolvedValue(null);
 
       await expect(
@@ -289,7 +291,7 @@ describe('RoleService', () => {
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('should throw BadRequestException if some permissions do not exist', async () => {
+    it('当某些权限不存在时应抛出BadRequestException', async () => {
       const roleWithPermissions = {
         ...mockRole,
         permissions: [mockPermission._id],
@@ -302,7 +304,7 @@ describe('RoleService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('should clear all permissions when empty array provided', async () => {
+    it('当提供空数组时应清除所有权限', async () => {
       const roleWithPermissions = {
         ...mockRole,
         permissions: [mockPermission._id],
@@ -328,8 +330,145 @@ describe('RoleService', () => {
     });
   });
 
+  describe('findByName', () => {
+    it('应该通过名称返回角色', async () => {
+      mockRoleModel.findOne.mockReturnValue({
+        populate: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue(mockRole),
+      });
+
+      const result = await service.findByName('admin');
+
+      expect(result).toEqual(mockRole);
+      expect(mockRoleModel.findOne).toHaveBeenCalledWith({ name: 'admin' });
+    });
+
+    it('当通过名称未找到角色时应返回null', async () => {
+      mockRoleModel.findOne.mockReturnValue({
+        populate: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue(null),
+      });
+
+      const result = await service.findByName('nonexistent');
+
+      expect(result).toBeNull();
+      expect(mockRoleModel.findOne).toHaveBeenCalledWith({ name: 'nonexistent' });
+    });
+  });
+
+  describe('findByType', () => {
+    it('应该通过类型返回角色', async () => {
+      mockRoleModel.findOne.mockReturnValue({
+        populate: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue(mockRole),
+      });
+
+      const result = await service.findByType(RoleType.ADMIN);
+
+      expect(result).toEqual(mockRole);
+      expect(mockRoleModel.findOne).toHaveBeenCalledWith({ type: RoleType.ADMIN });
+    });
+
+    it('当通过类型未找到角色时应返回null', async () => {
+      mockRoleModel.findOne.mockReturnValue({
+        populate: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue(null),
+      });
+
+      const result = await service.findByType(RoleType.OPERATOR);
+
+      expect(result).toBeNull();
+      expect(mockRoleModel.findOne).toHaveBeenCalledWith({ type: RoleType.OPERATOR });
+    });
+  });
+
+  describe('findByIds', () => {
+    it('应该通过ID列表返回角色', async () => {
+      const mockRoles = [mockRole];
+      mockRoleModel.find.mockReturnValue({
+        populate: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue(mockRoles),
+      });
+
+      const result = await service.findByIds(['507f1f77bcf86cd799439011']);
+
+      expect(result).toEqual(mockRoles);
+      expect(mockRoleModel.find).toHaveBeenCalledWith({
+        _id: { $in: ['507f1f77bcf86cd799439011'] }
+      });
+    });
+
+    it('当未找到角色时应返回空数组', async () => {
+      mockRoleModel.find.mockReturnValue({
+        populate: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue([]),
+      });
+
+      const result = await service.findByIds(['nonexistent']);
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('addPermissions', () => {
+    it('应该成功添加权限到角色', async () => {
+      const roleWithPermissions = {
+        ...mockRole,
+        permissions: ['existing_permission'],
+      };
+      const updatedRole = {
+        ...mockRole,
+        permissions: ['existing_permission', '507f1f77bcf86cd799439012'],
+      };
+
+      mockRoleModel.findById.mockResolvedValue(roleWithPermissions);
+      mockPermissionService.findByIds.mockResolvedValue([mockPermission]);
+      mockRoleModel.findByIdAndUpdate.mockReturnValue({
+        populate: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue(updatedRole),
+      });
+
+      const result = await service.addPermissions(
+        '507f1f77bcf86cd799439011',
+        ['507f1f77bcf86cd799439012']
+      );
+
+      expect(result).toEqual(updatedRole);
+      expect(mockPermissionService.findByIds).toHaveBeenCalledWith(['507f1f77bcf86cd799439012']);
+    });
+
+    it('当角色未找到时应抛出NotFoundException', async () => {
+      mockRoleModel.findById.mockResolvedValue(null);
+
+      await expect(
+        service.addPermissions('507f1f77bcf86cd799439011', ['user:read'])
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('当某些权限不存在时应抛出BadRequestException', async () => {
+      mockRoleModel.findById.mockResolvedValue(mockRole);
+      mockPermissionService.findByIds.mockResolvedValue([]);
+
+      await expect(
+        service.addPermissions('507f1f77bcf86cd799439011', ['nonexistent'])
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('getRoleTypes', () => {
+    it('应该返回所有带标签的角色类型', async () => {
+      const result = await service.getRoleTypes();
+
+      expect(result).toEqual([
+        { value: 'super_admin', label: '超级管理员' },
+        { value: 'admin', label: '管理员' },
+        { value: 'operator', label: '操作员' }
+      ]);
+    });
+  });
+
   describe('findPermissionsByRoleId', () => {
-    it('should return permissions for a role', async () => {
+    it('应该返回角色的权限', async () => {
       const roleWithPermissions = {
         ...mockRole,
         permissions: [mockPermission],
@@ -369,7 +508,7 @@ describe('RoleService', () => {
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('should return empty array if role has no permissions', async () => {
+    it('当角色没有权限时应返回空数组', async () => {
       const roleWithoutPermissions = {
         ...mockRole,
         permissions: [],

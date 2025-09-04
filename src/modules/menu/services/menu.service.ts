@@ -50,8 +50,7 @@ export class MenuService {
   }
 
   async create(createMenuDto: CreateMenuDto): Promise<Menu> {
-    const menu = new this.menuModel(createMenuDto);
-    return menu.save();
+    return this.menuModel.create(createMenuDto);
   }
 
   async update(updateMenuDto: UpdateMenuDto): Promise<Menu> {
@@ -107,24 +106,24 @@ export class MenuService {
   private convertToResponseDto(menuTree: MenuTree): MenuResponseDto {
     return {
       id: menuTree._id.toString(),
-      parentId: menuTree.parentId?.toString(),
-      path: menuTree.path,
-      name: menuTree.name,
-      component: menuTree.component,
-      redirect: menuTree.redirect,
+      parentId: menuTree.parentId?.toString() || null,
+      path: menuTree.path || '',
+      name: menuTree.name || '',
+      component: menuTree.component || '',
+      redirect: menuTree.redirect || null,
       meta: {
-        title: menuTree.metaTitle,
-        icon: menuTree.metaIcon,
-        hidden: menuTree.metaHidden,
-        alwaysShow: menuTree.metaAlwaysShow,
+        title: menuTree.metaTitle || '',
+        icon: menuTree.metaIcon || '',
+        hidden: menuTree.metaHidden || false,
+        alwaysShow: menuTree.metaAlwaysShow || false,
       },
-      sortOrder: menuTree.sortOrder,
-      status: menuTree.status,
-      createdAt: menuTree.createdAt?.toISOString(),
-      updatedAt: menuTree.updatedAt?.toISOString(),
+      sortOrder: menuTree.sortOrder || 0,
+      status: menuTree.status || 'active',
+      createdAt: menuTree.createdAt?.toISOString() || new Date().toISOString(),
+      updatedAt: menuTree.updatedAt?.toISOString() || new Date().toISOString(),
       children: menuTree.children?.map((child) =>
         this.convertToResponseDto(child),
-      ),
+      ) || [],
     };
   }
 }
