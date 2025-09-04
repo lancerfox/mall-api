@@ -5,12 +5,13 @@ import { Menu, MenuDocument } from '../entities/menu.entity';
 import { CreateMenuDto } from '../dto/create-menu.dto';
 import { UpdateMenuDto } from '../dto/update-menu.dto';
 import { MenuTree } from '../types/menu.types';
+import { MenuResponseDto } from '../dto/menu-response.dto';
 
 @Injectable()
 export class MenuService {
   constructor(@InjectModel(Menu.name) private menuModel: Model<MenuDocument>) {}
 
-  async findAll(): Promise<any[]> {
+  async findAll(): Promise<MenuResponseDto[]> {
     const menus = await this.menuModel
       .find()
       .sort({ sortOrder: 1, createdAt: 1 })
@@ -33,9 +34,11 @@ export class MenuService {
     return menu;
   }
 
-  async findByRole(roleId: string): Promise<any[]> {
+  async findByRole(_roleId: string): Promise<MenuResponseDto[]> {
     // TODO: 实现根据角色ID获取菜单的逻辑
     // 这里需要与权限系统集成，暂时返回所有启用的菜单
+    // roleId 参数已接收但暂未使用，添加下划线前缀表示未使用
+    console.log('_roleId', _roleId);
     const menus = await this.menuModel
       .find({ status: 'active' })
       .sort({ sortOrder: 1, createdAt: 1 })
@@ -101,7 +104,7 @@ export class MenuService {
     return rootMenus.sort((a, b) => a.sortOrder - b.sortOrder);
   }
 
-  private convertToResponseDto(menuTree: MenuTree): any {
+  private convertToResponseDto(menuTree: MenuTree): MenuResponseDto {
     return {
       id: menuTree._id.toString(),
       parentId: menuTree.parentId?.toString(),
@@ -117,8 +120,8 @@ export class MenuService {
       },
       sortOrder: menuTree.sortOrder,
       status: menuTree.status,
-      createdAt: (menuTree as any).createdAt?.toISOString(),
-      updatedAt: (menuTree as any).updatedAt?.toISOString(),
+      createdAt: menuTree.createdAt?.toISOString(),
+      updatedAt: menuTree.updatedAt?.toISOString(),
       children: menuTree.children?.map((child) =>
         this.convertToResponseDto(child),
       ),

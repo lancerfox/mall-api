@@ -10,7 +10,6 @@ import {
   MenuDetailRequestDto,
   MenuByRoleRequestDto,
 } from '../dto/menu-response.dto';
-import { MenuTree } from '../types/menu.types';
 
 @ApiTags('菜单管理')
 @Controller('menus')
