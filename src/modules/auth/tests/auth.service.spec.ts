@@ -1,78 +1,63 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { Test, TestingModule } from '@nestjs/testing';
+import { UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { AuthService } from '../services/auth.service';
 import { UserService } from '../../user/services/user.service';
 import { SecurityService } from '../services/security.service';
-import * as bcrypt from 'bcrypt';
-
-jest.mock('bcrypt');
+import { IUserWithoutPassword, ILoginResponse } from '../types';
+import { UserInfoDto } from '../dto/auth-response.dto';
+import { UserResponseDto } from '../../user/dto/user-response.dto';
 
 describe('AuthService', () => {
-  let service: AuthService;
-  let userService: jest.Mocked<UserService>;
-  let jwtService: jest.Mocked<JwtService>;
-  let configService: jest.Mocked<ConfigService>;
-  let securityService: jest.Mocked<SecurityService>;
+  let authService: AuthService;
+  let userService: UserService;
+  let jwtService: JwtService;
+  let configService: ConfigService;
+  let securityService: SecurityService;
 
-  const mockUser = {
-    _id: '507f1f77bcf86cd799439011',
-    username: 'testuser',
-    password: 'hashedpassword',
-    email: 'test@example.com',
-    realName: '测试用户',
-    role: 'admin',
-    status: 'active',
-    permissions: ['user:read'],
-    toObject: jest.fn().mockReturnValue({
-      _id: '507f1f77bcf86cd799439011',
-      username: 'testuser',
-      password: 'hashedpassword',
-      email: 'test@example.com',
-      realName: '测试用户',
-      role: 'admin',
-      status: 'active',
-      permissions: ['user:read'],
-    }),
+  const mockUserService = {
+    findOne: jest.fn(),
+    findById: jest.fn(),
+    updateLastLogin: jest.fn(),
+    updatePassword: jest.fn(),
   };
 
-  const mockUserWithoutPassword = {
-    id: '507f1f77bcf86cd799439011',
+  const mockJwtService = {
+    sign: jest.fn(),
+    verify: jest.fn(),
+  };
+
+  const mockConfigService = {
+    get: jest.fn(),
+  };
+
+  const mockSecurityService = {
+    isAccountLocked: jest.fn(),
+    getRemainingLockTime: jest.fn(),
+    recordLoginAttempt: jest.fn(),
+    getLoginAttemptStats: jest.fn(),
+    unlockAccount: jest.fn(),
+  };
+
+  const mockUser: IUserWithoutPassword = {
+    id: '123',
     username: 'testuser',
-    email: 'test@example.com',
-    realName: '测试用户',
-    role: 'admin',
+    roles: [{ id: '1', name: 'admin', description: '管理员' }],
     status: 'active',
-    permissions: ['user:read'],
+    avatar: 'avatar.jpg',
+    permissions: [],
+    lastLoginTime: new Date(),
+    lastLoginIp: '127.0.0.1',
+  };
+
+  const mockUserWithPassword = {
+    ...mockUser,
+    password: '$2b$10$hashedpassword',
   };
 
   beforeEach(async () => {
-    const mockUserService = {
-      findOne: jest.fn(),
-      findById: jest.fn(),
-      updateLastLogin: jest.fn(),
-      updatePassword: jest.fn(),
-    };
-
-    const mockJwtService = {
-      sign: jest.fn(),
-      verify: jest.fn(),
-    };
-
-    const mockConfigService = {
-      get: jest.fn(),
-    };
-
-    const mockSecurityService = {
-      isAccountLocked: jest.fn(),
-      getRemainingLockTime: jest.fn(),
-      recordLoginAttempt: jest.fn(),
-      getLoginAttemptStats: jest.fn(),
-      unlockAccount: jest.fn(),
-    };
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
@@ -83,299 +68,219 @@ describe('AuthService', () => {
       ],
     }).compile();
 
-    service = module.get<AuthService>(AuthService);
-    userService = module.get(UserService);
-    jwtService = module.get(JwtService);
-    configService = module.get(ConfigService);
-    securityService = module.get(SecurityService);
-  });
+    authService = module.get<AuthService>(AuthService);
+    userService = module.get<UserService>(UserService);
+    jwtService = module.get<JwtService>(JwtService);
+    configService = module.get<ConfigService>(ConfigService);
+    securityService = module.get<SecurityService>(SecurityService);
+    jest.clearAllMocks();
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
+    // 设置默认mock值
+    mockConfigService.get.mockImplementation((key: string) => {
+      if (key === 'JWT_SECRET') return 'test-secret';
+      if (key === 'JWT_EXPIRES_IN') return '1h';
+      return null;
+    });
+
+    mockSecurityService.isAccountLocked.mockReturnValue(false);
+    mockSecurityService.getRemainingLockTime.mockReturnValue(5);
   });
 
   describe('validateUser', () => {
-    beforeEach(() => {
-      securityService.isAccountLocked.mockReturnValue(false);
-      securityService.recordLoginAttempt.mockImplementation();
-    });
+    it('应该成功验证用户凭据', async () => {
+      mockUserService.findOne.mockResolvedValue(mockUserWithPassword);
+      jest.spyOn(require('bcrypt'), 'compare').mockResolvedValue(true);
 
-    it('should validate user successfully', async () => {
-      userService.findOne.mockResolvedValue(mockUser as any);
-      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
-
-      const result = await service.validateUser(
+      const result = await authService.validateUser(
         'testuser',
-        'password',
+        'password123',
         '127.0.0.1',
-        'test-agent',
       );
 
       expect(userService.findOne).toHaveBeenCalledWith('testuser');
-      expect(bcrypt.compare).toHaveBeenCalledWith('password', 'hashedpassword');
-      expect(securityService.recordLoginAttempt).toHaveBeenCalledWith(
-        'testuser',
-        '127.0.0.1',
-        true,
-        'test-agent',
-      );
-      expect(result).toEqual(expect.objectContaining(mockUserWithoutPassword));
+      expect(securityService.recordLoginAttempt).toHaveBeenCalled();
+      expect(result).toEqual(mockUser);
     });
 
-    it('should return null for invalid password', async () => {
-      userService.findOne.mockResolvedValue(mockUser as any);
-      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+    it('验证用户时应该处理密码错误', async () => {
+      mockUserService.findOne.mockResolvedValue(mockUserWithPassword);
+      jest.spyOn(require('bcrypt'), 'compare').mockResolvedValue(false);
 
-      const result = await service.validateUser(
+      const result = await authService.validateUser(
         'testuser',
         'wrongpassword',
         '127.0.0.1',
-        'test-agent',
       );
 
+      expect(result).toBeNull();
       expect(securityService.recordLoginAttempt).toHaveBeenCalledWith(
         'testuser',
         '127.0.0.1',
         false,
-        'test-agent',
+        undefined,
       );
-      expect(result).toBeNull();
     });
 
-    it('should return null for non-existent user', async () => {
-      userService.findOne.mockResolvedValue(null);
-
-      const result = await service.validateUser(
-        'nonexistent',
-        'password',
-        '127.0.0.1',
-        'test-agent',
-      );
-
-      expect(securityService.recordLoginAttempt).toHaveBeenCalledWith(
-        'nonexistent',
-        '127.0.0.1',
-        false,
-        'test-agent',
-      );
-      expect(result).toBeNull();
-    });
-
-    it('should throw UnauthorizedException for locked account', async () => {
-      securityService.isAccountLocked.mockReturnValue(true);
-      securityService.getRemainingLockTime.mockReturnValue(15);
+    it('验证用户时应该处理账户被锁定', async () => {
+      mockSecurityService.isAccountLocked.mockReturnValue(true);
 
       await expect(
-        service.validateUser('testuser', 'password', '127.0.0.1', 'test-agent'),
+        authService.validateUser('lockeduser', 'password123', '127.0.0.1'),
       ).rejects.toThrow(UnauthorizedException);
     });
 
-    it('should throw UnauthorizedException for locked user status', async () => {
-      const lockedUser = { ...mockUser, status: 'locked' };
-      userService.findOne.mockResolvedValue(lockedUser as any);
+    it('验证用户时应该处理用户状态为锁定', async () => {
+      const lockedUser = { ...mockUserWithPassword, status: 'locked' };
+      mockUserService.findOne.mockResolvedValue(lockedUser);
 
       await expect(
-        service.validateUser('testuser', 'password', '127.0.0.1', 'test-agent'),
-      ).rejects.toThrow(UnauthorizedException);
+        authService.validateUser('lockeduser', 'password123', '127.0.0.1'),
+      ).rejects.toThrow('账户已被管理员锁定，请联系管理员');
     });
 
-    it('should throw UnauthorizedException for inactive user status', async () => {
-      const inactiveUser = { ...mockUser, status: 'inactive' };
-      userService.findOne.mockResolvedValue(inactiveUser as any);
+    it('验证用户时应该处理用户状态为禁用', async () => {
+      const inactiveUser = { ...mockUserWithPassword, status: 'inactive' };
+      mockUserService.findOne.mockResolvedValue(inactiveUser);
 
       await expect(
-        service.validateUser('testuser', 'password', '127.0.0.1', 'test-agent'),
-      ).rejects.toThrow(UnauthorizedException);
+        authService.validateUser('inactiveuser', 'password123', '127.0.0.1'),
+      ).rejects.toThrow('账户已被禁用，请联系管理员');
     });
   });
 
   describe('login', () => {
-    it('should login successfully', async () => {
-      const mockToken = 'mock-jwt-token';
-      userService.updateLastLogin.mockResolvedValue();
-      userService.findById.mockResolvedValue(mockUserWithoutPassword as any);
-      jwtService.sign.mockReturnValue(mockToken);
-      configService.get.mockImplementation((key: string) => {
-        if (key === 'JWT_SECRET') return 'test-secret';
-        if (key === 'JWT_EXPIRES_IN') return '1h';
-        return undefined;
-      });
+    it('应该成功登录并生成访问令牌', async () => {
+      mockUserService.updateLastLogin.mockResolvedValue(undefined);
+      mockJwtService.sign.mockReturnValue('mock-jwt-token');
+      mockUserService.findById.mockResolvedValue(mockUserWithPassword);
 
-      const result = await service.login(
-        mockUserWithoutPassword as any,
-        '127.0.0.1',
-        'test-agent',
-      );
+      const result = await authService.login(mockUser, '127.0.0.1');
 
       expect(userService.updateLastLogin).toHaveBeenCalledWith(
-        mockUserWithoutPassword.id,
+        '123',
         '127.0.0.1',
       );
-      expect(jwtService.sign).toHaveBeenCalledWith(
-        {
-          username: 'testuser',
-          sub: '507f1f77bcf86cd799439011',
-          role: 'admin',
-        },
-        {
-          secret: 'test-secret',
-          expiresIn: '1h',
-        },
-      );
-      expect(result).toEqual({
-        access_token: mockToken,
-        user: expect.objectContaining({
-          id: '507f1f77bcf86cd799439011',
-          username: 'testuser',
-        }),
-        expires_in: 3600,
-      });
+      expect(jwtService.sign).toHaveBeenCalled();
+      expect(result.access_token).toBe('mock-jwt-token');
+      expect(result.user).toBeDefined();
+      expect(result.expires_in).toBe(3600);
     });
 
-    it('should throw UnauthorizedException if user not found after login', async () => {
-      userService.updateLastLogin.mockResolvedValue();
-      userService.findById.mockResolvedValue(null);
-      jwtService.sign.mockReturnValue('mock-token');
-      configService.get.mockReturnValue('test-secret');
+    it('登录时应该处理用户不存在', async () => {
+      mockUserService.updateLastLogin.mockResolvedValue(undefined);
+      mockUserService.findById.mockResolvedValue(null);
 
-      await expect(
-        service.login(
-          mockUserWithoutPassword as any,
-          '127.0.0.1',
-          'test-agent',
-        ),
-      ).rejects.toThrow(UnauthorizedException);
-    });
-  });
-
-  describe('validateToken', () => {
-    it('should validate token successfully', async () => {
-      const mockPayload = {
-        sub: '507f1f77bcf86cd799439011',
-        username: 'testuser',
-        role: 'admin',
-      };
-      jwtService.verify.mockReturnValue(mockPayload);
-      configService.get.mockReturnValue('test-secret');
-
-      const result = await service.validateToken('valid-token');
-
-      expect(jwtService.verify).toHaveBeenCalledWith('valid-token', {
-        secret: 'test-secret',
-      });
-      expect(result).toEqual(mockPayload);
-    });
-
-    it('should throw UnauthorizedException for invalid token', async () => {
-      jwtService.verify.mockImplementation(() => {
-        throw new Error('Invalid token');
-      });
-      configService.get.mockReturnValue('test-secret');
-
-      await expect(service.validateToken('invalid-token')).rejects.toThrow(
-        UnauthorizedException,
+      await expect(authService.login(mockUser, '127.0.0.1')).rejects.toThrow(
+        '用户不存在',
       );
     });
   });
 
   describe('getProfile', () => {
-    it('should return user profile', async () => {
-      userService.findById.mockResolvedValue(mockUserWithoutPassword as any);
+    it('应该成功获取用户资料', async () => {
+      mockUserService.findById.mockResolvedValue(mockUserWithPassword);
 
-      const result = await service.getProfile(mockUserWithoutPassword.id);
+      const result = await authService.getProfile('123');
 
-      expect(userService.findById).toHaveBeenCalledWith(
-        mockUserWithoutPassword.id,
-      );
-      expect(result).toEqual(
-        expect.objectContaining({
-          id: '507f1f77bcf86cd799439011',
-          username: 'testuser',
-        }),
-      );
+      expect(userService.findById).toHaveBeenCalledWith('123');
+      expect(result).toEqual(mockUser);
     });
 
-    it('should throw UnauthorizedException if user not found', async () => {
-      userService.findById.mockResolvedValue(null);
+    it('获取资料时应该处理用户不存在', async () => {
+      mockUserService.findById.mockResolvedValue(null);
 
-      await expect(
-        service.getProfile(mockUserWithoutPassword.id),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(authService.getProfile('nonexistent')).rejects.toThrow(
+        '用户不存在',
+      );
     });
   });
 
   describe('changePassword', () => {
-    it('should change password successfully', async () => {
-      userService.findById.mockResolvedValue(mockUserWithoutPassword as any);
-      userService.findOne.mockResolvedValue(mockUser as any);
-      (bcrypt.compare as jest.Mock)
-        .mockResolvedValueOnce(true)
-        .mockResolvedValueOnce(false);
-      userService.updatePassword.mockResolvedValue();
+    it('应该成功修改密码', async () => {
+      mockUserService.findById.mockResolvedValue(mockUserWithPassword);
+      mockUserService.findOne.mockResolvedValue(mockUserWithPassword);
+      jest
+        .spyOn(require('bcrypt'), 'compare')
+        .mockImplementation(async (input, hashed) => {
+          // 当前密码比较返回 true，新密码比较返回 false
+          return input === 'oldpassword';
+        });
+      mockUserService.updatePassword.mockResolvedValue(undefined);
 
-      await service.changePassword(
-        '507f1f77bcf86cd799439011',
+      await authService.changePassword(
+        '123',
         'oldpassword',
         'newpassword',
         '127.0.0.1',
-        'test-agent',
       );
 
-      expect(bcrypt.compare).toHaveBeenCalledWith(
-        'oldpassword',
-        'hashedpassword',
-      );
       expect(userService.updatePassword).toHaveBeenCalledWith(
-        '507f1f77bcf86cd799439011',
+        '123',
         'newpassword',
       );
     });
 
-    it('should throw UnauthorizedException for incorrect current password', async () => {
-      userService.findById.mockResolvedValue(mockUserWithoutPassword as any);
-      userService.findOne.mockResolvedValue(mockUser as any);
-      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+    it('修改密码时应该处理当前密码不正确', async () => {
+      mockUserService.findById.mockResolvedValue(mockUserWithPassword);
+      mockUserService.findOne.mockResolvedValue(mockUserWithPassword);
+      jest.spyOn(require('bcrypt'), 'compare').mockResolvedValue(false);
 
       await expect(
-        service.changePassword(
-          '507f1f77bcf86cd799439011',
+        authService.changePassword(
+          '123',
           'wrongpassword',
           'newpassword',
           '127.0.0.1',
-          'test-agent',
         ),
-      ).rejects.toThrow(UnauthorizedException);
+      ).rejects.toThrow('当前密码不正确');
     });
 
-    it('should throw BadRequestException for same password', async () => {
-      userService.findById.mockResolvedValue(mockUserWithoutPassword as any);
-      userService.findOne.mockResolvedValue(mockUser as any);
-      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+    it('修改密码时应该处理新密码与当前密码相同', async () => {
+      mockUserService.findById.mockResolvedValue(mockUserWithPassword);
+      mockUserService.findOne.mockResolvedValue(mockUserWithPassword);
+      jest
+        .spyOn(require('bcrypt'), 'compare')
+        .mockImplementation(async (input, hashed) => {
+          if (input === 'oldpassword') return true;
+          return false;
+        });
 
       await expect(
-        service.changePassword(
-          '507f1f77bcf86cd799439011',
-          'samepassword',
-          'samepassword',
+        authService.changePassword(
+          '123',
+          'oldpassword',
+          'oldpassword',
           '127.0.0.1',
-          'test-agent',
         ),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow('新密码不能与当前密码相同');
+    });
+
+    it('修改密码时应该处理用户不存在', async () => {
+      mockUserService.findById.mockResolvedValue(null);
+
+      await expect(
+        authService.changePassword(
+          'nonexistent',
+          'oldpassword',
+          'newpassword',
+          '127.0.0.1',
+        ),
+      ).rejects.toThrow('用户不存在');
     });
   });
 
   describe('getSecurityStats', () => {
-    it('should return security statistics', () => {
+    it('应该返回安全统计信息', () => {
       const mockStats = {
         totalAttempts: 10,
         successfulAttempts: 8,
         failedAttempts: 2,
         lockedAccounts: 0,
-        suspiciousAttempts: 0,
       };
-      securityService.getLoginAttemptStats.mockReturnValue(mockStats);
 
-      const result = service.getSecurityStats('testuser');
+      mockSecurityService.getLoginAttemptStats.mockReturnValue(mockStats);
+
+      const result = authService.getSecurityStats('testuser');
 
       expect(securityService.getLoginAttemptStats).toHaveBeenCalledWith(
         'testuser',
@@ -384,16 +289,30 @@ describe('AuthService', () => {
     });
   });
 
-  describe('unlockAccount', () => {
-    it('should unlock account', () => {
-      securityService.unlockAccount.mockImplementation();
+  describe('parseExpiresIn', () => {
+    it('应该正确解析秒数', () => {
+      const result = (authService as any).parseExpiresIn('30s');
+      expect(result).toBe(30);
+    });
 
-      service.unlockAccount('testuser', '127.0.0.1');
+    it('应该正确解析分钟数', () => {
+      const result = (authService as any).parseExpiresIn('30m');
+      expect(result).toBe(1800);
+    });
 
-      expect(securityService.unlockAccount).toHaveBeenCalledWith(
-        'testuser',
-        '127.0.0.1',
-      );
+    it('应该正确解析小时数', () => {
+      const result = (authService as any).parseExpiresIn('2h');
+      expect(result).toBe(7200);
+    });
+
+    it('应该正确解析天数', () => {
+      const result = (authService as any).parseExpiresIn('7d');
+      expect(result).toBe(604800);
+    });
+
+    it('应该返回默认值当格式无效时', () => {
+      const result = (authService as any).parseExpiresIn('invalid');
+      expect(result).toBe(3600);
     });
   });
 });

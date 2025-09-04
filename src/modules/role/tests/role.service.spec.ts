@@ -352,7 +352,9 @@ describe('RoleService', () => {
       const result = await service.findByName('nonexistent');
 
       expect(result).toBeNull();
-      expect(mockRoleModel.findOne).toHaveBeenCalledWith({ name: 'nonexistent' });
+      expect(mockRoleModel.findOne).toHaveBeenCalledWith({
+        name: 'nonexistent',
+      });
     });
   });
 
@@ -366,7 +368,9 @@ describe('RoleService', () => {
       const result = await service.findByType(RoleType.ADMIN);
 
       expect(result).toEqual(mockRole);
-      expect(mockRoleModel.findOne).toHaveBeenCalledWith({ type: RoleType.ADMIN });
+      expect(mockRoleModel.findOne).toHaveBeenCalledWith({
+        type: RoleType.ADMIN,
+      });
     });
 
     it('当通过类型未找到角色时应返回null', async () => {
@@ -378,7 +382,9 @@ describe('RoleService', () => {
       const result = await service.findByType(RoleType.OPERATOR);
 
       expect(result).toBeNull();
-      expect(mockRoleModel.findOne).toHaveBeenCalledWith({ type: RoleType.OPERATOR });
+      expect(mockRoleModel.findOne).toHaveBeenCalledWith({
+        type: RoleType.OPERATOR,
+      });
     });
   });
 
@@ -394,7 +400,7 @@ describe('RoleService', () => {
 
       expect(result).toEqual(mockRoles);
       expect(mockRoleModel.find).toHaveBeenCalledWith({
-        _id: { $in: ['507f1f77bcf86cd799439011'] }
+        _id: { $in: ['507f1f77bcf86cd799439011'] },
       });
     });
 
@@ -428,20 +434,21 @@ describe('RoleService', () => {
         exec: jest.fn().mockResolvedValue(updatedRole),
       });
 
-      const result = await service.addPermissions(
-        '507f1f77bcf86cd799439011',
-        ['507f1f77bcf86cd799439012']
-      );
+      const result = await service.addPermissions('507f1f77bcf86cd799439011', [
+        '507f1f77bcf86cd799439012',
+      ]);
 
       expect(result).toEqual(updatedRole);
-      expect(mockPermissionService.findByIds).toHaveBeenCalledWith(['507f1f77bcf86cd799439012']);
+      expect(mockPermissionService.findByIds).toHaveBeenCalledWith([
+        '507f1f77bcf86cd799439012',
+      ]);
     });
 
     it('当角色未找到时应抛出NotFoundException', async () => {
       mockRoleModel.findById.mockResolvedValue(null);
 
       await expect(
-        service.addPermissions('507f1f77bcf86cd799439011', ['user:read'])
+        service.addPermissions('507f1f77bcf86cd799439011', ['user:read']),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -450,7 +457,7 @@ describe('RoleService', () => {
       mockPermissionService.findByIds.mockResolvedValue([]);
 
       await expect(
-        service.addPermissions('507f1f77bcf86cd799439011', ['nonexistent'])
+        service.addPermissions('507f1f77bcf86cd799439011', ['nonexistent']),
       ).rejects.toThrow(BadRequestException);
     });
   });
@@ -462,7 +469,7 @@ describe('RoleService', () => {
       expect(result).toEqual([
         { value: 'super_admin', label: '超级管理员' },
         { value: 'admin', label: '管理员' },
-        { value: 'operator', label: '操作员' }
+        { value: 'operator', label: '操作员' },
       ]);
     });
   });

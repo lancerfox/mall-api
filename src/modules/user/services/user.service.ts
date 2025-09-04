@@ -180,8 +180,7 @@ export class UserService {
     }
 
     // 创建新用户
-    const newUser = new this.userModel(createUserDto);
-    const savedUser = await newUser.save();
+    const savedUser = await this.userModel.create(createUserDto);
 
     // 重新查询以获取populated的数据
     const userWithRoles = await this.userModel

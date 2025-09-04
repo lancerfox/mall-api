@@ -106,11 +106,11 @@ export class MenuService {
   private convertToResponseDto(menuTree: MenuTree): MenuResponseDto {
     return {
       id: menuTree._id.toString(),
-      parentId: menuTree.parentId?.toString() || null,
+      parentId: menuTree.parentId ? menuTree.parentId.toString() : undefined,
       path: menuTree.path || '',
       name: menuTree.name || '',
       component: menuTree.component || '',
-      redirect: menuTree.redirect || null,
+      redirect: menuTree.redirect ? menuTree.redirect : undefined,
       meta: {
         title: menuTree.metaTitle || '',
         icon: menuTree.metaIcon || '',
@@ -121,9 +121,9 @@ export class MenuService {
       status: menuTree.status || 'active',
       createdAt: menuTree.createdAt?.toISOString() || new Date().toISOString(),
       updatedAt: menuTree.updatedAt?.toISOString() || new Date().toISOString(),
-      children: menuTree.children?.map((child) =>
-        this.convertToResponseDto(child),
-      ) || [],
+      children:
+        menuTree.children?.map((child) => this.convertToResponseDto(child)) ||
+        [],
     };
   }
 }

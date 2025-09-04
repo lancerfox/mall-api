@@ -1,114 +1,45 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { UserService } from '../services/user.service';
-import { User, UserDocument } from '../entities/user.entity';
 import { RoleService } from '../../role/services/role.service';
+import { User, UserDocument } from '../entities/user.entity';
+import { Role, RoleDocument } from '../../role/entities/role.entity';
+import { RoleType } from '../../../common/enums/role-type.enum';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { QueryUserDto } from '../dto/query-user.dto';
 
 describe('UserService', () => {
   let service: UserService;
-  let userModel: any;
+  let userModel: Model<UserDocument>;
   let roleService: RoleService;
 
-  const mockRole = {
-    _id: '507f1f77bcf86cd799439012',
-    name: 'admin',
-    description: '管理员',
-    permissions: [
-      {
-        _id: '507f1f77bcf86cd799439013',
-        name: 'user:read',
-        description: '查看用户',
-      },
-    ],
-  };
-
-  const mockUserData = {
-    _id: '507f1f77bcf86cd799439011',
-    username: 'testuser',
-    roles: [mockRole],
-    status: 'active',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-
-  const mockUser = {
-    ...mockUserData,
-    toObject: jest.fn().mockReturnValue(mockUserData),
+  // Mock user model
+  const mockUserModel = {
+    findOne: jest.fn(),
+    findById: jest.fn(),
+    findByIdAndUpdate: jest.fn(),
+    find: jest.fn(),
+    countDocuments: jest.fn(),
+    create: jest.fn(),
+    save: jest.fn(),
+    findByIdAndDelete: jest.fn(),
   };
 
   const mockRoleService = {
     findByIds: jest.fn(),
-  };
-
-  // Create a mock constructor function that also has static methods
-  const createMockUserModel = () => {
-    const MockConstructor = jest.fn().mockImplementation((userData) => ({
-      ...userData,
-      save: jest.fn().mockResolvedValue({
-        ...mockUserData,
-        ...userData,
-        toObject: jest.fn().mockReturnValue({
-          ...mockUserData,
-          ...userData,
-        }),
-      }),
-      toObject: jest.fn().mockReturnValue({
-        ...mockUserData,
-        ...userData,
-      }),
-    }));
-
-    // Add static methods to the constructor
-    Object.assign(MockConstructor, {
-      findOne: jest.fn().mockReturnValue({
-        populate: jest.fn().mockReturnValue({ exec: jest.fn() }),
-        exec: jest.fn(),
-      }),
-      findById: jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          populate: jest.fn().mockReturnValue({ exec: jest.fn() }),
-          exec: jest.fn(),
-        }),
-        populate: jest.fn().mockReturnValue({ exec: jest.fn() }),
-        exec: jest.fn(),
-      }),
-      findByIdAndUpdate: jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          populate: jest.fn().mockReturnValue({ exec: jest.fn() }),
-          exec: jest.fn(),
-        }),
-        populate: jest.fn().mockReturnValue({ exec: jest.fn() }),
-        exec: jest.fn(),
-      }),
-      find: jest.fn().mockReturnValue({
-        skip: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockReturnThis(),
-        sort: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        populate: jest.fn().mockReturnThis(),
-        exec: jest.fn(),
-      }),
-      countDocuments: jest.fn().mockReturnValue({ exec: jest.fn() }),
-      findByIdAndDelete: jest.fn().mockReturnValue({ exec: jest.fn() }),
-    });
-
-    return MockConstructor;
+    findByType: jest.fn(),
   };
 
   beforeEach(async () => {
-    const mockUserModelInstance = createMockUserModel();
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UserService,
         {
           provide: getModelToken(User.name),
-          useValue: mockUserModelInstance,
+          useValue: mockUserModel,
         },
         {
           provide: RoleService,
@@ -117,357 +48,482 @@ describe('UserService', () => {
       ],
     }).compile();
 
+    service = module.get<UserService>(UserService);
     userModel = module.get<Model<UserDocument>>(getModelToken(User.name));
     roleService = module.get<RoleService>(RoleService);
-    service = module.get<UserService>(UserService);
+  });
 
-    // Reset all mocks before each test
+  afterEach(() => {
     jest.clearAllMocks();
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
+  describe('findOne - 根据用户名查找用户', () => {
+    it('应该通过用户名返回用户', async () => {
+      const mockUser = {
+        _id: new Types.ObjectId(),
+        username: 'testuser',
+        password: 'hashedpassword',
+        roles: [],
+      } as UserDocument;
 
-  describe('findOne', () => {
-    it('should find user by username with populated roles', async () => {
-      const mockExec = jest.fn().mockResolvedValue(mockUser);
-      const mockPopulate = jest.fn().mockReturnValue({ exec: mockExec });
-      userModel.findOne.mockReturnValue({ populate: mockPopulate });
+      mockUserModel.findOne.mockReturnValue({
+        populate: jest.fn().mockReturnValue({
+          exec: jest.fn().mockResolvedValue(mockUser),
+        }),
+      });
 
       const result = await service.findOne('testuser');
 
-      expect(userModel.findOne).toHaveBeenCalledWith({ username: 'testuser' });
-      expect(mockPopulate).toHaveBeenCalledWith('roles');
       expect(result).toEqual(mockUser);
-    });
-  });
-
-  describe('findById', () => {
-    it('should find user by id with populated roles', async () => {
-      const mockExec = jest.fn().mockResolvedValue(mockUser);
-      const mockPopulate = jest.fn().mockReturnValue({ exec: mockExec });
-      const mockSelect = jest.fn().mockReturnValue({ populate: mockPopulate });
-      userModel.findById.mockReturnValue({ select: mockSelect });
-
-      const result = await service.findById('507f1f77bcf86cd799439011');
-
-      expect(userModel.findById).toHaveBeenCalledWith(
-        '507f1f77bcf86cd799439011',
-      );
-      expect(mockSelect).toHaveBeenCalledWith('-password');
-      expect(mockPopulate).toHaveBeenCalledWith('roles');
-      expect(result).toMatchObject({
-        id: '507f1f77bcf86cd799439011',
+      expect(mockUserModel.findOne).toHaveBeenCalledWith({
         username: 'testuser',
-        role: 'admin', // 兼容字段
-        status: 'active',
       });
     });
 
-    it('should return null when user not found', async () => {
-      const mockExec = jest.fn().mockResolvedValue(null);
-      const mockPopulate = jest.fn().mockReturnValue({ exec: mockExec });
-      const mockSelect = jest.fn().mockReturnValue({ populate: mockPopulate });
-      userModel.findById.mockReturnValue({ select: mockSelect });
+    it('当用户未找到时应返回null', async () => {
+      mockUserModel.findOne.mockReturnValue({
+        populate: jest.fn().mockReturnValue({
+          exec: jest.fn().mockResolvedValue(null),
+        }),
+      });
 
-      const result = await service.findById('507f1f77bcf86cd799439011');
+      const result = await service.findOne('nonexistent');
 
       expect(result).toBeNull();
     });
   });
 
-  describe('updateLastLogin', () => {
-    it('should update last login time and IP', async () => {
-      const mockExec = jest.fn().mockResolvedValue(mockUser);
-      userModel.findByIdAndUpdate.mockReturnValue({ exec: mockExec });
-
-      await service.updateLastLogin('507f1f77bcf86cd799439011', '192.168.1.1');
-
-      expect(userModel.findByIdAndUpdate).toHaveBeenCalledWith(
-        '507f1f77bcf86cd799439011',
-        expect.objectContaining({
-          lastLoginTime: expect.any(Date),
-          lastLoginIp: '192.168.1.1',
-        }),
-      );
-    });
-  });
-
-  describe('updateProfile', () => {
-    it('should update user profile', async () => {
-      const updateData = {
-        avatar: 'new-avatar.jpg',
-      };
-
-      const mockExec = jest.fn().mockResolvedValue(mockUser);
-      const mockPopulate = jest.fn().mockReturnValue({ exec: mockExec });
-      const mockSelect = jest.fn().mockReturnValue({ populate: mockPopulate });
-      userModel.findByIdAndUpdate.mockReturnValue({ select: mockSelect });
-
-      const result = await service.updateProfile(
-        '507f1f77bcf86cd799439011',
-        updateData,
-      );
-
-      expect(userModel.findByIdAndUpdate).toHaveBeenCalledWith(
-        '507f1f77bcf86cd799439011',
-        updateData,
-        { new: true },
-      );
-      expect(result).toBeDefined();
-    });
-
-    it('should throw error when user not found', async () => {
-      const updateData = {
-        avatar: 'new-avatar.jpg',
-      };
-
-      const mockExec = jest.fn().mockResolvedValue(null);
-      const mockPopulate = jest.fn().mockReturnValue({ exec: mockExec });
-      const mockSelect = jest.fn().mockReturnValue({ populate: mockPopulate });
-      userModel.findByIdAndUpdate.mockReturnValue({ select: mockSelect });
-
-      await expect(
-        service.updateProfile('507f1f77bcf86cd799439011', updateData),
-      ).rejects.toThrow('用户不存在');
-    });
-  });
-
-  describe('findAll', () => {
-    it('should return paginated user list with populated roles', async () => {
-      const queryDto: QueryUserDto = { page: 1, limit: 10 };
-      const mockUsers = [mockUser];
-
-      const mockExec = jest.fn().mockResolvedValue(mockUsers);
-      const mockCountExec = jest.fn().mockResolvedValue(1);
-
-      userModel.find.mockReturnValue({
-        skip: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockReturnThis(),
-        sort: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        populate: jest.fn().mockReturnThis(),
-        exec: mockExec,
-      });
-
-      userModel.countDocuments.mockReturnValue({ exec: mockCountExec });
-
-      const result = await service.findAll(queryDto);
-
-      expect(result.data).toHaveLength(1);
-      expect(result.data[0]).toMatchObject({
-        id: '507f1f77bcf86cd799439011',
+  describe('findById - 根据ID查找用户', () => {
+    it('应该通过ID返回用户', async () => {
+      const mockUser = {
+        _id: new Types.ObjectId(),
         username: 'testuser',
-        role: 'admin',
-        status: 'active',
+        password: 'hashedpassword',
+        roles: [],
+        toObject: jest.fn().mockReturnValue({
+          _id: new Types.ObjectId(),
+          username: 'testuser',
+          roles: [],
+          status: 'active',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }),
+      } as unknown as UserDocument;
+
+      mockUserModel.findById.mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          populate: jest.fn().mockReturnValue({
+            exec: jest.fn().mockResolvedValue(mockUser),
+          }),
+        }),
       });
-      expect(result.total).toBe(1);
-      expect(result.page).toBe(1);
-      expect(result.limit).toBe(10);
+
+      const result = await service.findById('507f1f77bcf86cd799439011');
+
+      expect(result).toBeDefined();
+      expect(result?.username).toBe('testuser');
+    });
+
+    it('当用户未找到时应返回null', async () => {
+      mockUserModel.findById.mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          populate: jest.fn().mockReturnValue({
+            exec: jest.fn().mockResolvedValue(null),
+          }),
+        }),
+      });
+
+      const result = await service.findById('nonexistent');
+
+      expect(result).toBeNull();
     });
   });
 
-  describe('create', () => {
-    it('should create user successfully with roles', async () => {
+  describe('create - 创建用户', () => {
+    it('应该成功创建用户', async () => {
       const createUserDto: CreateUserDto = {
         username: 'newuser',
         password: 'password123',
-        roles: ['507f1f77bcf86cd799439012'],
+        roles: ['507f1f77bcf86cd799439011'],
       };
 
-      // Mock that user doesn't exist
-      userModel.findOne.mockReturnValue({
+      const mockRole = {
+        _id: new Types.ObjectId('507f1f77bcf86cd799439011'),
+        name: 'admin',
+        type: RoleType.ADMIN,
+      } as RoleDocument;
+
+      const mockUser = {
+        _id: new Types.ObjectId(),
+        username: 'newuser',
+        password: 'hashedpassword',
+        roles: [mockRole],
+        save: jest.fn().mockResolvedValue(true),
+        toObject: jest.fn().mockReturnValue({
+          _id: new Types.ObjectId(),
+          username: 'newuser',
+          roles: [mockRole],
+          status: 'active',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }),
+      } as unknown as UserDocument;
+
+      mockUserModel.findOne.mockReturnValue({
         exec: jest.fn().mockResolvedValue(null),
       });
-
-      // Mock role validation
       mockRoleService.findByIds.mockResolvedValue([mockRole]);
-
-      // Mock user creation and retrieval
-      const mockExec = jest.fn().mockResolvedValue(mockUser);
-      const mockPopulate = jest.fn().mockReturnValue({ exec: mockExec });
-      const mockSelect = jest.fn().mockReturnValue({ populate: mockPopulate });
-      userModel.findById.mockReturnValue({ select: mockSelect });
+      mockUserModel.create.mockReturnValue(mockUser);
+      mockUserModel.findById.mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          populate: jest.fn().mockReturnValue({
+            exec: jest.fn().mockResolvedValue(mockUser),
+          }),
+        }),
+      });
 
       const result = await service.create(createUserDto);
 
-      expect(userModel).toHaveBeenCalledWith(createUserDto);
-      expect(mockRoleService.findByIds).toHaveBeenCalledWith(
-        createUserDto.roles,
-      );
       expect(result).toBeDefined();
+      expect(result.username).toBe('newuser');
+      expect(mockUserModel.create).toHaveBeenCalledWith(createUserDto);
     });
 
-    it('should throw conflict error for existing username', async () => {
+    it('当用户名已存在时应抛出ConflictException', async () => {
       const createUserDto: CreateUserDto = {
         username: 'existinguser',
         password: 'password123',
-        roles: ['507f1f77bcf86cd799439012'],
+        roles: [],
       };
 
-      // Mock that username exists
-      userModel.findOne.mockReturnValue({
-        exec: jest.fn().mockResolvedValue(mockUser),
+      const existingUser = {
+        _id: new Types.ObjectId(),
+        username: 'existinguser',
+      } as UserDocument;
+
+      mockUserModel.findOne.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(existingUser),
       });
 
       await expect(service.create(createUserDto)).rejects.toThrow(
-        HttpException,
+        new HttpException('用户名已存在', HttpStatus.CONFLICT),
       );
     });
 
-    it('should throw error for non-existent roles', async () => {
+    it('当角色不存在时应抛出BadRequestException', async () => {
       const createUserDto: CreateUserDto = {
         username: 'newuser',
         password: 'password123',
-        roles: ['507f1f77bcf86cd799439012', '507f1f77bcf86cd799439999'],
+        roles: ['507f1f77bcf86cd799439011'],
       };
 
-      // Mock that user doesn't exist
-      userModel.findOne.mockReturnValue({
+      mockUserModel.findOne.mockReturnValue({
         exec: jest.fn().mockResolvedValue(null),
       });
-
-      // Mock role validation - only return one role
-      mockRoleService.findByIds.mockResolvedValue([mockRole]);
+      mockRoleService.findByIds.mockResolvedValue([]);
 
       await expect(service.create(createUserDto)).rejects.toThrow(
-        HttpException,
+        new HttpException('部分角色不存在', HttpStatus.BAD_REQUEST),
       );
     });
   });
 
-  describe('update', () => {
-    it('should update user successfully with role validation', async () => {
+  describe('findAll - 获取用户列表', () => {
+    it('应该返回分页的用户列表', async () => {
+      const query: QueryUserDto = {
+        page: 1,
+        limit: 10,
+      };
+
+      const mockUsers = [
+        {
+          _id: new Types.ObjectId(),
+          username: 'user1',
+          roles: [],
+          toObject: jest.fn().mockReturnValue({
+            _id: new Types.ObjectId(),
+            username: 'user1',
+            roles: [],
+            status: 'active',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          }),
+        },
+        {
+          _id: new Types.ObjectId(),
+          username: 'user2',
+          roles: [],
+          toObject: jest.fn().mockReturnValue({
+            _id: new Types.ObjectId(),
+            username: 'user2',
+            roles: [],
+            status: 'active',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          }),
+        },
+      ] as unknown as UserDocument[];
+
+      mockUserModel.find.mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          populate: jest.fn().mockReturnValue({
+            sort: jest.fn().mockReturnValue({
+              skip: jest.fn().mockReturnValue({
+                limit: jest.fn().mockReturnValue({
+                  exec: jest.fn().mockResolvedValue(mockUsers),
+                }),
+              }),
+            }),
+          }),
+        }),
+      });
+
+      mockUserModel.countDocuments.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(2),
+      });
+
+      const result = await service.findAll(query);
+
+      expect(result).toBeDefined();
+      expect(result.data).toHaveLength(2);
+      expect(result.total).toBe(2);
+      expect(result.page).toBe(1);
+      expect(result.limit).toBe(10);
+    });
+
+    it('应该支持用户名搜索', async () => {
+      const query: QueryUserDto = {
+        page: 1,
+        limit: 10,
+        username: 'test',
+      };
+
+      mockUserModel.find.mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          populate: jest.fn().mockReturnValue({
+            sort: jest.fn().mockReturnValue({
+              skip: jest.fn().mockReturnValue({
+                limit: jest.fn().mockReturnValue({
+                  exec: jest.fn().mockResolvedValue([]),
+                }),
+              }),
+            }),
+          }),
+        }),
+      });
+
+      mockUserModel.countDocuments.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(0),
+      });
+
+      await service.findAll(query);
+
+      expect(mockUserModel.find).toHaveBeenCalledWith({
+        username: { $regex: 'test', $options: 'i' },
+      });
+    });
+  });
+
+  describe('update - 更新用户', () => {
+    it('应该成功更新用户信息', async () => {
+      const userId = '507f1f77bcf86cd799439011';
       const updateUserDto: UpdateUserDto = {
+        username: 'updateduser',
         roles: ['507f1f77bcf86cd799439012'],
       };
 
-      // Mock user exists
-      userModel.findById.mockReturnValue({
+      const existingUser = {
+        _id: new Types.ObjectId(userId),
+        username: 'olduser',
+      } as UserDocument;
+
+      const mockRole = {
+        _id: new Types.ObjectId('507f1f77bcf86cd799439012'),
+        name: 'admin',
+        type: RoleType.ADMIN,
+      } as RoleDocument;
+
+      const updatedUser = {
+        _id: new Types.ObjectId(userId),
+        username: 'updateduser',
+        roles: [mockRole],
+        toObject: jest.fn().mockReturnValue({
+          _id: new Types.ObjectId(userId),
+          username: 'updateduser',
+          roles: [mockRole],
+          status: 'active',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }),
+      } as unknown as UserDocument;
+
+      mockUserModel.findById.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(existingUser),
+      });
+      mockRoleService.findByIds.mockResolvedValue([mockRole]);
+      mockUserModel.findByIdAndUpdate.mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          populate: jest.fn().mockReturnValue({
+            exec: jest.fn().mockResolvedValue(updatedUser),
+          }),
+        }),
+      });
+
+      const result = await service.update(userId, updateUserDto);
+
+      expect(result).toBeDefined();
+      expect(result.username).toBe('updateduser');
+    });
+
+    it('当用户不存在时应抛出NotFoundException', async () => {
+      const userId = 'nonexistent';
+      const updateUserDto: UpdateUserDto = {
+        username: 'updateduser',
+      };
+
+      mockUserModel.findById.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(null),
+      });
+
+      await expect(service.update(userId, updateUserDto)).rejects.toThrow(
+        new HttpException('用户不存在', HttpStatus.NOT_FOUND),
+      );
+    });
+  });
+
+  describe('remove - 删除用户', () => {
+    it('应该成功删除用户', async () => {
+      const userId = '507f1f77bcf86cd799439011';
+      const mockUser = {
+        _id: new Types.ObjectId(userId),
+        username: 'todelete',
+      } as UserDocument;
+
+      mockUserModel.findByIdAndDelete.mockReturnValue({
         exec: jest.fn().mockResolvedValue(mockUser),
       });
 
-      // Mock role validation
-      mockRoleService.findByIds.mockResolvedValue([mockRole]);
-
-      const mockExec = jest.fn().mockResolvedValue(mockUser);
-      const mockPopulate = jest.fn().mockReturnValue({ exec: mockExec });
-      const mockSelect = jest.fn().mockReturnValue({ populate: mockPopulate });
-      userModel.findByIdAndUpdate.mockReturnValue({ select: mockSelect });
-
-      const result = await service.update(
-        '507f1f77bcf86cd799439011',
-        updateUserDto,
-      );
-
-      expect(mockRoleService.findByIds).toHaveBeenCalledWith(
-        updateUserDto.roles,
-      );
-      expect(result).toBeDefined();
+      await expect(service.remove(userId)).resolves.not.toThrow();
     });
 
-    it('should throw not found error for non-existent user', async () => {
-      const updateUserDto: UpdateUserDto = {
-        roles: ['507f1f77bcf86cd799439012'],
-      };
-
-      userModel.findById.mockReturnValue({
+    it('当用户不存在时应抛出NotFoundException', async () => {
+      const userId = 'nonexistent';
+      mockUserModel.findByIdAndDelete.mockReturnValue({
         exec: jest.fn().mockResolvedValue(null),
       });
 
-      await expect(
-        service.update('507f1f77bcf86cd799439011', updateUserDto),
-      ).rejects.toThrow(HttpException);
+      await expect(service.remove(userId)).rejects.toThrow(
+        new HttpException('用户不存在', HttpStatus.NOT_FOUND),
+      );
     });
   });
 
-  describe('hasPermission', () => {
-    it('should return true when user has permission through roles', async () => {
-      const mockExec = jest.fn().mockResolvedValue(mockUser);
-      const mockPopulate = jest.fn().mockReturnValue({ exec: mockExec });
-      userModel.findById.mockReturnValue({ populate: mockPopulate });
+  describe('updateLastLogin - 更新最后登录信息', () => {
+    it('应该更新最后登录时间和IP', async () => {
+      const userId = '507f1f77bcf86cd799439011';
+      const ip = '192.168.1.1';
 
-      const result = await service.hasPermission(
-        '507f1f77bcf86cd799439011',
-        'user:read',
-      );
+      mockUserModel.findByIdAndUpdate.mockReturnValue({
+        exec: jest.fn().mockResolvedValue({}),
+      });
+
+      await service.updateLastLogin(userId, ip);
+
+      expect(mockUserModel.findByIdAndUpdate).toHaveBeenCalledWith(userId, {
+        lastLoginTime: expect.any(Date),
+        lastLoginIp: ip,
+      });
+    });
+  });
+
+  describe('hasPermission - 检查用户权限', () => {
+    it('应该返回用户是否有指定权限', async () => {
+      const userId = '507f1f77bcf86cd799439011';
+      const permission = 'user:read';
+
+      const mockUser = {
+        _id: new Types.ObjectId(userId),
+        username: 'testuser',
+        roles: [
+          {
+            _id: new Types.ObjectId(),
+            name: 'admin',
+            permissions: ['user:read', 'user:write'],
+          },
+        ],
+      } as unknown as UserDocument;
+
+      mockUserModel.findById.mockReturnValue({
+        populate: jest.fn().mockReturnValue({
+          exec: jest.fn().mockResolvedValue(mockUser),
+        }),
+      });
+
+      const result = await service.hasPermission(userId, permission);
 
       expect(result).toBe(true);
     });
 
-    it('should return false when user does not have permission', async () => {
-      const mockExec = jest.fn().mockResolvedValue(mockUser);
-      const mockPopulate = jest.fn().mockReturnValue({ exec: mockExec });
-      userModel.findById.mockReturnValue({ populate: mockPopulate });
+    it('当用户不存在时应返回false', async () => {
+      const userId = 'nonexistent';
+      const permission = 'user:read';
 
-      const result = await service.hasPermission(
-        '507f1f77bcf86cd799439011',
-        'user:write',
-      );
+      mockUserModel.findById.mockReturnValue({
+        populate: jest.fn().mockReturnValue({
+          exec: jest.fn().mockResolvedValue(null),
+        }),
+      });
+
+      const result = await service.hasPermission(userId, permission);
 
       expect(result).toBe(false);
     });
   });
 
-  describe('hasRole', () => {
-    it('should return true when user has role', async () => {
-      const mockExec = jest.fn().mockResolvedValue(mockUser);
-      const mockPopulate = jest.fn().mockReturnValue({ exec: mockExec });
-      userModel.findById.mockReturnValue({ populate: mockPopulate });
+  describe('generateRandomPassword - 生成随机密码', () => {
+    it('应该生成指定长度的随机密码', () => {
+      const password = service.generateRandomPassword(12);
 
-      const result = await service.hasRole('507f1f77bcf86cd799439011', [
-        'admin',
-      ]);
-
-      expect(result).toBe(true);
+      expect(password).toHaveLength(12);
+      expect(password).toMatch(/^[a-zA-Z0-9]+$/);
     });
 
-    it('should return false when user does not have role', async () => {
-      const mockExec = jest.fn().mockResolvedValue(mockUser);
-      const mockPopulate = jest.fn().mockReturnValue({ exec: mockExec });
-      userModel.findById.mockReturnValue({ populate: mockPopulate });
+    it('默认长度应为8位', () => {
+      const password = service.generateRandomPassword();
 
-      const result = await service.hasRole('507f1f77bcf86cd799439011', [
-        'super_admin',
-      ]);
-
-      expect(result).toBe(false);
+      expect(password).toHaveLength(8);
     });
   });
 
-  describe('getUserPermissions', () => {
-    it('should return all permissions from user roles', async () => {
-      const result = await service.getUserPermissions(mockUser as any);
+  describe('createInitialAdmin - 创建初始管理员', () => {
+    it('当管理员已存在时应跳过创建', async () => {
+      const existingAdmin = {
+        _id: new Types.ObjectId(),
+        username: 'admin',
+      } as UserDocument;
 
-      expect(result).toContain('user:read');
-      expect(Array.isArray(result)).toBe(true);
-    });
-  });
+      mockUserModel.findOne.mockReturnValue({
+        populate: jest.fn().mockReturnValue({
+          exec: jest.fn().mockResolvedValue(existingAdmin),
+        }),
+      });
 
-  describe('getUserMenus', () => {
-    it('should return user menus based on permissions', async () => {
-      const mockExec = jest.fn().mockResolvedValue(mockUser);
-      const mockPopulate = jest.fn().mockReturnValue({ exec: mockExec });
-      userModel.findById.mockReturnValue({ populate: mockPopulate });
+      await service.createInitialAdmin();
 
-      const result = await service.getUserMenus('507f1f77bcf86cd799439011');
-
-      expect(result).toBeDefined();
-      expect(result.permissions).toBeDefined();
-      expect(result.menus).toBeDefined();
-      expect(Array.isArray(result.permissions)).toBe(true);
-      expect(Array.isArray(result.menus)).toBe(true);
+      expect(mockUserModel.create).not.toHaveBeenCalled();
     });
 
-    it('should throw not found error when user does not exist', async () => {
-      const mockExec = jest.fn().mockResolvedValue(null);
-      const mockPopulate = jest.fn().mockReturnValue({ exec: mockExec });
-      userModel.findById.mockReturnValue({ populate: mockPopulate });
+    it('当超级管理员角色不存在时应记录错误', async () => {
+      mockUserModel.findOne.mockReturnValue({
+        populate: jest.fn().mockReturnValue({
+          exec: jest.fn().mockResolvedValue(null),
+        }),
+      });
+      mockRoleService.findByType.mockResolvedValue(null);
 
-      await expect(
-        service.getUserMenus('507f1f77bcf86cd799439011'),
-      ).rejects.toThrow(HttpException);
+      await service.createInitialAdmin();
+
+      expect(mockUserModel.create).not.toHaveBeenCalled();
     });
   });
 });

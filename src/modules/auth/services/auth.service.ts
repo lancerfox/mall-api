@@ -70,10 +70,8 @@ export class AuthService {
 
     if (user && isValid) {
       // 验证成功，返回用户信息（排除密码）
-      const { ...result } = user.toObject({
-        virtuals: true,
-      }) as User;
-      return result as unknown as IUserWithoutPassword;
+      const { password: _, ...result } = user as any;
+      return result as IUserWithoutPassword;
     }
 
     return null;
@@ -238,6 +236,11 @@ export class AuthService {
   private parseExpiresIn(expiresIn: string): number {
     const unit = expiresIn.slice(-1);
     const value = parseInt(expiresIn.slice(0, -1));
+
+    // 处理无效输入
+    if (isNaN(value)) {
+      return 3600; // 默认1小时
+    }
 
     switch (unit) {
       case 's':
