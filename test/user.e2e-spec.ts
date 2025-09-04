@@ -77,7 +77,7 @@ describe('UserController (e2e)', () => {
   });
 
   describe('/users (POST)', () => {
-    it('should create a new user', () => {
+    it('应该成功创建新用户', () => {
       return request(app.getHttpServer())
         .post('/users')
         .set('Authorization', `Bearer ${accessToken}`)
@@ -91,7 +91,7 @@ describe('UserController (e2e)', () => {
         });
     });
 
-    it('should reject duplicate username', () => {
+    it('应该拒绝重复的用户名', () => {
       return request(app.getHttpServer())
         .post('/users')
         .set('Authorization', `Bearer ${accessToken}`)
@@ -99,7 +99,7 @@ describe('UserController (e2e)', () => {
         .expect(400);
     });
 
-    it('should validate required fields', () => {
+    it('应该验证必填字段', () => {
       return request(app.getHttpServer())
         .post('/users')
         .set('Authorization', `Bearer ${accessToken}`)
@@ -109,7 +109,7 @@ describe('UserController (e2e)', () => {
         .expect(400);
     });
 
-    it('should reject request without authentication', () => {
+    it('应该拒绝未认证的请求', () => {
       return request(app.getHttpServer())
         .post('/users')
         .send(testUser)
@@ -118,7 +118,7 @@ describe('UserController (e2e)', () => {
   });
 
   describe('/users (GET)', () => {
-    it('should get paginated users list', () => {
+    it('应该获取分页用户列表', () => {
       return request(app.getHttpServer())
         .get('/users')
         .set('Authorization', `Bearer ${accessToken}`)
@@ -133,7 +133,7 @@ describe('UserController (e2e)', () => {
         });
     });
 
-    it('should filter users by username', () => {
+    it('应该按用户名过滤用户', () => {
       return request(app.getHttpServer())
         .get('/users')
         .set('Authorization', `Bearer ${accessToken}`)
@@ -145,7 +145,7 @@ describe('UserController (e2e)', () => {
         });
     });
 
-    it('should filter users by role', () => {
+    it('应该按角色过滤用户', () => {
       return request(app.getHttpServer())
         .get('/users')
         .set('Authorization', `Bearer ${accessToken}`)
@@ -161,7 +161,7 @@ describe('UserController (e2e)', () => {
   });
 
   describe('/users/:id (GET)', () => {
-    it('should get user by id', () => {
+    it('应该通过ID获取用户', () => {
       return request(app.getHttpServer())
         .get(`/users/${testUserId}`)
         .set('Authorization', `Bearer ${accessToken}`)
@@ -173,14 +173,14 @@ describe('UserController (e2e)', () => {
         });
     });
 
-    it('should return 404 for non-existent user', () => {
+    it('应该为不存在的用户返回404', () => {
       return request(app.getHttpServer())
         .get('/users/507f1f77bcf86cd799439011')
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(404);
     });
 
-    it('should return 400 for invalid id format', () => {
+    it('应该为无效的ID格式返回400', () => {
       return request(app.getHttpServer())
         .get('/users/invalid-id')
         .set('Authorization', `Bearer ${accessToken}`)
@@ -189,7 +189,7 @@ describe('UserController (e2e)', () => {
   });
 
   describe('/users/:id (PUT)', () => {
-    it('should update user', () => {
+    it('应该更新用户信息', () => {
       const updateData = {
         realName: 'Updated Test User',
         email: 'updated@example.com',
@@ -206,7 +206,7 @@ describe('UserController (e2e)', () => {
         });
     });
 
-    it('should validate email format', () => {
+    it('应该验证邮箱格式', () => {
       return request(app.getHttpServer())
         .put(`/users/${testUserId}`)
         .set('Authorization', `Bearer ${accessToken}`)
@@ -218,7 +218,7 @@ describe('UserController (e2e)', () => {
   });
 
   describe('/users/:id/status (PUT)', () => {
-    it('should update user status', () => {
+    it('应该更新用户状态', () => {
       return request(app.getHttpServer())
         .put(`/users/${testUserId}/status`)
         .set('Authorization', `Bearer ${accessToken}`)
@@ -231,7 +231,7 @@ describe('UserController (e2e)', () => {
         });
     });
 
-    it('should validate status value', () => {
+    it('应该验证状态值', () => {
       return request(app.getHttpServer())
         .put(`/users/${testUserId}/status`)
         .set('Authorization', `Bearer ${accessToken}`)
@@ -243,7 +243,7 @@ describe('UserController (e2e)', () => {
   });
 
   describe('/users/:id/reset-password (POST)', () => {
-    it('should reset user password', () => {
+    it('应该重置用户密码', () => {
       return request(app.getHttpServer())
         .post(`/users/${testUserId}/reset-password`)
         .set('Authorization', `Bearer ${accessToken}`)
@@ -256,7 +256,7 @@ describe('UserController (e2e)', () => {
         });
     });
 
-    it('should validate password strength', () => {
+    it('应该验证密码强度', () => {
       return request(app.getHttpServer())
         .post(`/users/${testUserId}/reset-password`)
         .set('Authorization', `Bearer ${accessToken}`)
@@ -272,7 +272,7 @@ describe('UserController (e2e)', () => {
     let user2Id: string;
 
     beforeAll(async () => {
-      // Create test users for batch deletion
+      // 创建用于批量删除的测试用户
       const user1Response = await request(app.getHttpServer())
         .post('/users')
         .set('Authorization', `Bearer ${accessToken}`)
@@ -298,7 +298,7 @@ describe('UserController (e2e)', () => {
       user2Id = user2Response.body.id;
     });
 
-    it('should delete multiple users', () => {
+    it('应该批量删除多个用户', () => {
       return request(app.getHttpServer())
         .delete('/users/batch-delete')
         .set('Authorization', `Bearer ${accessToken}`)
@@ -313,7 +313,7 @@ describe('UserController (e2e)', () => {
   });
 
   describe('/users/:id/menus (GET)', () => {
-    it('should get user menus', () => {
+    it('应该获取用户菜单', () => {
       return request(app.getHttpServer())
         .get(`/users/${testUserId}/menus`)
         .set('Authorization', `Bearer ${accessToken}`)
@@ -328,7 +328,7 @@ describe('UserController (e2e)', () => {
   });
 
   describe('/users/:id (DELETE)', () => {
-    it('should delete user', () => {
+    it('应该删除用户', () => {
       return request(app.getHttpServer())
         .delete(`/users/${testUserId}`)
         .set('Authorization', `Bearer ${accessToken}`)
@@ -338,7 +338,7 @@ describe('UserController (e2e)', () => {
         });
     });
 
-    it('should return 404 for already deleted user', () => {
+    it('应该为已删除的用户返回404', () => {
       return request(app.getHttpServer())
         .delete(`/users/${testUserId}`)
         .set('Authorization', `Bearer ${accessToken}`)
