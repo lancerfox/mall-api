@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">5.88% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/119</span>
+                <span class='fraction'>7/119</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">4.05% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/74</span>
+                <span class='fraction'>3/74</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">4.67% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/107</span>
+                <span class='fraction'>5/107</span>
             </div>
         
             
@@ -440,10 +440,10 @@
 <a name='L375'></a><a href='#L375'>375</a>
 <a name='L376'></a><a href='#L376'>376</a>
 <a name='L377'></a><a href='#L377'>377</a>
-<a name='L378'></a><a href='#L378'>378</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<a name='L378'></a><a href='#L378'>378</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -466,7 +466,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -817,10 +817,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >import { Injectable } from '@nestjs/common';</span>
-<span class="cstat-no" title="statement not covered" >import { InjectModel } from '@nestjs/mongoose';</span>
-<span class="cstat-no" title="statement not covered" >import { Model } from 'mongoose';</span>
-<span class="cstat-no" title="statement not covered" >import { User, UserDocument } from '../../user/entities/user.entity';</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { User, UserDocument } from '../../user/entities/user.entity';
 &nbsp;
 interface LoginAttempt {
   username: string;
@@ -843,7 +843,7 @@ interface SecurityConfig {
 }
 &nbsp;
 @Injectable()
-export <span class="cstat-no" title="statement not covered" >class <span class="cstat-no" title="statement not covered" ><span class="cstat-no" title="statement not covered" >SecurityService </span>{</span></span>
+export class SecurityService {
   private loginAttempts: Map&lt;string, LoginAttempt[]&gt; = <span class="cstat-no" title="statement not covered" >new Map();</span>
   private lockedAccounts: Map&lt;string, Date&gt; = <span class="cstat-no" title="statement not covered" >new Map();</span>
 &nbsp;
@@ -861,7 +861,7 @@ export <span class="cstat-no" title="statement not covered" >class <span class="
 &nbsp;
 <span class="fstat-no" title="function not covered" >  constructor(</span>
     @InjectModel(User.name)
-    private <span class="cstat-no" title="statement not covered" >userModel: M</span>odel&lt;UserDocument&gt;,
+    private <span class="cstat-no" title="statement not covered" >userModel: M</span>odel<span class="branch-1 cbranch-no" title="branch not covered" >&lt;UserDocument&gt;,</span>
   ) {
     // Clean up old login attempts every hour
 <span class="cstat-no" title="statement not covered" >    setInterval(<span class="fstat-no" title="function not covered" >() =</span>&gt; <span class="cstat-no" title="statement not covered" >this.cleanupOldAttempts(),</span> 60 * 60 * 1000);</span>
@@ -1201,7 +1201,7 @@ export <span class="cstat-no" title="statement not covered" >class <span class="
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-04T10:29:18.185Z
+                at 2025-09-04T11:05:37.158Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>
