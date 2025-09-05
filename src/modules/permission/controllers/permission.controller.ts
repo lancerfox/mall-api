@@ -21,6 +21,7 @@ import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Permissions } from '../../../common/decorators/permissions.decorator';
 import { PermissionService } from '../services/permission.service';
 import { CreatePermissionDto } from '../dto/create-permission.dto';
+import { UpdatePermissionWithIdDto } from '../dto/update-permission-with-id.dto';
 import { Permission } from '../entities/permission.entity';
 
 @ApiTags('权限管理')
@@ -103,5 +104,19 @@ export class PermissionController {
     @Param('type') type: string,
   ) {
     return this.permissionService.findByModuleAndType(module, type);
+  }
+
+  @Post('update')
+  @Permissions('permission:update')
+  @ApiOperation({ summary: '更新权限信息' })
+  @ApiBody({ type: UpdatePermissionWithIdDto })
+  @ApiResponse({
+    status: 200,
+    description: 'The permission has been successfully updated.',
+    type: Permission,
+  })
+  update(@Body() updatePermissionDto: UpdatePermissionWithIdDto) {
+    const { id, ...updateData } = updatePermissionDto;
+    return this.permissionService.update(id, updateData);
   }
 }

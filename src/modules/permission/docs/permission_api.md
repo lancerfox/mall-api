@@ -164,6 +164,60 @@
 
 ---
 
+## 4. 更新权限信息
+
+- **接口说明**: 根据 ID 更新权限信息。
+- **接口地址**: `POST /permissions/update`
+- **所需权限**: `permission:update`
+
+### 请求参数 (Request Body)
+
+| 参数名      | 类型   | 是否必填 | 说明           |
+| ----------- | ------ | -------- | -------------- |
+| `id`        | string | 是       | 权限的 ID      |
+| `name`      | string | 否       | 权限的唯一名称 |
+| `description` | string | 否       | 权限的详细描述 |
+| `module`    | string | 否       | 权限所属的模块 |
+| `status`    | string | 否       | 权限状态 (`active` 或 `inactive`) |
+| `type`      | string | 否       | 权限类型 (`API`, `PAGE`, `OPERATION`, `DATA`) |
+
+**请求示例**:
+```json
+{
+  "id": "60d0fe4f5311236168a109ca",
+  "name": "user:create:updated",
+  "description": "更新后的权限描述",
+  "module": "UserManagement",
+  "status": "active",
+  "type": "API"
+}
+```
+
+### 响应 (Response)
+
+**成功响应 (200 OK)**:
+返回更新后的权限对象。
+
+**响应示例**:
+```json
+{
+  "name": "user:create:updated",
+  "description": "更新后的权限描述",
+  "module": "UserManagement",
+  "type": "API",
+  "status": "active",
+  "_id": "60d0fe4f5311236168a109ca",
+  "createdAt": "2023-08-29T14:30:00.000Z",
+  "updatedAt": "2023-08-29T15:30:00.000Z"
+}
+```
+
+**失败响应**:
+- `404 Not Found`: 如果提供的 `id` 找不到对应的权限
+- `409 Conflict`: 如果权限名称 `name` 已存在（除了当前权限）
+
+---
+
 ## 5. 按类型获取权限列表
 
 - **接口说明**: 根据权限类型获取权限列表。
