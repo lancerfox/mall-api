@@ -104,4 +104,38 @@ export class PermissionService {
   ): Promise<Permission[]> {
     return this.permissionModel.find({ module, type }).exec();
   }
+
+  async updateByName(
+    name: string,
+    updateData: Partial<Permission>,
+  ): Promise<Permission> {
+    // 如果更新数据中包含权限名称，检查新名称是否已存在（排除当前权限）
+    if (updateData.name && updateData.name !== name) {
+      const existingPermission = await this.permissionModel.findOne({
+        name: updateData.name,
+        _id: { $ne: (await this.permissionModel.findOne({ name }))?._id },
+      });
+
+      if (existingPermission) {
+        throw new ConflictException('权限名称已存在');
+      }
+    }
+
+    const permission = await this.permissionModel
+      .findOneAndUpdate({ name }, updateData, { new: true })
+      .exec();
+
+    if (!permission) {
+      throw new NotFoundException(`权限 ${name} 不存在`);
+    }
+
+    return permission;
+  }
+
+  async removeByName(name: string): Promise<void> {
+    const result = await this.permissionModel.findOneAndDelete({ name }).exec();
+    if (!result) {
+      throw new NotFoundException(`权限 ${name} 不存在`);
+    }
+  }
 }
