@@ -1,0 +1,108 @@
+[{
+  "_id": {
+    "$oid": "68ba89827d5866498ef67f80"
+  },
+  "path": "/user",
+  "name": "UserManagement",
+  "component": "#",
+  "metaTitle": "用户管理",
+  "metaIcon": "user",
+  "sortOrder": 0,
+  "children": [
+    {
+      "path": "list",
+      "name": "UserManagementList",
+      "component": "views/Menu/index",
+      "metaTitle": "用户管理",
+      "metaIcon": "userlist",
+      "sortOrder": 0
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-09-05T06:56:02.379Z"
+  },
+  "updatedAt": {
+    "$date": "2025-09-05T07:00:24.559Z"
+  },
+  "metaAlwaysShow": false,
+  "metaHidden": false,
+  "redirect": "/user/list"
+},
+{
+  "_id": {
+    "$oid": "68ba89827d5866498ef67f81"
+  },
+  "path": "/menu",
+  "name": "MenuManagement",
+  "component": "#",
+  "metaTitle": "菜单管理",
+  "metaIcon": "menu",
+  "sortOrder": 0,
+  "children": [
+    {
+      "path": "list",
+      "name": "UserManagementList",
+      "component": "views/Menu/index",
+      "metaTitle": "菜单管理",
+      "metaIcon": "menu",
+      "sortOrder": 0
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-09-05T06:56:02.526Z"
+  },
+  "updatedAt": {
+    "$date": "2025-09-05T07:00:43.198Z"
+  },
+  "metaAlwaysShow": false,
+  "metaHidden": false,
+  "redirect": "/menu/list"
+},
+{
+  "_id": {
+    "$oid": "68ba8ae3f7fba96029f219d0"
+  },
+  "parentId": "68ba89827d5866498ef67f81",
+  "path": "list",
+  "name": "MenuManagementList",
+  "component": "views/Menu/index",
+  "redirect": "",
+  "metaTitle": "菜单列表",
+  "metaIcon": "",
+  "metaHidden": false,
+  "metaAlwaysShow": false,
+  "sortOrder": 0,
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-09-05T07:01:55.083Z"
+  },
+  "updatedAt": {
+    "$date": "2025-09-05T07:01:55.083Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68ba8b7ff7fba96029f219e1"
+  },
+  "parentId": "68ba89827d5866498ef67f80",
+  "path": "userManagementList",
+  "name": "UserManagementList",
+  "component": "views/User/index",
+  "redirect": "",
+  "metaTitle": "菜单列表",
+  "metaIcon": "",
+  "metaHidden": false,
+  "metaAlwaysShow": false,
+  "sortOrder": 0,
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-09-05T07:04:31.256Z"
+  },
+  "updatedAt": {
+    "$date": "2025-09-05T07:04:31.256Z"
+  },
+  "__v": 0
+}]

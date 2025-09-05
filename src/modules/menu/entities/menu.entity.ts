@@ -49,5 +49,5 @@ export const MenuSchema = SchemaFactory.createForClass(Menu);
 
 // 创建索引优化查询性能
 MenuSchema.index({ parentId: 1, status: 1 });
-MenuSchema.index({ path: 1 }, { unique: true });
 MenuSchema.index({ sortOrder: 1 });
+// MenuSchema.index({ path: 1 }, { unique: true });
