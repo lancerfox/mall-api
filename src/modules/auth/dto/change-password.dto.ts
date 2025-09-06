@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsString,
   Length,
-  Matches,
+  // Matches,
   IsNotEmpty,
   MaxLength,
 } from 'class-validator';
@@ -25,11 +25,11 @@ export class ChangePasswordDto {
     example: 'newPassword123!',
   })
   @IsString({ message: '新密码必须是字符串' })
-  @Length(8, 32, { message: '新密码长度必须在8-32个字符之间' })
-  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, {
-    message:
-      '新密码必须包含至少一个小写字母、一个大写字母、一个数字和一个特殊字符',
-  })
+  @Length(8, 50, { message: '新密码长度必须在8-50个字符之间' })
+  // @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, {
+  //   message:
+  //     '新密码必须包含至少一个小写字母、一个大写字母、一个数字和一个特殊字符',
+  // })
   newPassword: string;
 
   @ApiProperty({

@@ -117,9 +117,14 @@ export class UserService {
    * @param newPassword 新密码（将自动加密）
    */
   async updatePassword(id: string, newPassword: string): Promise<void> {
-    await this.userModel
-      .findByIdAndUpdate(id, { password: newPassword })
-      .exec();
+    const user = await this.userModel.findById(id).exec();
+    if (!user) {
+      throw new HttpException('用户不存在', HttpStatus.NOT_FOUND);
+    }
+
+    // 直接设置密码并保存，这样会触发密码加密中间件
+    user.password = newPassword;
+    await user.save();
   }
 
   /**

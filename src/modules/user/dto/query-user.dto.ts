@@ -1,7 +1,6 @@
 import { IsOptional, IsString, IsEnum, IsInt, Min } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { RoleType } from '../../../common/enums/role-type.enum';
 
 // 辅助函数：将空字符串转换为 undefined
 const emptyStringToUndefined = ({ value }: { value: unknown }) =>
