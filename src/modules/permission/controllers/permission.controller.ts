@@ -54,9 +54,6 @@ export class PermissionController {
     type: [Permission],
   })
   findAll(@Query('type') type?: string) {
-    if (type) {
-      return this.permissionService.findByType(type);
-    }
     return this.permissionService.findAll();
   }
 
@@ -77,33 +74,6 @@ export class PermissionController {
   })
   remove(@Body('id') id: string) {
     return this.permissionService.remove(id);
-  }
-
-  @Get('type/:type')
-  @Permissions('permission:read')
-  @ApiOperation({ summary: '按类型获取权限列表' })
-  @ApiResponse({
-    status: 200,
-    description: 'A list of permissions by type.',
-    type: [Permission],
-  })
-  findByType(@Param('type') type: string) {
-    return this.permissionService.findByType(type);
-  }
-
-  @Get('module/:module/type/:type')
-  @Permissions('permission:read')
-  @ApiOperation({ summary: '按模块和类型获取权限列表' })
-  @ApiResponse({
-    status: 200,
-    description: 'A list of permissions by module and type.',
-    type: [Permission],
-  })
-  findByModuleAndType(
-    @Param('module') module: string,
-    @Param('type') type: string,
-  ) {
-    return this.permissionService.findByModuleAndType(module, type);
   }
 
   @Post('update')

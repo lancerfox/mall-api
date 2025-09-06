@@ -94,17 +94,6 @@ export class PermissionService {
     return this.permissionModel.find({ module }).exec();
   }
 
-  async findByType(type: string): Promise<Permission[]> {
-    return this.permissionModel.find({ type }).exec();
-  }
-
-  async findByModuleAndType(
-    module: string,
-    type: string,
-  ): Promise<Permission[]> {
-    return this.permissionModel.find({ module, type }).exec();
-  }
-
   async updateByName(
     name: string,
     updateData: Partial<Permission>,
