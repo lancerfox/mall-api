@@ -35,16 +35,6 @@ export interface IJwtPayload {
  */
 export interface ILoginResponse {
   access_token: string;
-  user: {
-    id: string;
-    username: string;
-    roles: { id: string; name: string }[];
-    status: string;
-    avatar?: string;
-    permissions: string[];
-    lastLoginTime?: Date;
-    lastLoginIp?: string;
-  };
   expires_in: number;
 }
 

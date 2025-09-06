@@ -45,7 +45,7 @@ describe('AuthService', () => {
   const mockUser: IUserWithoutPassword = {
     id: '123',
     username: 'testuser',
-    roles: [{ id: '1', name: 'admin', description: '管理员' }],
+    roles: [{ id: '1', name: 'admin' }],
     status: 'active',
     avatar: 'avatar.jpg',
     permissions: [],
@@ -164,7 +164,6 @@ describe('AuthService', () => {
       );
       expect(jwtService.sign).toHaveBeenCalled();
       expect(result.access_token).toBe('mock-jwt-token');
-      expect(result.user).toBeDefined();
       expect(result.expires_in).toBe(3600);
     });
 
@@ -172,9 +171,12 @@ describe('AuthService', () => {
       mockUserService.updateLastLogin.mockResolvedValue(undefined);
       mockUserService.findOne.mockResolvedValue(null);
 
-      await expect(authService.login(mockUser, '127.0.0.1')).rejects.toThrow(
-        '用户不存在',
-      );
+      // 创建一个没有id的mock用户，这样会触发findOne调用
+      const mockUserWithoutId = { ...mockUser, id: undefined };
+
+      await expect(
+        authService.login(mockUserWithoutId, '127.0.0.1'),
+      ).rejects.toThrow('用户不存在');
     });
   });
 

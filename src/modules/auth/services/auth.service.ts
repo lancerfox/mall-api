@@ -69,14 +69,18 @@ export class AuthService {
 
     if (user && isValid) {
       // 验证成功，返回用户信息（排除密码）
-      const userObj = user.toObject ? user.toObject() : user;
-      const { password: _, ...result } = userObj;
+      const userObj = user.toObject?.() ?? user;
+      const { password, ...result } = userObj as Record<string, unknown>;
 
       // 确保返回的对象包含正确的id字段
-      return {
+      const resultWithId = {
         ...result,
-        id: result._id ? result._id.toString() : result.id,
-      } as IUserWithoutPassword;
+        id: (result as any)._id
+          ? String((result as any)._id)
+          : (result as any).id,
+      };
+
+      return resultWithId as IUserWithoutPassword;
     }
 
     return null;
@@ -87,7 +91,7 @@ export class AuthService {
    * @param user 已验证的用户信息
    * @param ip 客户端IP地址
    * @param userAgent 用户代理
-   * @returns 包含access_token和用户信息的对象
+   * @returns 包含access_token的对象
    */
   async login(
     user: IUserWithoutPassword,
@@ -95,9 +99,19 @@ export class AuthService {
     userAgent?: string,
   ): Promise<ILoginResponse> {
     // 使用username作为备用标识符，如果id不存在
-    const userId =
-      user.id ||
-      (await this.userService.findOne(user.username))?._id?.toString();
+    let userId = user.id;
+
+    if (!userId) {
+      const foundUser = await this.userService.findOne(user.username);
+      if (!foundUser) {
+        throw new UnauthorizedException('用户不存在');
+      }
+      const foundUserId = foundUser._id?.toString();
+      if (!foundUserId) {
+        throw new UnauthorizedException('无法确定用户ID');
+      }
+      userId = foundUserId;
+    }
 
     if (!userId) {
       throw new UnauthorizedException('无法确定用户ID');
@@ -116,18 +130,9 @@ export class AuthService {
       secret: this.configService.get('JWT_SECRET'),
       expiresIn: this.configService.get('JWT_EXPIRES_IN', '1h'),
     });
-    // 获取更新后的用户信息
-    const updatedUser = await this.userService.findOne(user.username);
-    if (!updatedUser) {
-      throw new UnauthorizedException('用户不存在');
-    }
-    // 将UserDocument转换为UserResponseDto类型
-    const userResponse = this.userService.transformUserToResponse(updatedUser);
 
-    const userInfo = this.formatUserInfo(userResponse);
     return {
       access_token: accessToken,
-      user: userInfo,
       expires_in: this.parseExpiresIn(
         this.configService.get('JWT_EXPIRES_IN', '1h'),
       ),

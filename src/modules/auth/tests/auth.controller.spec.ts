@@ -25,7 +25,7 @@ describe('AuthController', () => {
   const mockUser: IUserWithoutPassword = {
     id: '123',
     username: 'testuser',
-    roles: [{ id: '1', name: 'admin', description: '管理员' }],
+    roles: [{ id: '1', name: 'admin' }],
     status: 'active',
     avatar: 'avatar.jpg',
     permissions: [],
@@ -35,7 +35,6 @@ describe('AuthController', () => {
 
   const mockLoginResponse: ILoginResponse = {
     access_token: 'mock-jwt-token',
-    user: mockUser,
     expires_in: 3600,
   };
 
