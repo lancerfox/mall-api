@@ -252,6 +252,38 @@ export class AuthService {
   }
 
   /**
+   * 重置用户密码
+   * @param username 用户名
+   * @returns 新生成的密码
+   */
+  async resetPassword(username: string): Promise<string> {
+    const user = await this.userService.findOne(username);
+    if (!user) {
+      throw new BadRequestException('用户不存在');
+    }
+
+    // 检查用户状态
+    if (user.status === 'locked') {
+      throw new BadRequestException('账户已被锁定，无法重置密码');
+    }
+
+    if (user.status === 'inactive') {
+      throw new BadRequestException('账户已被禁用，无法重置密码');
+    }
+
+    // 生成随机密码
+    const newPassword = this.userService.generateRandomPassword(10);
+
+    // 更新密码
+    await this.userService.updatePassword(
+      (user._id as any).toString(),
+      newPassword,
+    );
+
+    return newPassword;
+  }
+
+  /**
    * 解析过期时间字符串为秒数
    * @param expiresIn 过期时间字符串（如 '1h', '30m', '7d'）
    * @returns 秒数

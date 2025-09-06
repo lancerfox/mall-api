@@ -2,7 +2,6 @@ import {
   Controller,
   Post,
   Get,
-  Put,
   Body,
   UnauthorizedException,
   BadRequestException,
@@ -23,6 +22,7 @@ import { Public } from '../../../common/decorators/public.decorator';
 import { CurrentUser } from '../../../common/decorators/user.decorator';
 import { LoginDto } from '../dto/login.dto';
 import { ChangePasswordDto } from '../dto/change-password.dto';
+import { ResetPasswordDto } from '../dto/reset-password.dto';
 import { AuthResponseDto, UserInfoDto } from '../dto/auth-response.dto';
 import { ILoginResponse } from '../types';
 import type { JwtUser } from '../../../common/decorators/user.decorator';
@@ -194,5 +194,52 @@ export class AuthController {
   @Get('security-stats')
   getSecurityStats(@CurrentUser() user: JwtUser) {
     return this.authService.getSecurityStats(user.username);
+  }
+
+  /**
+   * 重置密码接口
+   * @param resetPasswordDto 重置密码数据传输对象
+   * @returns 新生成的密码
+   */
+  @ApiOperation({ summary: '重置密码' })
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 200,
+    description: '密码重置成功',
+    schema: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          example: '密码重置成功',
+        },
+        newPassword: {
+          type: 'string',
+          description: '新生成的密码',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: '请求参数错误或用户状态异常',
+  })
+  @ApiResponse({
+    status: 401,
+    description: '未授权访问',
+  })
+  @UseGuards(JwtAuthGuard)
+  @Post('reset-password')
+  async resetPassword(
+    @Body() resetPasswordDto: ResetPasswordDto,
+  ): Promise<{ message: string; newPassword: string }> {
+    const newPassword = await this.authService.resetPassword(
+      resetPasswordDto.username,
+    );
+
+    return {
+      message: '密码重置成功',
+      newPassword,
+    };
   }
 }
