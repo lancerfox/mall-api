@@ -73,11 +73,14 @@ export class AuthService {
       const { password, ...result } = userObj as Record<string, unknown>;
 
       // 确保返回的对象包含正确的id字段
+      const typedResult = result as Record<string, unknown>;
       const resultWithId = {
         ...result,
-        id: (result as any)._id
-          ? String((result as any)._id)
-          : (result as any).id,
+        id: typedResult._id
+          ? String(typedResult._id)
+          : typedResult.id
+            ? String(typedResult.id)
+            : '',
       };
 
       return resultWithId as IUserWithoutPassword;
