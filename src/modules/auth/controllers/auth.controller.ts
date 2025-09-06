@@ -133,7 +133,7 @@ export class AuthController {
     description: '未授权访问或当前密码不正确',
   })
   @UseGuards(JwtAuthGuard)
-  @Put('password')
+  @Post('password')
   async changePassword(
     @Body() changePasswordDto: ChangePasswordDto,
     @CurrentUser('sub') userId: string,
