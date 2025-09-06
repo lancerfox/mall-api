@@ -24,7 +24,15 @@ export class UserService {
    * @returns 用户信息或null
    */
   async findOne(username: string): Promise<UserDocument | null> {
-    return this.userModel.findOne({ username }).populate('roles').exec();
+    return this.userModel
+      .findOne({ username })
+      .populate({
+        path: 'roles',
+        populate: {
+          path: 'permissions',
+        },
+      })
+      .exec();
   }
 
   /**
@@ -37,7 +45,12 @@ export class UserService {
       const user = await this.userModel
         .findById(id)
         .select('-password')
-        .populate('roles')
+        .populate({
+          path: 'roles',
+          populate: {
+            path: 'permissions',
+          },
+        })
         .exec();
       if (!user) {
         console.log(`User not found with ID: ${id}`);
@@ -83,7 +96,12 @@ export class UserService {
     const updatedUser = await this.userModel
       .findByIdAndUpdate(id, updateData, { new: true })
       .select('-password')
-      .populate('roles')
+      .populate({
+        path: 'roles',
+        populate: {
+          path: 'permissions',
+        },
+      })
       .exec();
 
     if (!updatedUser) {
@@ -135,7 +153,12 @@ export class UserService {
       this.userModel
         .find(filter)
         .select('-password')
-        .populate('roles')
+        .populate({
+          path: 'roles',
+          populate: {
+            path: 'permissions',
+          },
+        })
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -186,7 +209,12 @@ export class UserService {
     const userWithRoles = await this.userModel
       .findById(savedUser._id)
       .select('-password')
-      .populate('roles')
+      .populate({
+        path: 'roles',
+        populate: {
+          path: 'permissions',
+        },
+      })
       .exec();
 
     return this.transformUserToResponse(userWithRoles!);
@@ -220,7 +248,12 @@ export class UserService {
     const updatedUser = await this.userModel
       .findByIdAndUpdate(id, updateUserDto, { new: true })
       .select('-password')
-      .populate('roles')
+      .populate({
+        path: 'roles',
+        populate: {
+          path: 'permissions',
+        },
+      })
       .exec();
 
     if (!updatedUser) {
@@ -263,7 +296,15 @@ export class UserService {
    * @returns 是否有权限
    */
   async hasPermission(userId: string, permission: string): Promise<boolean> {
-    const user = await this.userModel.findById(userId).populate('roles').exec();
+    const user = await this.userModel
+      .findById(userId)
+      .populate({
+        path: 'roles',
+        populate: {
+          path: 'permissions',
+        },
+      })
+      .exec();
     if (!user) {
       return false;
     }
@@ -280,7 +321,15 @@ export class UserService {
    * @returns 是否有角色
    */
   async hasRole(userId: string, roleNames: string[]): Promise<boolean> {
-    const user = await this.userModel.findById(userId).populate('roles').exec();
+    const user = await this.userModel
+      .findById(userId)
+      .populate({
+        path: 'roles',
+        populate: {
+          path: 'permissions',
+        },
+      })
+      .exec();
     if (!user) {
       return false;
     }
@@ -331,7 +380,15 @@ export class UserService {
     permissions: string[];
     menus: any[];
   }> {
-    const user = await this.userModel.findById(userId).populate('roles').exec();
+    const user = await this.userModel
+      .findById(userId)
+      .populate({
+        path: 'roles',
+        populate: {
+          path: 'permissions',
+        },
+      })
+      .exec();
 
     if (!user) {
       throw new HttpException('用户不存在', HttpStatus.NOT_FOUND);
@@ -501,13 +558,16 @@ export class UserService {
       (role) => role.type === RoleType.SUPER_ADMIN,
     );
 
+    // 获取用户所有权限
+    const permissions = this.getUserPermissions(user);
+
     return {
       id: userObj._id.toString(),
       username: userObj.username,
       roles,
       status: userObj.status,
       avatar: userObj.avatar,
-      permissions: [], // 这里可以根据需要计算权限
+      permissions: permissions, // 使用实际计算的权限
       lastLoginTime: userObj.lastLoginTime,
       lastLoginIp: userObj.lastLoginIp,
       createdAt: userObj.createdAt,
