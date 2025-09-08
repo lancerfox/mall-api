@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Body } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { MenuService } from '../services/menu.service';
+import { RoleService } from '../../role/services/role.service';
 import { CreateMenuDto } from '../dto/create-menu.dto';
 import { UpdateMenuDto } from '../dto/update-menu.dto';
 import {
@@ -10,17 +11,31 @@ import {
   MenuDetailRequestDto,
   MenuByRoleRequestDto,
 } from '../dto/menu-response.dto';
+import { CurrentUser } from '../../../common/decorators/user.decorator';
 
 @ApiTags('菜单管理')
 @Controller('menus')
 export class MenuController {
-  constructor(private readonly menuService: MenuService) {}
+  constructor(
+    private readonly menuService: MenuService,
+    private readonly roleService: RoleService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: '获取菜单列表' })
   @ApiResponse({ status: 200, type: MenuListResponseDto })
-  async getMenus(): Promise<MenuListResponseDto> {
-    const data = await this.menuService.findAll();
+  async getMenus(
+    @CurrentUser('role') roleName: string,
+  ): Promise<MenuListResponseDto> {
+    // 根据角色名称获取角色信息
+    const role = await this.roleService.findByName(roleName);
+    if (!role) {
+      // 如果角色不存在，返回空菜单
+      return { data: [] };
+    }
+
+    // 根据角色ID获取对应的菜单
+    const data = await this.menuService.findByRole(role.id);
     return { data };
   }
 
