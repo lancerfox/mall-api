@@ -56,7 +56,7 @@ export class RoleController {
   }
 
   @Post('delete')
-  @Permissions('role:delete')
+  @Permissions(PERMISSIONS.ROLE_DELETE)
   @ApiOperation({ summary: '删除角色' })
   @ApiBody({
     schema: {
@@ -75,7 +75,7 @@ export class RoleController {
   }
 
   @Post('update-permissions')
-  @Permissions(PERMISSIONS.ROLE_UPDATE)
+  @Permissions(PERMISSIONS.ROLE_UPDATE_PERMISSIONS)
   @ApiOperation({ summary: '更新角色权限' })
   @ApiBody({
     schema: {
@@ -99,7 +99,7 @@ export class RoleController {
   }
 
   @Post('update')
-  @Permissions('role:update')
+  @Permissions(PERMISSIONS.ROLE_UPDATE)
   @ApiOperation({
     summary: '更新角色信息',
     description: '更新角色信息，角色名称和描述可修改，但角色类型不可修改',
@@ -146,7 +146,7 @@ export class RoleController {
   }
 
   @Get('types')
-  @Permissions('role:read')
+  @Permissions(PERMISSIONS.ROLE_TYPES)
   @ApiOperation({
     summary: '获取所有角色类型',
     description: '获取系统中定义的所有角色类型枚举值，用于前端下拉选择',

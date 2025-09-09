@@ -13,25 +13,26 @@ export const Permissions = (...permissions: string[]) =>
  */
 export const API_PERMISSIONS = {
   // 用户管理API权限
-  USER_CREATE: 'api:user:create',
   USER_READ: 'api:user:list',
+  USER_CREATE: 'api:user:create',
   USER_UPDATE: 'api:user:update',
   USER_DELETE: 'api:user:delete',
   USER_RESET_PASSWORD: 'api:user:reset-password',
-  USER_UPDATE_STATUS: 'api:user:update-status',
 
   // 权限管理API权限
-  PERMISSION_CREATE: 'permission:create',
-  PERMISSION_READ: 'permission:list',
-  PERMISSION_UPDATE: 'permission:update',
-  PERMISSION_DELETE: 'permission:delete',
+  PERMISSION_READ: 'api:permission:list',
+  PERMISSION_CREATE: 'api:permission:create',
+  PERMISSION_UPDATE: 'api:permission:update',
+  PERMISSION_DELETE: 'api:permission:delete',
 
   // 角色管理API权限
-  ROLE_CREATE: 'role:create',
-  ROLE_READ: 'role:list',
-  ROLE_UPDATE: 'role:update',
-  ROLE_DELETE: 'role:delete',
-  ROLE_PERMISSIONS: 'role:permissions',
+  ROLE_READ: 'api:role:list',
+  ROLE_CREATE: 'api:role:create',
+  ROLE_UPDATE: 'api:role:update',
+  ROLE_DELETE: 'api:role:delete',
+  ROLE_PERMISSIONS: 'api:role:permissions',
+  ROLE_TYPES: 'api:role:types',
+  ROLE_UPDATE_PERMISSIONS: 'api:role:update-permissions',
 } as const;
 
 /**
