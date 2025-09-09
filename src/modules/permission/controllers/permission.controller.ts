@@ -17,7 +17,7 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
-import { RolesGuard } from '../../../common/guards/roles.guard';
+// import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Permissions } from '../../../common/decorators/permissions.decorator';
 import { PermissionService } from '../services/permission.service';
 import { CreatePermissionDto } from '../dto/create-permission.dto';
@@ -26,7 +26,10 @@ import { Permission } from '../entities/permission.entity';
 
 @ApiTags('权限管理')
 @Controller('permissions')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(
+  JwtAuthGuard,
+  // RolesGuard
+)
 @UsePipes(new ValidationPipe({ transform: true }))
 @ApiBearerAuth()
 export class PermissionController {
@@ -46,7 +49,7 @@ export class PermissionController {
   }
 
   @Get('list')
-  @Permissions('permission:read')
+  @Permissions('permission:list')
   @ApiOperation({ summary: '获取权限列表' })
   @ApiResponse({
     status: 200,

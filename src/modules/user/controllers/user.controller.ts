@@ -17,7 +17,7 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
-import { RolesGuard } from '../../../common/guards/roles.guard';
+// import { RolesGuard } from '../../../common/guards/roles.guard';
 import {
   Permissions,
   PERMISSIONS,
@@ -34,7 +34,10 @@ import { UpdateUserWithIdDto } from '../dto/update-user-with-id.dto';
 
 @ApiTags('用户管理')
 @Controller('users')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(
+  JwtAuthGuard,
+  // RolesGuard
+)
 @UsePipes(new ValidationPipe({ transform: true }))
 @ApiBearerAuth()
 export class UserController {

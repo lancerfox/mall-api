@@ -17,7 +17,7 @@ export enum ModuleType {
   USER = 'user',
   ROLE = 'role',
   PERMISSION = 'permission',
-  SYSTEM = 'system',
+  MENU = 'menu',
 }
 
 /**
@@ -56,7 +56,7 @@ export const ROLES = {
 export const API_PERMISSIONS = {
   // 用户管理API权限
   USER_CREATE: 'api:user:create',
-  USER_READ: 'api:user:read',
+  USER_READ: 'api:user:list',
   USER_UPDATE: 'api:user:update',
   USER_DELETE: 'api:user:delete',
   USER_RESET_PASSWORD: 'api:user:reset-password',
@@ -64,13 +64,13 @@ export const API_PERMISSIONS = {
 
   // 权限管理API权限
   PERMISSION_CREATE: 'api:permission:create',
-  PERMISSION_READ: 'api:permission:read',
+  PERMISSION_READ: 'api:permission:list',
   PERMISSION_UPDATE: 'api:permission:update',
   PERMISSION_DELETE: 'api:permission:delete',
 
   // 系统管理API权限
-  SYSTEM_CONFIG: 'api:system:config',
-  SYSTEM_LOG: 'api:system:log',
+  // SYSTEM_CONFIG: 'api:system:config',
+  // SYSTEM_LOG: 'api:system:log',
 } as const;
 
 /**
@@ -78,15 +78,13 @@ export const API_PERMISSIONS = {
  */
 export const PAGE_PERMISSIONS = {
   // 用户管理页面权限
-  USER_MANAGEMENT: 'page:user:management',
-  USER_DETAIL: 'page:user:detail',
-  USER_CREATE_PAGE: 'page:user:create',
-
+  // USER_MANAGEMENT: 'page:user:management',
+  // USER_DETAIL: 'page:user:detail',
+  // USER_CREATE_PAGE: 'page:user:create',
   // 权限管理页面权限
-  PERMISSION_MANAGEMENT: 'page:permission:management',
-
+  // PERMISSION_MANAGEMENT: 'page:permission:management',
   // 系统管理页面权限
-  SYSTEM_MANAGEMENT: 'page:system:management',
+  // SYSTEM_MANAGEMENT: 'page:system:management',
 } as const;
 
 /**
@@ -94,13 +92,13 @@ export const PAGE_PERMISSIONS = {
  */
 export const OPERATION_PERMISSIONS = {
   // 用户操作权限
-  USER_EXPORT: 'operation:user:export',
-  USER_IMPORT: 'operation:user:import',
-  USER_BATCH_DELETE: 'operation:user:batch-delete',
+  // USER_EXPORT: 'operation:user:export',
+  // USER_IMPORT: 'operation:user:import',
+  // USER_BATCH_DELETE: 'operation:user:batch-delete',
 
   // 权限操作权限
-  PERMISSION_ASSIGN: 'operation:permission:assign',
-  PERMISSION_BATCH_UPDATE: 'operation:permission:batch-update',
+  // PERMISSION_ASSIGN: 'operation:permission:assign',
+  // PERMISSION_BATCH_UPDATE: 'operation:permission:batch-update',
 } as const;
 
 /**

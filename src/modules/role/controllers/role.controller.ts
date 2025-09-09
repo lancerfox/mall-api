@@ -7,7 +7,7 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
-import { RolesGuard } from '../../../common/guards/roles.guard';
+// import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Permissions } from '../../../common/decorators/permissions.decorator';
 import { RoleService } from '../services/role.service';
 import { CreateRoleDto } from '../dto/create-role.dto';
@@ -17,7 +17,10 @@ import { RoleListResponseDto } from '../dto/role-list-response.dto';
 
 @ApiTags('角色管理')
 @Controller('roles')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(
+  JwtAuthGuard,
+  // RolesGuard
+)
 export class RoleController {
   constructor(private readonly roleService: RoleService) {}
 
@@ -38,7 +41,7 @@ export class RoleController {
   }
 
   @Get('list')
-  @Permissions('role:read')
+  @Permissions('role:list')
   @ApiOperation({ summary: '获取所有角色列表' })
   @ApiResponse({
     status: 200,
