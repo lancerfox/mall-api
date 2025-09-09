@@ -8,7 +8,10 @@ import {
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 // import { RolesGuard } from '../../../common/guards/roles.guard';
-import { Permissions } from '../../../common/decorators/permissions.decorator';
+import {
+  Permissions,
+  PERMISSIONS,
+} from '../../../common/decorators/permissions.decorator';
 import { RoleService } from '../services/role.service';
 import { CreateRoleDto } from '../dto/create-role.dto';
 import { UpdateRoleWithIdDto } from '../dto/update-role-with-id.dto';
@@ -25,7 +28,7 @@ export class RoleController {
   constructor(private readonly roleService: RoleService) {}
 
   @Post('create')
-  @Permissions('role:create')
+  @Permissions(PERMISSIONS.ROLE_CREATE)
   @ApiOperation({
     summary: '创建新角色',
     description: '创建新角色，角色类型一旦创建后不可修改',
@@ -41,7 +44,7 @@ export class RoleController {
   }
 
   @Get('list')
-  @Permissions('role:list')
+  @Permissions(PERMISSIONS.ROLE_READ)
   @ApiOperation({ summary: '获取所有角色列表' })
   @ApiResponse({
     status: 200,
@@ -72,7 +75,7 @@ export class RoleController {
   }
 
   @Post('update-permissions')
-  @Permissions('role:update')
+  @Permissions(PERMISSIONS.ROLE_UPDATE)
   @ApiOperation({ summary: '更新角色权限' })
   @ApiBody({
     schema: {
@@ -112,7 +115,7 @@ export class RoleController {
   }
 
   @Get('permissions')
-  @Permissions('role:read')
+  @Permissions(PERMISSIONS.ROLE_PERMISSIONS)
   @ApiOperation({ summary: '获取角色权限列表（支持按类型筛选）' })
   @ApiQuery({ name: 'id', required: true, description: '角色ID' })
   @ApiQuery({

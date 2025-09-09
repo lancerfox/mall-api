@@ -3,7 +3,6 @@ import {
   Get,
   Post,
   Body,
-  Param,
   UseGuards,
   UsePipes,
   ValidationPipe,
@@ -18,7 +17,10 @@ import {
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 // import { RolesGuard } from '../../../common/guards/roles.guard';
-import { Permissions } from '../../../common/decorators/permissions.decorator';
+import {
+  Permissions,
+  PERMISSIONS,
+} from '../../../common/decorators/permissions.decorator';
 import { PermissionService } from '../services/permission.service';
 import { CreatePermissionDto } from '../dto/create-permission.dto';
 import { UpdatePermissionWithIdDto } from '../dto/update-permission-with-id.dto';
@@ -36,7 +38,7 @@ export class PermissionController {
   constructor(private readonly permissionService: PermissionService) {}
 
   @Post('create')
-  @Permissions('permission:create')
+  @Permissions(PERMISSIONS.PERMISSION_CREATE)
   @ApiOperation({ summary: '创建新权限' })
   @ApiBody({ type: CreatePermissionDto })
   @ApiResponse({
@@ -49,7 +51,7 @@ export class PermissionController {
   }
 
   @Get('list')
-  @Permissions('permission:list')
+  @Permissions(PERMISSIONS.PERMISSION_READ)
   @ApiOperation({ summary: '获取权限列表' })
   @ApiResponse({
     status: 200,
@@ -61,7 +63,7 @@ export class PermissionController {
   }
 
   @Post('delete')
-  @Permissions('permission:delete')
+  @Permissions(PERMISSIONS.PERMISSION_DELETE)
   @ApiOperation({ summary: '删除权限' })
   @ApiBody({
     schema: {
@@ -80,7 +82,7 @@ export class PermissionController {
   }
 
   @Post('update')
-  @Permissions('permission:update')
+  @Permissions(PERMISSIONS.PERMISSION_UPDATE)
   @ApiOperation({ summary: '更新权限信息' })
   @ApiBody({ type: UpdatePermissionWithIdDto })
   @ApiResponse({

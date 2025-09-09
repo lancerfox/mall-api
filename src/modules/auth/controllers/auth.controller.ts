@@ -26,6 +26,10 @@ import { ResetPasswordDto } from '../dto/reset-password.dto';
 import { AuthResponseDto, UserInfoDto } from '../dto/auth-response.dto';
 import { ILoginResponse } from '../types';
 import type { JwtUser } from '../../../common/decorators/user.decorator';
+import {
+  Permissions,
+  PERMISSIONS,
+} from '../../../common/decorators/permissions.decorator';
 
 @ApiTags('认证')
 @Controller('auth')
@@ -229,6 +233,7 @@ export class AuthController {
     description: '未授权访问',
   })
   @UseGuards(JwtAuthGuard)
+  @Permissions(PERMISSIONS.USER_RESET_PASSWORD)
   @Post('reset-password')
   async resetPassword(
     @Body() resetPasswordDto: ResetPasswordDto,
