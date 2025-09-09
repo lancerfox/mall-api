@@ -9,30 +9,60 @@ export const Permissions = (...permissions: string[]) =>
   SetMetadata('permissions', permissions);
 
 /**
- * 预定义的权限常量
+ * 后端API权限常量
+ */
+export const API_PERMISSIONS = {
+  // 用户管理API权限
+  USER_CREATE: 'api:user:create',
+  USER_READ: 'api:user:list',
+  USER_UPDATE: 'api:user:update',
+  USER_DELETE: 'api:user:delete',
+  USER_RESET_PASSWORD: 'api:user:reset-password',
+  USER_UPDATE_STATUS: 'api:user:update-status',
+
+  // 权限管理API权限
+  PERMISSION_CREATE: 'api:permission:create',
+  PERMISSION_READ: 'api:permission:list',
+  PERMISSION_UPDATE: 'api:permission:update',
+  PERMISSION_DELETE: 'api:permission:delete',
+
+  // 系统管理API权限
+  // SYSTEM_CONFIG: 'api:system:config',
+  // SYSTEM_LOG: 'api:system:log',
+} as const;
+
+/**
+ * 前端页面权限常量
+ */
+export const PAGE_PERMISSIONS = {
+  // 用户管理页面权限
+  // USER_MANAGEMENT: 'page:user:management',
+  // USER_DETAIL: 'page:user:detail',
+  // USER_CREATE_PAGE: 'page:user:create',
+  // 权限管理页面权限
+  // PERMISSION_MANAGEMENT: 'page:permission:management',
+  // 系统管理页面权限
+  // SYSTEM_MANAGEMENT: 'page:system:management',
+} as const;
+
+/**
+ * 操作权限常量
+ */
+export const OPERATION_PERMISSIONS = {
+  // 用户操作权限
+  // USER_EXPORT: 'operation:user:export',
+  // USER_IMPORT: 'operation:user:import',
+  // USER_BATCH_DELETE: 'operation:user:batch-delete',
+  // 权限操作权限
+  // PERMISSION_ASSIGN: 'operation:permission:assign',
+  // PERMISSION_BATCH_UPDATE: 'operation:permission:batch-update',
+} as const;
+
+/**
+ * 合并所有权限常量（向后兼容）
  */
 export const PERMISSIONS = {
-  // 用户管理权限
-  USER_CREATE: 'user:create',
-  USER_READ: 'user:read',
-  USER_UPDATE: 'user:update',
-  USER_DELETE: 'user:delete',
-  USER_RESET_PASSWORD: 'user:reset-password',
-  USER_UPDATE_STATUS: 'user:update-status',
-
-  // 角色管理权限
-  ROLE_CREATE: 'role:create',
-  ROLE_READ: 'role:read',
-  ROLE_UPDATE: 'role:update',
-  ROLE_DELETE: 'role:delete',
-
-  // 权限管理权限
-  PERMISSION_CREATE: 'permission:create',
-  PERMISSION_READ: 'permission:read',
-  PERMISSION_UPDATE: 'permission:update',
-  PERMISSION_DELETE: 'permission:delete',
-
-  // 系统管理权限
-  SYSTEM_CONFIG: 'system:config',
-  SYSTEM_LOG: 'system:log',
+  ...API_PERMISSIONS,
+  ...PAGE_PERMISSIONS,
+  ...OPERATION_PERMISSIONS,
 } as const;

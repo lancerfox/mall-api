@@ -21,7 +21,7 @@ import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import {
   Permissions,
   PERMISSIONS,
-} from '../../../common/decorators/roles.decorator';
+} from '../../../common/decorators/permissions.decorator';
 import { CurrentUser } from '../../../common/decorators/user.decorator';
 import { UserService } from '../services/user.service';
 import { CreateUserDto } from '../dto/create-user.dto';
