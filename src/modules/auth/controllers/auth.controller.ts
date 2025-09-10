@@ -239,7 +239,7 @@ export class AuthController {
     @Body() resetPasswordDto: ResetPasswordDto,
   ): Promise<{ message: string; newPassword: string }> {
     const newPassword = await this.authService.resetPassword(
-      resetPasswordDto.username,
+      resetPasswordDto.id,
     );
 
     return {

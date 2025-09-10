@@ -253,11 +253,11 @@ export class AuthService {
 
   /**
    * 重置用户密码
-   * @param username 用户名
+   * @param id 用户ID
    * @returns 新生成的密码
    */
-  async resetPassword(username: string): Promise<string> {
-    const user = await this.userService.findOne(username);
+  async resetPassword(id: string): Promise<string> {
+    const user = await this.userService.findById(id);
     if (!user) {
       throw new BadRequestException('用户不存在');
     }
@@ -275,10 +275,7 @@ export class AuthService {
     const newPassword = this.userService.generateRandomPassword(10);
 
     // 更新密码
-    await this.userService.updatePassword(
-      (user._id as any).toString(),
-      newPassword,
-    );
+    await this.userService.updatePassword(user.id, newPassword);
 
     return newPassword;
   }

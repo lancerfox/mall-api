@@ -202,12 +202,12 @@ Authorization: Bearer <access_token>
 
 | 参数名 | 类型 | 必填 | 说明 | 示例 |
 |--------|------|------|------|------|
-| username | string | 是 | 要重置密码的用户名 | "admin" |
+| id | string | 是 | 要重置密码的用户ID | "507f1f77bcf86cd799439011" |
 
 **请求示例**:
 ```json
 {
-  "username": "admin"
+  "id": "507f1f77bcf86cd799439011"
 }
 ```
 
@@ -293,7 +293,7 @@ Authorization: Bearer <access_token>
 ### ResetPasswordDto - 重置密码请求数据模型
 ```typescript
 {
-  username: string;    // 用户名
+  id: string;    // 用户ID
 }
 ```
 
