@@ -142,7 +142,7 @@ describe('BeadMaterial (e2e)', () => {
                 hardness: '5',
                 transparency: '不透明',
                 origin: '中国',
-                price: 12.50,
+                price: 12.5,
                 stock_quantity: 50,
                 unit: '颗',
                 supplier: '测试供应商',
@@ -172,7 +172,7 @@ describe('BeadMaterial (e2e)', () => {
           hardness: '6',
           transparency: '半透明',
           origin: '日本',
-          price: 15.00,
+          price: 15.0,
           stock_quantity: 30,
           unit: '颗',
           supplier: '测试供应商2',
@@ -288,14 +288,14 @@ describe('BeadMaterial (e2e)', () => {
             id: materialId,
             name: '更新后的测试材料',
             description: '这是更新后的测试材料',
-            price: 20.00,
+            price: 20.0,
           })
           .expect(200)
           .expect((res) => {
             expect(res.body.code).toBe(200);
             expect(res.body.message).toBe('材料更新成功');
             expect(res.body.data.name).toBe('更新后的测试材料');
-            expect(res.body.data.price).toBe(20.00);
+            expect(res.body.data.price).toBe(20.0);
           });
       }
     });
