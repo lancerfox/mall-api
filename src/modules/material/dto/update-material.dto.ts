@@ -50,7 +50,7 @@ export class UpdateMaterialDto {
   @ApiProperty({ description: '颜色', example: '红色', required: false })
   @IsOptional()
   @IsString()
-  @Length(1, 20)
+  @Length(0, 20)
   color?: string;
 
   @ApiProperty({ description: '硬度(1-10)', example: 7, required: false })
