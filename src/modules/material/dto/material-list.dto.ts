@@ -36,10 +36,10 @@ export class MaterialListDto {
   @ApiProperty({
     description: '状态筛选',
     example: '',
-    enum: ['enabled', 'disabled'],
+    enum: ['', 'enabled', 'disabled'],
     required: false,
   })
   @IsOptional()
-  @IsEnum(['enabled', 'disabled'])
+  @IsEnum(['', 'enabled', 'disabled'])
   status?: string;
 }
