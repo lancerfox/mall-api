@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  HttpException,
-} from '@nestjs/common';
+import { Injectable, HttpException } from '@nestjs/common';
 import { ERROR_CODES } from '../../../common/constants/error-codes';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -40,7 +37,10 @@ export class MaterialService {
       name: createMaterialDto.name,
     });
     if (existingMaterial) {
-      throw new HttpException('材料名称已存在', ERROR_CODES.MATERIAL_ALREADY_EXISTS);
+      throw new HttpException(
+        '材料名称已存在',
+        ERROR_CODES.MATERIAL_ALREADY_EXISTS,
+      );
     }
 
     const materialId = `M${Date.now()}${Math.random().toString(36).substr(2, 3).toUpperCase()}`;
@@ -171,7 +171,10 @@ export class MaterialService {
         materialId: { $ne: materialId },
       });
       if (duplicateMaterial) {
-        throw new HttpException('材料名称已存在', ERROR_CODES.MATERIAL_ALREADY_EXISTS);
+        throw new HttpException(
+          '材料名称已存在',
+          ERROR_CODES.MATERIAL_ALREADY_EXISTS,
+        );
       }
     }
 

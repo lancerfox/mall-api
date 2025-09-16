@@ -30,7 +30,10 @@ export class RoleService {
     });
 
     if (existingRole) {
-      throw new HttpException('角色名称已存在', ERROR_CODES.ROLE_ALREADY_EXISTS);
+      throw new HttpException(
+        '角色名称已存在',
+        ERROR_CODES.ROLE_ALREADY_EXISTS,
+      );
     }
 
     // 验证角色类型是否合法
@@ -46,7 +49,10 @@ export class RoleService {
       );
       const permissionIds = createRoleDto.permissions as string[];
       if (permissions.length !== permissionIds.length) {
-        throw new HttpException('部分权限不存在', ERROR_CODES.PERMISSION_NOT_FOUND);
+        throw new HttpException(
+          '部分权限不存在',
+          ERROR_CODES.PERMISSION_NOT_FOUND,
+        );
       }
     }
 
@@ -99,12 +105,18 @@ export class RoleService {
 
     // 系统角色不允许修改某些字段
     if (existingRole.isSystem && updateRoleDto.isSystem === false) {
-      throw new HttpException('不能修改系统角色的系统标识', ERROR_CODES.SYSTEM_ROLE_IMMUTABLE);
+      throw new HttpException(
+        '不能修改系统角色的系统标识',
+        ERROR_CODES.SYSTEM_ROLE_IMMUTABLE,
+      );
     }
 
     // 角色类型不允许修改
     if (updateRoleDto.type && updateRoleDto.type !== existingRole.type) {
-      throw new HttpException('角色类型不允许修改', ERROR_CODES.ROLE_TYPE_IMMUTABLE);
+      throw new HttpException(
+        '角色类型不允许修改',
+        ERROR_CODES.ROLE_TYPE_IMMUTABLE,
+      );
     }
 
     if (updateRoleDto.name) {
@@ -114,7 +126,10 @@ export class RoleService {
       });
 
       if (duplicateRole) {
-        throw new HttpException('角色名称已存在', ERROR_CODES.ROLE_ALREADY_EXISTS);
+        throw new HttpException(
+          '角色名称已存在',
+          ERROR_CODES.ROLE_ALREADY_EXISTS,
+        );
       }
     }
 
@@ -125,7 +140,10 @@ export class RoleService {
       );
       const permissionIds = updateRoleDto.permissions as string[];
       if (permissions.length !== permissionIds.length) {
-        throw new HttpException('部分权限不存在', ERROR_CODES.PERMISSION_NOT_FOUND);
+        throw new HttpException(
+          '部分权限不存在',
+          ERROR_CODES.PERMISSION_NOT_FOUND,
+        );
       }
     }
 
@@ -144,7 +162,10 @@ export class RoleService {
     }
 
     if (role.isSystem) {
-      throw new HttpException('系统角色不能删除', ERROR_CODES.SYSTEM_ROLE_IMMUTABLE);
+      throw new HttpException(
+        '系统角色不能删除',
+        ERROR_CODES.SYSTEM_ROLE_IMMUTABLE,
+      );
     }
 
     await this.roleModel.findByIdAndDelete(id).exec();
@@ -159,7 +180,10 @@ export class RoleService {
     // 验证权限是否存在
     const permissions = await this.permissionService.findByIds(permissionIds);
     if (permissions.length !== permissionIds.length) {
-      throw new HttpException('部分权限不存在', ERROR_CODES.PERMISSION_NOT_FOUND);
+      throw new HttpException(
+        '部分权限不存在',
+        ERROR_CODES.PERMISSION_NOT_FOUND,
+      );
     }
 
     // 添加权限（去重）
@@ -189,7 +213,10 @@ export class RoleService {
     if (permissionIds.length > 0) {
       const permissions = await this.permissionService.findByIds(permissionIds);
       if (permissions.length !== permissionIds.length) {
-        throw new HttpException('部分权限不存在', ERROR_CODES.PERMISSION_NOT_FOUND);
+        throw new HttpException(
+          '部分权限不存在',
+          ERROR_CODES.PERMISSION_NOT_FOUND,
+        );
       }
     }
 

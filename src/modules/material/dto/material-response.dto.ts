@@ -18,7 +18,11 @@ export class MaterialResponseDto {
   @ApiProperty({ description: '库存数量', example: 100 })
   stock: number;
 
-  @ApiProperty({ description: '材料描述', example: '天然红玛瑙', required: false })
+  @ApiProperty({
+    description: '材料描述',
+    example: '天然红玛瑙',
+    required: false,
+  })
   description?: string;
 
   @ApiProperty({ description: '颜色', example: '红色', required: false })
@@ -30,7 +34,11 @@ export class MaterialResponseDto {
   @ApiProperty({ description: '密度', example: 2.65, required: false })
   density?: number;
 
-  @ApiProperty({ description: '状态', example: 'enabled', enum: ['enabled', 'disabled'] })
+  @ApiProperty({
+    description: '状态',
+    example: 'enabled',
+    enum: ['enabled', 'disabled'],
+  })
   status: string;
 
   @ApiProperty({ description: '创建时间', example: '2024-01-01T00:00:00.000Z' })
@@ -76,7 +84,12 @@ export class MaterialListResponseDto {
   @ApiProperty({ description: '每页数量', example: 20 })
   pageSize: number;
 
-  constructor(list: MaterialResponseDto[], total: number, page: number, pageSize: number) {
+  constructor(
+    list: MaterialResponseDto[],
+    total: number,
+    page: number,
+    pageSize: number,
+  ) {
     this.list = list;
     this.total = total;
     this.page = page;
@@ -101,4 +114,3 @@ export class BatchDeleteResponseDto {
     this.deletedCount = deletedCount;
   }
 }
-

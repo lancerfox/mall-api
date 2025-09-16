@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  HttpException,
-} from '@nestjs/common';
+import { Injectable, HttpException } from '@nestjs/common';
 import { ERROR_CODES } from '../../../common/constants/error-codes';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -22,7 +19,10 @@ export class PermissionService {
     });
 
     if (existingPermission) {
-      throw new HttpException('权限名称已存在', ERROR_CODES.PERMISSION_ALREADY_EXISTS);
+      throw new HttpException(
+        '权限名称已存在',
+        ERROR_CODES.PERMISSION_ALREADY_EXISTS,
+      );
     }
 
     const permission = new this.permissionModel(createPermissionDto);
@@ -68,7 +68,10 @@ export class PermissionService {
       });
 
       if (existingPermission) {
-        throw new HttpException('权限名称已存在', ERROR_CODES.PERMISSION_ALREADY_EXISTS);
+        throw new HttpException(
+          '权限名称已存在',
+          ERROR_CODES.PERMISSION_ALREADY_EXISTS,
+        );
       }
     }
 
@@ -106,7 +109,10 @@ export class PermissionService {
       });
 
       if (existingPermission) {
-        throw new HttpException('权限名称已存在', ERROR_CODES.PERMISSION_ALREADY_EXISTS);
+        throw new HttpException(
+          '权限名称已存在',
+          ERROR_CODES.PERMISSION_ALREADY_EXISTS,
+        );
       }
     }
 
@@ -115,7 +121,10 @@ export class PermissionService {
       .exec();
 
     if (!permission) {
-      throw new HttpException(`权限 ${name} 不存在`, ERROR_CODES.PERMISSION_NOT_FOUND);
+      throw new HttpException(
+        `权限 ${name} 不存在`,
+        ERROR_CODES.PERMISSION_NOT_FOUND,
+      );
     }
 
     return permission;
@@ -124,7 +133,10 @@ export class PermissionService {
   async removeByName(name: string): Promise<void> {
     const result = await this.permissionModel.findOneAndDelete({ name }).exec();
     if (!result) {
-      throw new HttpException(`权限 ${name} 不存在`, ERROR_CODES.PERMISSION_NOT_FOUND);
+      throw new HttpException(
+        `权限 ${name} 不存在`,
+        ERROR_CODES.PERMISSION_NOT_FOUND,
+      );
     }
   }
 }

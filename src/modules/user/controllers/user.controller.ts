@@ -103,7 +103,10 @@ export class UserController {
   ): Promise<{ message: string }> {
     // 防止用户删除自己
     if (currentUserId === userIdDto.id) {
-      throw new HttpException('不能删除自己的账户', ERROR_CODES.OPERATION_NOT_ALLOWED);
+      throw new HttpException(
+        '不能删除自己的账户',
+        ERROR_CODES.OPERATION_NOT_ALLOWED,
+      );
     }
 
     await this.userService.remove(userIdDto.id);

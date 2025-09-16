@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  HttpException,
-} from '@nestjs/common';
+import { Injectable, HttpException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UserService } from '../../user/services/user.service';
@@ -118,16 +115,16 @@ export class AuthService {
       }
       const foundUserId = foundUser._id?.toString();
       if (!foundUserId) {
-        throw new HttpException('无法确定用户ID', ERROR_CODES.USER_ID_UNDEFINED);
+        throw new HttpException(
+          '无法确定用户ID',
+          ERROR_CODES.USER_ID_UNDEFINED,
+        );
       }
       userId = foundUserId;
     }
 
     if (!userId) {
-      throw new HttpException(
-        '无法确定用户ID',
-        ERROR_CODES.INVALID_USER_ID,
-      );
+      throw new HttpException('无法确定用户ID', ERROR_CODES.INVALID_USER_ID);
     }
 
     await this.userService.updateLastLogin(userId, ip);
@@ -197,10 +194,7 @@ export class AuthService {
   async getProfile(userId: string): Promise<UserInfoDto> {
     const user = await this.userService.findById(userId);
     if (!user) {
-      throw new HttpException(
-        '用户不存在',
-        ERROR_CODES.USER_NOT_FOUND,
-      );
+      throw new HttpException('用户不存在', ERROR_CODES.USER_NOT_FOUND);
     }
 
     return this.formatUserInfo(user);
@@ -224,10 +218,7 @@ export class AuthService {
     try {
       const user = await this.userService.findById(userId);
       if (!user) {
-        throw new HttpException(
-          '用户不存在',
-          ERROR_CODES.USER_NOT_FOUND,
-        );
+        throw new HttpException('用户不存在', ERROR_CODES.USER_NOT_FOUND);
       }
 
       // 验证当前密码
@@ -236,10 +227,7 @@ export class AuthService {
         !userWithPassword ||
         !(await bcrypt.compare(currentPassword, userWithPassword.password))
       ) {
-        throw new HttpException(
-          '当前密码不正确',
-          ERROR_CODES.INVALID_PASSWORD,
-        );
+        throw new HttpException('当前密码不正确', ERROR_CODES.INVALID_PASSWORD);
       }
 
       // 检查新密码是否与当前密码相同
@@ -284,10 +272,7 @@ export class AuthService {
   async resetPassword(id: string): Promise<string> {
     const user = await this.userService.findById(id);
     if (!user) {
-      throw new HttpException(
-        '用户不存在',
-        ERROR_CODES.USER_NOT_FOUND,
-      );
+      throw new HttpException('用户不存在', ERROR_CODES.USER_NOT_FOUND);
     }
 
     // 检查用户状态

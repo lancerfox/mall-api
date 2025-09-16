@@ -67,8 +67,6 @@ export class CreateCategoryResponseDto {
   categoryId: string;
 }
 
-
-
 export class BatchDeleteResponseDto {
   @ApiProperty({ example: 5 })
   deletedCount: number;

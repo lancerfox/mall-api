@@ -33,10 +33,13 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   override handleRequest(err: Error | null, user: any): any {
     // 如果有错误或者没有用户信息，抛出未授权异常
     if (err || !user) {
-      throw err || new UnauthorizedException({
-        message: '访问令牌无效或已过期',
-        errorCode: ERROR_CODES.AUTH_TOKEN_INVALID,
-      });
+      throw (
+        err ||
+        new UnauthorizedException({
+          message: '访问令牌无效或已过期',
+          errorCode: ERROR_CODES.AUTH_TOKEN_INVALID,
+        })
+      );
     }
     return user;
   }

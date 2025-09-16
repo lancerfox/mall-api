@@ -216,7 +216,10 @@ export class MenuService {
       .exec();
 
     if (!updatedMenu) {
-      throw new HttpException(`菜单 ${id} 更新失败`, ERROR_CODES.MENU_NOT_FOUND);
+      throw new HttpException(
+        `菜单 ${id} 更新失败`,
+        ERROR_CODES.MENU_NOT_FOUND,
+      );
     }
     return updatedMenu.toObject();
   }
