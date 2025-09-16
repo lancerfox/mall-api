@@ -1,5 +1,6 @@
 import {
   Injectable,
+  HttpException,
   ConflictException,
   NotFoundException,
   BadRequestException,
@@ -13,6 +14,7 @@ import { UpdateRoleDto } from '../dto/update-role.dto';
 import { PermissionService } from '../../permission/services/permission.service';
 import { Permission } from '../../permission/entities/permission.entity';
 import { RoleListResponseDto } from '../dto/role-list-response.dto';
+import { ERROR_CODES } from '../../../common/constants/error-codes';
 
 @Injectable()
 export class RoleService {
@@ -28,13 +30,13 @@ export class RoleService {
     });
 
     if (existingRole) {
-      throw new ConflictException('角色名称已存在');
+      throw new HttpException('角色名称已存在', ERROR_CODES.ROLE_ALREADY_EXISTS);
     }
 
     // 验证角色类型是否合法
     const validRoleTypes = Object.values(RoleType) as RoleType[];
     if (!validRoleTypes.includes(createRoleDto.type)) {
-      throw new BadRequestException('无效的角色类型');
+      throw new HttpException('无效的角色类型', ERROR_CODES.INVALID_ROLE_TYPE);
     }
 
     // 验证权限是否存在
@@ -44,7 +46,7 @@ export class RoleService {
       );
       const permissionIds = createRoleDto.permissions as string[];
       if (permissions.length !== permissionIds.length) {
-        throw new BadRequestException('部分权限不存在');
+        throw new HttpException('部分权限不存在', ERROR_CODES.PERMISSION_NOT_FOUND);
       }
     }
 
@@ -65,7 +67,7 @@ export class RoleService {
       .populate('permissions')
       .exec();
     if (!role) {
-      throw new NotFoundException('角色不存在');
+      throw new HttpException('角色不存在', ERROR_CODES.ROLE_NOT_FOUND);
     }
     return role;
   }
@@ -92,17 +94,17 @@ export class RoleService {
   async update(id: string, updateRoleDto: UpdateRoleDto): Promise<Role> {
     const existingRole = await this.roleModel.findById(id);
     if (!existingRole) {
-      throw new NotFoundException('角色不存在');
+      throw new HttpException('角色不存在', ERROR_CODES.ROLE_NOT_FOUND);
     }
 
     // 系统角色不允许修改某些字段
     if (existingRole.isSystem && updateRoleDto.isSystem === false) {
-      throw new BadRequestException('不能修改系统角色的系统标识');
+      throw new HttpException('不能修改系统角色的系统标识', ERROR_CODES.SYSTEM_ROLE_IMMUTABLE);
     }
 
     // 角色类型不允许修改
     if (updateRoleDto.type && updateRoleDto.type !== existingRole.type) {
-      throw new BadRequestException('角色类型不允许修改');
+      throw new HttpException('角色类型不允许修改', ERROR_CODES.ROLE_TYPE_IMMUTABLE);
     }
 
     if (updateRoleDto.name) {
@@ -112,7 +114,7 @@ export class RoleService {
       });
 
       if (duplicateRole) {
-        throw new ConflictException('角色名称已存在');
+        throw new HttpException('角色名称已存在', ERROR_CODES.ROLE_ALREADY_EXISTS);
       }
     }
 
@@ -123,7 +125,7 @@ export class RoleService {
       );
       const permissionIds = updateRoleDto.permissions as string[];
       if (permissions.length !== permissionIds.length) {
-        throw new BadRequestException('部分权限不存在');
+        throw new HttpException('部分权限不存在', ERROR_CODES.PERMISSION_NOT_FOUND);
       }
     }
 
@@ -138,11 +140,11 @@ export class RoleService {
   async remove(id: string): Promise<void> {
     const role = await this.roleModel.findById(id);
     if (!role) {
-      throw new NotFoundException('角色不存在');
+      throw new HttpException('角色不存在', ERROR_CODES.ROLE_NOT_FOUND);
     }
 
     if (role.isSystem) {
-      throw new BadRequestException('系统角色不能删除');
+      throw new HttpException('系统角色不能删除', ERROR_CODES.SYSTEM_ROLE_IMMUTABLE);
     }
 
     await this.roleModel.findByIdAndDelete(id).exec();
@@ -151,13 +153,13 @@ export class RoleService {
   async addPermissions(roleId: string, permissionIds: string[]): Promise<Role> {
     const role = await this.roleModel.findById(roleId);
     if (!role) {
-      throw new NotFoundException('角色不存在');
+      throw new HttpException('角色不存在', ERROR_CODES.ROLE_NOT_FOUND);
     }
 
     // 验证权限是否存在
     const permissions = await this.permissionService.findByIds(permissionIds);
     if (permissions.length !== permissionIds.length) {
-      throw new BadRequestException('部分权限不存在');
+      throw new HttpException('部分权限不存在', ERROR_CODES.PERMISSION_NOT_FOUND);
     }
 
     // 添加权限（去重）
@@ -180,14 +182,14 @@ export class RoleService {
   ): Promise<Role> {
     const role = await this.roleModel.findById(roleId);
     if (!role) {
-      throw new NotFoundException('角色不存在');
+      throw new HttpException('角色不存在', ERROR_CODES.ROLE_NOT_FOUND);
     }
 
     // 验证权限是否存在
     if (permissionIds.length > 0) {
       const permissions = await this.permissionService.findByIds(permissionIds);
       if (permissions.length !== permissionIds.length) {
-        throw new BadRequestException('部分权限不存在');
+        throw new HttpException('部分权限不存在', ERROR_CODES.PERMISSION_NOT_FOUND);
       }
     }
 
@@ -216,7 +218,7 @@ export class RoleService {
       .exec();
 
     if (!role) {
-      throw new NotFoundException('角色不存在');
+      throw new HttpException('角色不存在', ERROR_CODES.ROLE_NOT_FOUND);
     }
 
     // 首先过滤出已填充的权限对象（包含type字段）

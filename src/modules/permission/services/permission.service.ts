@@ -1,8 +1,8 @@
 import {
   Injectable,
-  ConflictException,
-  NotFoundException,
+  HttpException,
 } from '@nestjs/common';
+import { ERROR_CODES } from '../../../common/constants/error-codes';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Permission, PermissionDocument } from '../entities/permission.entity';
@@ -22,7 +22,7 @@ export class PermissionService {
     });
 
     if (existingPermission) {
-      throw new ConflictException('权限名称已存在');
+      throw new HttpException('权限名称已存在', ERROR_CODES.PERMISSION_ALREADY_EXISTS);
     }
 
     const permission = new this.permissionModel(createPermissionDto);
@@ -36,7 +36,7 @@ export class PermissionService {
   async findOne(id: string): Promise<Permission> {
     const permission = await this.permissionModel.findById(id).exec();
     if (!permission) {
-      throw new NotFoundException('权限不存在');
+      throw new HttpException('权限不存在', ERROR_CODES.PERMISSION_NOT_FOUND);
     }
     return permission;
   }
@@ -68,7 +68,7 @@ export class PermissionService {
       });
 
       if (existingPermission) {
-        throw new ConflictException('权限名称已存在');
+        throw new HttpException('权限名称已存在', ERROR_CODES.PERMISSION_ALREADY_EXISTS);
       }
     }
 
@@ -77,7 +77,7 @@ export class PermissionService {
       .exec();
 
     if (!permission) {
-      throw new NotFoundException('权限不存在');
+      throw new HttpException('权限不存在', ERROR_CODES.PERMISSION_NOT_FOUND);
     }
 
     return permission;
@@ -86,7 +86,7 @@ export class PermissionService {
   async remove(id: string): Promise<void> {
     const result = await this.permissionModel.findByIdAndDelete(id).exec();
     if (!result) {
-      throw new NotFoundException('权限不存在');
+      throw new HttpException('权限不存在', ERROR_CODES.PERMISSION_NOT_FOUND);
     }
   }
 
@@ -106,7 +106,7 @@ export class PermissionService {
       });
 
       if (existingPermission) {
-        throw new ConflictException('权限名称已存在');
+        throw new HttpException('权限名称已存在', ERROR_CODES.PERMISSION_ALREADY_EXISTS);
       }
     }
 
@@ -115,7 +115,7 @@ export class PermissionService {
       .exec();
 
     if (!permission) {
-      throw new NotFoundException(`权限 ${name} 不存在`);
+      throw new HttpException(`权限 ${name} 不存在`, ERROR_CODES.PERMISSION_NOT_FOUND);
     }
 
     return permission;
@@ -124,7 +124,7 @@ export class PermissionService {
   async removeByName(name: string): Promise<void> {
     const result = await this.permissionModel.findOneAndDelete({ name }).exec();
     if (!result) {
-      throw new NotFoundException(`权限 ${name} 不存在`);
+      throw new HttpException(`权限 ${name} 不存在`, ERROR_CODES.PERMISSION_NOT_FOUND);
     }
   }
 }

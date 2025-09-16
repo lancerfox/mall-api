@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException, Inject } from '@nestjs/common';
+import { Injectable, HttpException, Inject } from '@nestjs/common';
+import { ERROR_CODES } from '../../../common/constants/error-codes';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types, Document } from 'mongoose';
 import { Menu, MenuDocument } from '../entities/menu.entity';
@@ -32,12 +33,12 @@ export class MenuService {
 
   async findOne(id: string): Promise<Menu> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new NotFoundException('无效的菜单ID');
+      throw new HttpException('无效的菜单ID', ERROR_CODES.MENU_NOT_FOUND);
     }
 
     const menu = await this.menuModel.findById(id).exec();
     if (!menu) {
-      throw new NotFoundException(`菜单 ${id} 不存在`);
+      throw new HttpException(`菜单 ${id} 不存在`, ERROR_CODES.MENU_NOT_FOUND);
     }
     return menu.toObject();
   }
@@ -126,7 +127,7 @@ export class MenuService {
 
     const menu = await this.menuModel.findById(id);
     if (!menu) {
-      throw new NotFoundException(`菜单 ${id} 不存在`);
+      throw new HttpException(`菜单 ${id} 不存在`, ERROR_CODES.MENU_NOT_FOUND);
     }
 
     let permissionNameToSet: string | undefined;
@@ -215,7 +216,7 @@ export class MenuService {
       .exec();
 
     if (!updatedMenu) {
-      throw new NotFoundException(`菜单 ${id} 更新失败`);
+      throw new HttpException(`菜单 ${id} 更新失败`, ERROR_CODES.MENU_NOT_FOUND);
     }
     return updatedMenu.toObject();
   }
@@ -223,7 +224,7 @@ export class MenuService {
   async delete(id: string): Promise<void> {
     const menu = await this.menuModel.findById(id);
     if (!menu) {
-      throw new NotFoundException(`菜单 ${id} 不存在`);
+      throw new HttpException(`菜单 ${id} 不存在`, ERROR_CODES.MENU_NOT_FOUND);
     }
 
     // 删除关联的权限

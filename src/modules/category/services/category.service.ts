@@ -1,8 +1,8 @@
 import {
   Injectable,
-  NotFoundException,
-  BadRequestException,
+  HttpException,
 } from '@nestjs/common';
+import { ERROR_CODES } from '../../../common/constants/error-codes';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Category, CategoryDocument } from '../entities/category.entity';
@@ -36,7 +36,7 @@ export class CategoryService {
         categoryId: parentId,
       });
       if (!parentCategory) {
-        throw new BadRequestException('父分类不存在');
+        throw new HttpException('父分类不存在', ERROR_CODES.CATEGORY_NOT_FOUND);
       }
       level = parentCategory.level + 1;
       path = `${parentCategory.path}/${parentId}`;
@@ -50,7 +50,7 @@ export class CategoryService {
       parentId: parentId || null,
     });
     if (existingCategory) {
-      throw new BadRequestException('同级分类名称不能重复');
+      throw new HttpException('同级分类名称不能重复', ERROR_CODES.CATEGORY_ALREADY_EXISTS);
     }
 
     const categoryId = `C${Date.now()}${Math.random().toString(36).substr(2, 3).toUpperCase()}`;
@@ -100,7 +100,7 @@ export class CategoryService {
 
     const existingCategory = await this.categoryModel.findOne({ categoryId });
     if (!existingCategory) {
-      throw new NotFoundException('分类不存在');
+      throw new HttpException('分类不存在', ERROR_CODES.CATEGORY_NOT_FOUND);
     }
 
     let level = 1;
@@ -112,7 +112,7 @@ export class CategoryService {
         categoryId: parentId,
       });
       if (!parentCategory) {
-        throw new BadRequestException('父分类不存在');
+        throw new HttpException('父分类不存在', ERROR_CODES.CATEGORY_NOT_FOUND);
       }
       level = parentCategory.level + 1;
       path = `${parentCategory.path}/${categoryId}`;
@@ -131,7 +131,7 @@ export class CategoryService {
         categoryId: { $ne: categoryId },
       });
       if (duplicateCategory) {
-        throw new BadRequestException('同级分类名称不能重复');
+        throw new HttpException('同级分类名称不能重复', ERROR_CODES.CATEGORY_ALREADY_EXISTS);
       }
     }
 
@@ -161,7 +161,7 @@ export class CategoryService {
   async remove(categoryId: string): Promise<void> {
     const category = await this.categoryModel.findOne({ categoryId });
     if (!category) {
-      throw new NotFoundException('分类不存在');
+      throw new HttpException('分类不存在', ERROR_CODES.CATEGORY_NOT_FOUND);
     }
 
     // 检查是否有子分类
@@ -169,7 +169,7 @@ export class CategoryService {
       parentId: categoryId,
     });
     if (childrenCount > 0) {
-      throw new BadRequestException('分类下存在子分类，无法删除');
+      throw new HttpException('分类下存在子分类，无法删除', ERROR_CODES.CATEGORY_HAS_CHILDREN);
     }
 
     // 检查是否有材料
@@ -177,7 +177,7 @@ export class CategoryService {
       categoryId,
     });
     if (materialCount > 0) {
-      throw new BadRequestException('分类下存在材料，无法删除');
+      throw new HttpException('分类下存在材料，无法删除', ERROR_CODES.CATEGORY_HAS_MATERIALS);
     }
 
     await this.categoryModel.deleteOne({ categoryId });
@@ -191,7 +191,7 @@ export class CategoryService {
 
     const category = await this.categoryModel.findOne({ categoryId });
     if (!category) {
-      throw new NotFoundException('分类不存在');
+      throw new HttpException('分类不存在', ERROR_CODES.CATEGORY_NOT_FOUND);
     }
 
     let level = 1;
@@ -203,7 +203,7 @@ export class CategoryService {
         categoryId: targetParentId,
       });
       if (!targetParent) {
-        throw new BadRequestException('目标父分类不存在');
+        throw new HttpException('目标父分类不存在', ERROR_CODES.CATEGORY_NOT_FOUND);
       }
 
       // 检查是否试图移动到自己的子分类下
@@ -211,7 +211,7 @@ export class CategoryService {
         targetParent.path.includes(`/${categoryId}/`) ||
         targetParent.path.endsWith(`/${categoryId}`)
       ) {
-        throw new BadRequestException('不能将分类移动到自己的子分类下');
+        throw new HttpException('不能将分类移动到自己的子分类下', ERROR_CODES.CATEGORY_CANNOT_MOVE_TO_SELF);
       }
 
       level = targetParent.level + 1;

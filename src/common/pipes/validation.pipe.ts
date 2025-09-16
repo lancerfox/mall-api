@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { validate, ValidationError } from 'class-validator';
 import { plainToClass, ClassConstructor } from 'class-transformer';
+import { ERROR_CODES } from '../constants/error-codes';
 
 @Injectable()
 export class ValidationPipe implements PipeTransform<unknown> {
@@ -27,6 +28,7 @@ export class ValidationPipe implements PipeTransform<unknown> {
       const errorMessages = this.formatErrors(errors);
       throw new BadRequestException({
         message: '数据验证失败',
+        errorCode: ERROR_CODES.VALIDATION_FAILED,
         errors: errorMessages,
       });
     }

@@ -1,4 +1,5 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpException } from '@nestjs/common';
+import { ERROR_CODES } from '../../../common/constants/error-codes';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, FilterQuery, Types } from 'mongoose';
 import { User, UserDocument } from '../entities/user.entity';
@@ -105,7 +106,7 @@ export class UserService {
       .exec();
 
     if (!updatedUser) {
-      throw new HttpException('用户不存在', HttpStatus.NOT_FOUND);
+      throw new HttpException('用户不存在', ERROR_CODES.USER_NOT_FOUND);
     }
 
     return this.transformUserToResponse(updatedUser);
@@ -119,7 +120,7 @@ export class UserService {
   async updatePassword(id: string, newPassword: string): Promise<void> {
     const user = await this.userModel.findById(id).exec();
     if (!user) {
-      throw new HttpException('用户不存在', HttpStatus.NOT_FOUND);
+      throw new HttpException('用户不存在', ERROR_CODES.USER_NOT_FOUND);
     }
 
     // 直接设置密码并保存，这样会触发密码加密中间件
@@ -196,14 +197,14 @@ export class UserService {
       .findOne({ username: createUserDto.username })
       .exec();
     if (existingUser) {
-      throw new HttpException('用户名已存在', HttpStatus.CONFLICT);
+      throw new HttpException('用户名已存在', ERROR_CODES.USER_ALREADY_EXISTS);
     }
 
     // 验证角色是否存在
     if (createUserDto.roles && createUserDto.roles.length > 0) {
       const roles = await this.roleService.findByIds(createUserDto.roles);
       if (roles.length !== createUserDto.roles.length) {
-        throw new HttpException('部分角色不存在', HttpStatus.BAD_REQUEST);
+        throw new HttpException('部分角色不存在', ERROR_CODES.ROLE_NOT_FOUND);
       }
     }
 
@@ -238,14 +239,14 @@ export class UserService {
     // 检查用户是否存在
     const existingUser = await this.userModel.findById(id).exec();
     if (!existingUser) {
-      throw new HttpException('用户不存在', HttpStatus.NOT_FOUND);
+      throw new HttpException('用户不存在', ERROR_CODES.USER_NOT_FOUND);
     }
 
     // 验证角色是否存在
     if (updateUserDto.roles && updateUserDto.roles.length > 0) {
       const roles = await this.roleService.findByIds(updateUserDto.roles);
       if (roles.length !== updateUserDto.roles.length) {
-        throw new HttpException('部分角色不存在', HttpStatus.BAD_REQUEST);
+        throw new HttpException('部分角色不存在', ERROR_CODES.ROLE_NOT_FOUND);
       }
     }
 
@@ -262,7 +263,7 @@ export class UserService {
       .exec();
 
     if (!updatedUser) {
-      throw new HttpException('更新用户失败', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException('更新用户失败', ERROR_CODES.USER_UPDATE_FAILED);
     }
 
     return this.transformUserToResponse(updatedUser);
@@ -275,7 +276,7 @@ export class UserService {
   async remove(id: string): Promise<void> {
     const result = await this.userModel.findByIdAndDelete(id).exec();
     if (!result) {
-      throw new HttpException('用户不存在', HttpStatus.NOT_FOUND);
+      throw new HttpException('用户不存在', ERROR_CODES.USER_NOT_FOUND);
     }
   }
 
@@ -396,7 +397,7 @@ export class UserService {
       .exec();
 
     if (!user) {
-      throw new HttpException('用户不存在', HttpStatus.NOT_FOUND);
+      throw new HttpException('用户不存在', ERROR_CODES.USER_NOT_FOUND);
     }
 
     // 获取用户所有权限

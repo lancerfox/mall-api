@@ -3,11 +3,11 @@ import {
   Post,
   Get,
   Body,
-  UnauthorizedException,
-  BadRequestException,
   UseGuards,
   Req,
   Ip,
+  UnauthorizedException,
+  BadRequestException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -26,6 +26,7 @@ import { ResetPasswordDto } from '../dto/reset-password.dto';
 import { AuthResponseDto, UserInfoDto } from '../dto/auth-response.dto';
 import { ILoginResponse } from '../types';
 import type { JwtUser } from '../../../common/decorators/user.decorator';
+import { ERROR_CODES } from '../../../common/constants/error-codes';
 import {
   Permissions,
   PERMISSIONS,
@@ -71,7 +72,10 @@ export class AuthController {
       );
 
       if (!user) {
-        throw new UnauthorizedException('用户名或密码错误');
+        throw new UnauthorizedException({
+          message: '用户名或密码错误',
+          errorCode: ERROR_CODES.AUTH_INVALID_CREDENTIALS,
+        });
       }
 
       return await this.authService.login(user, ip, userAgent);
@@ -80,7 +84,10 @@ export class AuthController {
         throw error;
       }
 
-      throw new UnauthorizedException('登录失败，请稍后重试');
+      throw new UnauthorizedException({
+        message: '登录失败，请稍后重试',
+        errorCode: ERROR_CODES.AUTH_LOGIN_FAILED,
+      });
     }
   }
 
@@ -148,7 +155,10 @@ export class AuthController {
 
     // 验证新密码和确认密码是否一致
     if (changePasswordDto.newPassword !== changePasswordDto.confirmPassword) {
-      throw new BadRequestException('新密码和确认密码不一致');
+      throw new BadRequestException({
+        message: '新密码和确认密码不一致',
+        errorCode: ERROR_CODES.AUTH_PASSWORD_MISMATCH,
+      });
     }
 
     await this.authService.changePassword(

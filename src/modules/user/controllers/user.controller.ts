@@ -5,7 +5,6 @@ import {
   Body,
   Query,
   UseGuards,
-  HttpStatus,
   HttpException,
   UsePipes,
   ValidationPipe,
@@ -18,6 +17,7 @@ import {
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 // import { RolesGuard } from '../../../common/guards/roles.guard';
+import { ERROR_CODES } from '../../../common/constants/error-codes';
 import {
   Permissions,
   PERMISSIONS,
@@ -103,7 +103,7 @@ export class UserController {
   ): Promise<{ message: string }> {
     // 防止用户删除自己
     if (currentUserId === userIdDto.id) {
-      throw new HttpException('不能删除自己的账户', HttpStatus.BAD_REQUEST);
+      throw new HttpException('不能删除自己的账户', ERROR_CODES.OPERATION_NOT_ALLOWED);
     }
 
     await this.userService.remove(userIdDto.id);

@@ -1,8 +1,8 @@
 import {
   Injectable,
-  NotFoundException,
-  BadRequestException,
+  HttpException,
 } from '@nestjs/common';
+import { ERROR_CODES } from '../../../common/constants/error-codes';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Material, MaterialDocument } from '../entities/material.entity';
@@ -32,7 +32,7 @@ export class MaterialService {
       categoryId: createMaterialDto.categoryId,
     });
     if (!category) {
-      throw new BadRequestException('分类不存在');
+      throw new HttpException('分类不存在', ERROR_CODES.CATEGORY_NOT_FOUND);
     }
 
     // 检查材料名称是否已存在
@@ -40,7 +40,7 @@ export class MaterialService {
       name: createMaterialDto.name,
     });
     if (existingMaterial) {
-      throw new BadRequestException('材料名称已存在');
+      throw new HttpException('材料名称已存在', ERROR_CODES.MATERIAL_ALREADY_EXISTS);
     }
 
     const materialId = `M${Date.now()}${Math.random().toString(36).substr(2, 3).toUpperCase()}`;
@@ -139,7 +139,7 @@ export class MaterialService {
   async findOne(materialId: string): Promise<Material> {
     const material = await this.materialModel.findOne({ materialId }).lean();
     if (!material) {
-      throw new NotFoundException('材料不存在');
+      throw new HttpException('材料不存在', ERROR_CODES.MATERIAL_NOT_FOUND);
     }
     return material;
   }
@@ -153,7 +153,7 @@ export class MaterialService {
     // 验证材料是否存在
     const existingMaterial = await this.materialModel.findOne({ materialId });
     if (!existingMaterial) {
-      throw new NotFoundException('材料不存在');
+      throw new HttpException('材料不存在', ERROR_CODES.MATERIAL_NOT_FOUND);
     }
 
     // 验证分类是否存在
@@ -161,7 +161,7 @@ export class MaterialService {
       categoryId: updateData.categoryId,
     });
     if (!category) {
-      throw new BadRequestException('分类不存在');
+      throw new HttpException('分类不存在', ERROR_CODES.CATEGORY_NOT_FOUND);
     }
 
     // 检查材料名称是否已被其他材料使用
@@ -171,7 +171,7 @@ export class MaterialService {
         materialId: { $ne: materialId },
       });
       if (duplicateMaterial) {
-        throw new BadRequestException('材料名称已存在');
+        throw new HttpException('材料名称已存在', ERROR_CODES.MATERIAL_ALREADY_EXISTS);
       }
     }
 
@@ -201,7 +201,7 @@ export class MaterialService {
   async remove(materialId: string): Promise<void> {
     const material = await this.materialModel.findOne({ materialId });
     if (!material) {
-      throw new NotFoundException('材料不存在');
+      throw new HttpException('材料不存在', ERROR_CODES.MATERIAL_NOT_FOUND);
     }
 
     await this.materialModel.deleteOne({ materialId });
@@ -246,7 +246,7 @@ export class MaterialService {
 
     const material = await this.materialModel.findOne({ materialId });
     if (!material) {
-      throw new NotFoundException('材料不存在');
+      throw new HttpException('材料不存在', ERROR_CODES.MATERIAL_NOT_FOUND);
     }
 
     const updatedMaterial = await this.materialModel.findOneAndUpdate(
