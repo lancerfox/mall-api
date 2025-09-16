@@ -133,7 +133,7 @@ export class UserService {
    * @returns 用户列表和分页信息
    */
   async findAll(query: QueryUserDto): Promise<UserListResponseDto> {
-    const { page = 1, limit = 10, username, status, roles } = query;
+    const { page = 1, pageSize = 10, username, status, roles } = query;
 
     // 构建查询条件
     const filter: FilterQuery<UserDocument> = {};
@@ -151,7 +151,7 @@ export class UserService {
     }
 
     // 计算跳过的文档数量
-    const skip = (page - 1) * limit;
+    const skip = (page - 1) * pageSize;
 
     // 执行查询
     const [users, total] = await Promise.all([
@@ -166,7 +166,7 @@ export class UserService {
         })
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(limit)
+        .limit(pageSize)
         .exec(),
       this.userModel.countDocuments(filter).exec(),
     ]);
@@ -174,13 +174,13 @@ export class UserService {
     // 转换数据格式
     const data = users.map((user) => this.transformUserToResponse(user));
 
-    const totalPages = Math.ceil(total / limit);
+    const totalPages = Math.ceil(total / pageSize);
 
     return {
       data,
       total,
       page,
-      limit,
+      pageSize,
       totalPages,
     };
   }

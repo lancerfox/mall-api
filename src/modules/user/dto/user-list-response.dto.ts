@@ -27,7 +27,7 @@ export class UserListResponseDto {
     description: '每页数量',
     example: 10,
   })
-  limit: number;
+  pageSize: number;
 
   @ApiProperty({
     description: '总页数',

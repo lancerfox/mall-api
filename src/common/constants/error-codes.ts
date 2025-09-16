@@ -4,7 +4,7 @@
  */
 export const ERROR_CODES = {
   // 成功
-  SUCCESS: 0,
+  SUCCESS: 200,
 
   // 通用错误 (1000-1999)
   INTERNAL_SERVER_ERROR: 1000,

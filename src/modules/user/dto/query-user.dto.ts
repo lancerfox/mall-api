@@ -68,7 +68,7 @@ export class QueryUserDto {
   @IsOptional()
   @IsInt({ message: '每页数量必须是整数' })
   @Min(1, { message: '每页数量不能小于1' })
-  limit?: number = 10;
+  pageSize?: number = 10;
 
   @ApiPropertyOptional({
     description: '用户名搜索',

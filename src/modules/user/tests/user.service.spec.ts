@@ -232,7 +232,7 @@ describe('UserService', () => {
     it('应该返回分页的用户列表', async () => {
       const query: QueryUserDto = {
         page: 1,
-        limit: 10,
+        pageSize: 10,
       };
 
       const mockUsers = [
@@ -288,13 +288,13 @@ describe('UserService', () => {
       expect(result.data).toHaveLength(2);
       expect(result.total).toBe(2);
       expect(result.page).toBe(1);
-      expect(result.limit).toBe(10);
+      expect(result.pageSize).toBe(10);
     });
 
     it('应该支持用户名搜索', async () => {
       const query: QueryUserDto = {
         page: 1,
-        limit: 10,
+        pageSize: 10,
         username: 'test',
       };
 
