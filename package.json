@@ -21,12 +21,16 @@
     "type-scan": "node scripts/type-scan.js",
     "type-report": "npm run typecheck:report && npm run lint:report && npm run type-scan",
     "init-rbac": "node scripts/init-rbac-system.js",
+    "init:test-rbac": "node scripts/init-test-rbac.js",
+    "test:setup": "npm run init:test-rbac",
+    "test:verify-db": "node scripts/verify-test-db.js",
     "test": "jest",
     "test:handles": "jest --detectOpenHandles",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:all": "npm run test:setup && npm run test"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -93,9 +97,25 @@
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "**/*.(t|j)s",
+      "!**/*.d.ts",
+      "!**/main.ts",
+      "!**/node_modules/**",
+      "!**/test/**",
+      "!**/dist/**"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "setupFilesAfterEnv": ["<rootDir>/../test/setup/jest.setup.ts"],
+    "coverageThreshold": {
+      "global": {
+        "branches": 70,
+        "functions": 80,
+        "lines": 80,
+        "statements": 80
+      }
+    },
+    "coverageReporters": ["text", "lcov", "html"],
+    "testTimeout": 30000
   }
 }

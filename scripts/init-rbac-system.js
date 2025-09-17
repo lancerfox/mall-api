@@ -1,8 +1,39 @@
-require('dotenv').config(); // 加载环境变量
 const { MongoClient } = require('mongodb');
+const path = require('path');
 
-// 数据库连接配置
-const DATABASE_URL = process.env.DATABASE_URL;
+// 检测运行环境并加载对应的环境变量
+function loadEnvironmentConfig() {
+  // 检查是否是测试环境
+  const isTest =
+    process.env.NODE_ENV === 'test' ||
+    process.argv.includes('--test') ||
+    process.env.npm_lifecycle_event === 'test' ||
+    process.env.npm_lifecycle_event === 'test:cov';
+
+  if (isTest) {
+    // 测试环境：优先加载测试环境变量，覆盖默认配置
+    const testEnvPath = path.join(__dirname, '..', '.env.test');
+    require('dotenv').config({ path: testEnvPath, override: true });
+    console.log('🧪 检测到测试环境，使用测试数据库配置');
+    return {
+      DATABASE_URL:
+        process.env.DATABASE_URL || 'mongodb://localhost:27017/mall-api-test',
+      environment: 'test',
+    };
+  } else {
+    // 生产环境：加载默认环境变量
+    require('dotenv').config();
+    console.log('🚀 检测到生产环境，使用生产数据库配置');
+    return {
+      DATABASE_URL: process.env.DATABASE_URL,
+      environment: 'production',
+    };
+  }
+}
+
+const config = loadEnvironmentConfig();
+const DATABASE_URL = config.DATABASE_URL;
+const ENVIRONMENT = config.environment;
 
 // 默认权限列表 - 根据系统权限常量定义
 const DEFAULT_PERMISSIONS = [
@@ -202,7 +233,13 @@ async function initRBACSystem() {
   let client;
 
   try {
-    console.log('🚀 开始初始化 RBAC 权限系统...');
+    console.log(`🚀 开始初始化 RBAC 权限系统... (环境: ${ENVIRONMENT})`);
+
+    if (!DATABASE_URL) {
+      throw new Error('数据库连接URL未配置，请检查环境变量');
+    }
+
+    console.log(`📡 连接数据库: ${DATABASE_URL}`);
 
     // 连接数据库
     client = new MongoClient(DATABASE_URL);
@@ -215,8 +252,15 @@ async function initRBACSystem() {
     console.log('📝 初始化权限数据...');
     const permissionsCollection = db.collection('permissions');
 
-    // 清空现有权限（可选）
-    await permissionsCollection.deleteMany({});
+    // 根据环境决定是否清空现有权限
+    if (ENVIRONMENT === 'test') {
+      // 测试环境：清空现有权限以确保数据一致性
+      await permissionsCollection.deleteMany({});
+      console.log('🧹 测试环境：已清空现有权限数据');
+    } else {
+      // 生产环境：保留现有权限，只添加新的
+      console.log('🔒 生产环境：保留现有权限数据');
+    }
 
     const permissionDocs = [];
     for (const permission of DEFAULT_PERMISSIONS) {
@@ -302,23 +346,25 @@ async function initRBACSystem() {
     if (superAdminRole) {
       // 查找所有用户
       const allUsers = await usersCollection.find({}).toArray();
-      
+
       // 查找超级管理员用户
-      const superAdminUsers = allUsers.filter(user => 
-        user.roles && user.roles.length > 0 && 
-        user.roles.some(roleId => roleId.equals(superAdminRole._id))
+      const superAdminUsers = allUsers.filter(
+        (user) =>
+          user.roles &&
+          user.roles.length > 0 &&
+          user.roles.some((roleId) => roleId.equals(superAdminRole._id)),
       );
 
       if (superAdminUsers.length > 0) {
         console.log('🔍 找到超级管理员用户:');
-        superAdminUsers.forEach(user => {
+        superAdminUsers.forEach((user) => {
           console.log(`   - ${user.username} (${user.email || '无邮箱'})`);
         });
 
         // 修复超级管理员用户的权限
         const result = await usersCollection.updateMany(
-          { 
-            _id: { $in: superAdminUsers.map(user => user._id) }
+          {
+            _id: { $in: superAdminUsers.map((user) => user._id) },
           },
           {
             $set: {
@@ -354,6 +400,12 @@ async function initRBACSystem() {
 
 // 运行初始化
 if (require.main === module) {
+  // 从命令行参数检查是否指定了环境
+  const args = process.argv.slice(2);
+  if (args.includes('--test')) {
+    process.env.NODE_ENV = 'test';
+  }
+
   initRBACSystem();
 }
 
