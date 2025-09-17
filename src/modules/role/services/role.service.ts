@@ -30,16 +30,13 @@ export class RoleService {
     });
 
     if (existingRole) {
-      throw new HttpException(
-        '角色名称已存在',
-        ERROR_CODES.ROLE_ALREADY_EXISTS,
-      );
+      throw new HttpException('角色名称已存在', ERROR_CODES.ROLE_NOT_FOUND);
     }
 
     // 验证角色类型是否合法
     const validRoleTypes = Object.values(RoleType) as RoleType[];
     if (!validRoleTypes.includes(createRoleDto.type)) {
-      throw new HttpException('无效的角色类型', ERROR_CODES.INVALID_ROLE_TYPE);
+      throw new HttpException('无效的角色类型', ERROR_CODES.VALIDATION_FAILED);
     }
 
     // 验证权限是否存在
@@ -107,7 +104,7 @@ export class RoleService {
     if (existingRole.isSystem && updateRoleDto.isSystem === false) {
       throw new HttpException(
         '不能修改系统角色的系统标识',
-        ERROR_CODES.SYSTEM_ROLE_IMMUTABLE,
+        ERROR_CODES.PERMISSION_INSUFFICIENT,
       );
     }
 
@@ -115,7 +112,7 @@ export class RoleService {
     if (updateRoleDto.type && updateRoleDto.type !== existingRole.type) {
       throw new HttpException(
         '角色类型不允许修改',
-        ERROR_CODES.ROLE_TYPE_IMMUTABLE,
+        ERROR_CODES.PERMISSION_INSUFFICIENT,
       );
     }
 
@@ -128,7 +125,7 @@ export class RoleService {
       if (duplicateRole) {
         throw new HttpException(
           '角色名称已存在',
-          ERROR_CODES.ROLE_ALREADY_EXISTS,
+          ERROR_CODES.USER_ALREADY_EXISTS,
         );
       }
     }
@@ -164,7 +161,7 @@ export class RoleService {
     if (role.isSystem) {
       throw new HttpException(
         '系统角色不能删除',
-        ERROR_CODES.SYSTEM_ROLE_IMMUTABLE,
+        ERROR_CODES.PERMISSION_INSUFFICIENT,
       );
     }
 

@@ -263,7 +263,7 @@ export class UserService {
       .exec();
 
     if (!updatedUser) {
-      throw new HttpException('更新用户失败', ERROR_CODES.USER_UPDATE_FAILED);
+      throw new HttpException('更新用户失败', ERROR_CODES.VALIDATION_FAILED);
     }
 
     return this.transformUserToResponse(updatedUser);

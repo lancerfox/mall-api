@@ -122,26 +122,29 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     // 处理认证相关的错误码映射
     if (statusCode === HttpStatus.UNAUTHORIZED && message) {
-      if (message.includes('用户名或密码错误')) {
-        return ERROR_CODES.INVALID_CREDENTIALS;
+      if (
+        message.includes('用户名或密码错误') ||
+        message.includes('账号或密码错误')
+      ) {
+        return ERROR_CODES.AUTH_INVALID_CREDENTIALS;
       }
       if (message.includes('无效的访问令牌')) {
         return ERROR_CODES.INVALID_TOKEN;
       }
       if (message.includes('访问令牌已过期')) {
-        return ERROR_CODES.TOKEN_EXPIRED;
+        return ERROR_CODES.AUTH_TOKEN_INVALID;
       }
     }
 
     switch (statusCode) {
       case HttpStatus.UNAUTHORIZED:
-        return ERROR_CODES.UNAUTHORIZED;
+        return ERROR_CODES.AUTH_TOKEN_INVALID;
       case HttpStatus.FORBIDDEN:
-        return ERROR_CODES.FORBIDDEN;
+        return ERROR_CODES.PERMISSION_INSUFFICIENT;
       case HttpStatus.BAD_REQUEST:
-        return ERROR_CODES.VALIDATION_ERROR;
+        return ERROR_CODES.VALIDATION_FAILED;
       default:
-        return ERROR_CODES.INTERNAL_SERVER_ERROR;
+        return ERROR_CODES.VALIDATION_FAILED;
     }
   }
 

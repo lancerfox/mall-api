@@ -105,7 +105,7 @@ export class UserController {
     if (currentUserId === userIdDto.id) {
       throw new HttpException(
         '不能删除自己的账户',
-        ERROR_CODES.OPERATION_NOT_ALLOWED,
+        ERROR_CODES.PERMISSION_INSUFFICIENT,
       );
     }
 
