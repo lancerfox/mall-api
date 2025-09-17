@@ -8,7 +8,11 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateMenuDto {
-  @ApiProperty({ description: '父级菜单ID', required: false })
+  @ApiProperty({
+    description: '父级菜单ID',
+    required: false,
+    example: '60f1b2b3b3b3b3b3b3b3b3b3',
+  })
   @IsOptional()
   @IsMongoId()
   parentId?: string;
@@ -40,7 +44,7 @@ export class CreateMenuDto {
   redirect?: string;
 
   @ApiProperty({
-    description: '菜单标题',
+    description: '菜单标题(meta.title)',
     required: false,
     example: '系统管理',
   })
@@ -49,7 +53,7 @@ export class CreateMenuDto {
   metaTitle?: string;
 
   @ApiProperty({
-    description: '菜单图标',
+    description: '菜单图标(meta.icon)',
     required: false,
     example: 'carbon:settings',
   })
@@ -57,17 +61,32 @@ export class CreateMenuDto {
   @IsString()
   metaIcon?: string;
 
-  @ApiProperty({ description: '是否隐藏', required: false, default: false })
+  @ApiProperty({
+    description: '是否在菜单中隐藏(meta.hidden)',
+    required: false,
+    default: false,
+    example: false,
+  })
   @IsOptional()
   @IsBoolean()
   metaHidden?: boolean;
 
-  @ApiProperty({ description: '是否始终显示', required: false, default: false })
+  @ApiProperty({
+    description: '如果设置为true，将始终显示根菜单(meta.alwaysShow)',
+    required: false,
+    default: false,
+    example: false,
+  })
   @IsOptional()
   @IsBoolean()
   metaAlwaysShow?: boolean;
 
-  @ApiProperty({ description: '排序顺序', required: false, default: 0 })
+  @ApiProperty({
+    description: '排序顺序',
+    required: false,
+    default: 0,
+    example: 0,
+  })
   @IsOptional()
   @IsNumber()
   sortOrder?: number;

@@ -14,6 +14,8 @@ export class ChangePasswordDto {
   @ApiProperty({
     description: '当前密码',
     example: 'currentPassword123',
+    required: true,
+    maxLength: 50,
   })
   @IsString({ message: '当前密码必须是字符串' })
   @IsNotEmpty({ message: '当前密码不能为空' })
@@ -23,6 +25,9 @@ export class ChangePasswordDto {
   @ApiProperty({
     description: '新密码',
     example: 'newPassword123!',
+    required: true,
+    minLength: 8,
+    maxLength: 50,
   })
   @IsString({ message: '新密码必须是字符串' })
   @Length(8, 50, { message: '新密码长度必须在8-50个字符之间' })
@@ -35,6 +40,8 @@ export class ChangePasswordDto {
   @ApiProperty({
     description: '确认新密码',
     example: 'newPassword123!',
+    required: true,
+    maxLength: 50,
   })
   @IsString({ message: '确认密码必须是字符串' })
   @IsNotEmpty({ message: '确认密码不能为空' })

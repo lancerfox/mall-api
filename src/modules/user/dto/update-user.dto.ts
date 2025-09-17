@@ -1,4 +1,10 @@
-import { IsString, IsOptional, IsEnum, IsArray } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsArray,
+  MaxLength,
+} from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 /**
@@ -27,8 +33,10 @@ export class UpdateUserDto {
   @ApiPropertyOptional({
     description: '头像URL',
     example: 'https://example.com/avatar.jpg',
+    maxLength: 500,
   })
   @IsOptional()
   @IsString()
+  @MaxLength(500, { message: '头像URL长度不能超过500位' })
   avatar?: string;
 }

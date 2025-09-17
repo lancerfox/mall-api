@@ -18,6 +18,7 @@ export class CreateUserDto {
     example: 'admin',
     minLength: 3,
     maxLength: 20,
+    required: true,
   })
   @IsString({ message: '用户名必须是字符串' })
   @IsNotEmpty({ message: '用户名不能为空' })
@@ -31,6 +32,7 @@ export class CreateUserDto {
     example: 'Password123!',
     minLength: 8,
     maxLength: 50,
+    required: true,
   })
   @IsString({ message: '密码必须是字符串' })
   @IsNotEmpty({ message: '密码不能为空' })
@@ -58,6 +60,7 @@ export class CreateUserDto {
   @ApiPropertyOptional({
     description: '头像URL',
     example: 'https://example.com/avatar.jpg',
+    maxLength: 500,
   })
   @IsOptional()
   @IsString({ message: '头像URL必须是字符串' })

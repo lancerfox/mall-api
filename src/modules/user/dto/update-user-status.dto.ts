@@ -9,6 +9,7 @@ export class UpdateUserStatusDto {
     description: '用户状态',
     example: 'active',
     enum: ['active', 'inactive', 'locked'],
+    required: true,
   })
   @IsEnum(['active', 'inactive', 'locked'])
   @IsNotEmpty()

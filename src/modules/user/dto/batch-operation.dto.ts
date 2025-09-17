@@ -7,8 +7,9 @@ import { ApiProperty } from '@nestjs/swagger';
 export class BatchOperationDto {
   @ApiProperty({
     description: '用户ID列表',
-    example: ['507f1f77bcf86cd799439011', '507f1f77bcf86cd799439012'],
+    example: ['60f1b2b3b3b3b3b3b3b3b3b3', '60f1b2b3b3b3b3b3b3b3b3b4'],
     type: [String],
+    required: true,
   })
   @IsArray()
   @IsString({ each: true })
@@ -24,6 +25,7 @@ export class BatchUpdateStatusDto extends BatchOperationDto {
     description: '新状态',
     example: 'inactive',
     enum: ['active', 'inactive', 'locked'],
+    required: true,
   })
   @IsEnum(['active', 'inactive', 'locked'])
   @IsNotEmpty()

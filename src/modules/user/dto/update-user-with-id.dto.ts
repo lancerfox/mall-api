@@ -5,7 +5,8 @@ import { UpdateUserDto } from './update-user.dto';
 export class UpdateUserWithIdDto extends UpdateUserDto {
   @ApiProperty({
     description: '用户ID',
-    example: '507f1f77bcf86cd799439011',
+    example: '60f1b2b3b3b3b3b3b3b3b3b3',
+    required: true,
   })
   @IsNotEmpty({ message: '用户ID不能为空' })
   @IsString({ message: '用户ID必须是字符串' })

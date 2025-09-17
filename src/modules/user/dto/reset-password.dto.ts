@@ -9,6 +9,7 @@ export class ResetPasswordDto {
     description: '新密码',
     example: 'newpassword123',
     minLength: 6,
+    required: true,
   })
   @IsString()
   @MinLength(6)
@@ -17,6 +18,7 @@ export class ResetPasswordDto {
   @ApiPropertyOptional({
     description: '是否发送邮件通知',
     example: true,
+    default: false,
   })
   @IsOptional()
   sendEmail?: boolean = false;
