@@ -99,9 +99,11 @@ describe('应用启动和数据库连接测试', () => {
               },
             },
             {
-              provide: RoleService, 
+              provide: RoleService,
               useValue: {
-                findByType: jest.fn().mockResolvedValue({ _id: 'mock-role-id' }),
+                findByType: jest
+                  .fn()
+                  .mockResolvedValue({ _id: 'mock-role-id' }),
               },
             },
           ],
