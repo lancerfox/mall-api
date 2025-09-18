@@ -17,8 +17,8 @@ import {
   ApiBearerAuth,
   ApiConsumes,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../guards/jwt-auth.guard';
-import { CurrentUser } from '../decorators/user.decorator';
+import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
+import { CurrentUser } from '../../../common/decorators/user.decorator';
 import { UploadImageService } from '../services/upload-image.service';
 import {
   UploadImageDto,

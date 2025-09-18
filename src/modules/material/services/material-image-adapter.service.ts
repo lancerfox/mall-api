@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { UploadImageService } from '../../../common/services/upload-image.service';
-import { BusinessType } from '../../../common/dto/upload-image.dto';
+import { UploadImageService } from '../../upload/services/upload-image.service';
+import { BusinessType } from '../../upload/dto/upload-image.dto';
 import {
   UploadImageDto as MaterialUploadImageDto,
   BatchUploadImagesDto as MaterialBatchUploadImagesDto,

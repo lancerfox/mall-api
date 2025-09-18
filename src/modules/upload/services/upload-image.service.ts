@@ -14,7 +14,7 @@ import {
   SortImagesDto,
   BusinessType,
 } from '../dto/upload-image.dto';
-import { ERROR_CODES } from '../constants/error-codes';
+import { ERROR_CODES } from '../../../common/constants/error-codes';
 
 @Injectable()
 export class UploadImageService {
