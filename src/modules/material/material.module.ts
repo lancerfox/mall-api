@@ -8,14 +8,11 @@ import {
 import { BatchOperationsController } from './controllers/batch-operations.controller';
 import { EnhancedMaterialController } from './controllers/enhanced-material.controller';
 import { OperationLogController } from './controllers/operation-log.controller';
-import { ImageManagementController } from './controllers/image-management.controller';
 import { MaterialService } from './services/material.service';
 import { AdvancedSearchService } from './services/advanced-search.service';
 import { BatchOperationsService } from './services/batch-operations.service';
 import { EnhancedMaterialService } from './services/enhanced-material.service';
 import { OperationLogService } from './services/operation-log.service';
-import { ImageManagementService } from './services/image-management.service';
-import { MaterialImageAdapterService } from './services/material-image-adapter.service';
 import { UploadModule } from '../upload/upload.module';
 import { Material, MaterialSchema } from './entities/material.entity';
 import {
@@ -50,7 +47,6 @@ import { Category, CategorySchema } from '../category/entities/category.entity';
     EnhancedMaterialController,
     SearchConditionController,
     OperationLogController,
-    ImageManagementController,
   ],
   providers: [
     MaterialService,
@@ -58,8 +54,6 @@ import { Category, CategorySchema } from '../category/entities/category.entity';
     BatchOperationsService,
     EnhancedMaterialService,
     OperationLogService,
-    ImageManagementService,
-    MaterialImageAdapterService,
   ],
   exports: [
     MaterialService,
@@ -67,8 +61,6 @@ import { Category, CategorySchema } from '../category/entities/category.entity';
     BatchOperationsService,
     EnhancedMaterialService,
     OperationLogService,
-    ImageManagementService,
-    MaterialImageAdapterService,
   ],
 })
 export class MaterialModule {}

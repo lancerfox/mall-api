@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ImageResponseDto } from './image-response.dto';
+import { ImageDataDto } from '../../upload/dto/upload-image-response.dto';
 
 export class MaterialStatsDto {
   @ApiProperty({ description: '查看次数', example: 150 })
@@ -58,8 +58,8 @@ export class MaterialDetailEnhancedResponseDto {
   @ApiProperty({ description: '状态', example: 'enabled' })
   status: string;
 
-  @ApiProperty({ description: '图片列表', type: [ImageResponseDto] })
-  images: ImageResponseDto[];
+  @ApiProperty({ description: '图片列表', type: [ImageDataDto] })
+  images: ImageDataDto[];
 
   @ApiProperty({ description: '统计信息', type: MaterialStatsDto })
   stats: MaterialStatsDto;

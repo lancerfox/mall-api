@@ -22,7 +22,7 @@ import {
   CopyMaterialResponseDto,
   MaterialStatsDto,
 } from '../dto/enhanced-material-response.dto';
-import { ImageResponseDto } from '../dto/image-response.dto';
+import { ImageDataDto } from '../../upload/dto/upload-image-response.dto';
 
 @Injectable()
 export class EnhancedMaterialService {
@@ -58,7 +58,7 @@ export class EnhancedMaterialService {
       .sort({ sortOrder: 1, createdAt: 1 })
       .lean();
 
-    const imageList = images.map((image) => new ImageResponseDto(image));
+    const imageList = images.map((image) => image as unknown as ImageDataDto);
 
     // 模拟统计信息（实际应从统计表获取）
     const stats: MaterialStatsDto = {
