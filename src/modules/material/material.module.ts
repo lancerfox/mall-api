@@ -1,14 +1,20 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { MaterialController } from './controllers/material.controller';
-import { AdvancedSearchController } from './controllers/advanced-search.controller';
+import {
+  AdvancedSearchController,
+  SearchConditionController,
+} from './controllers/advanced-search.controller';
 import { BatchOperationsController } from './controllers/batch-operations.controller';
 import { EnhancedMaterialController } from './controllers/enhanced-material.controller';
-import { SearchConditionController } from './controllers/advanced-search.controller';
+import { OperationLogController } from './controllers/operation-log.controller';
+import { ImageManagementController } from './controllers/image-management.controller';
 import { MaterialService } from './services/material.service';
 import { AdvancedSearchService } from './services/advanced-search.service';
 import { BatchOperationsService } from './services/batch-operations.service';
 import { EnhancedMaterialService } from './services/enhanced-material.service';
+import { OperationLogService } from './services/operation-log.service';
+import { ImageManagementService } from './services/image-management.service';
 import { Material, MaterialSchema } from './entities/material.entity';
 import {
   MaterialImage,
@@ -40,18 +46,24 @@ import { Category, CategorySchema } from '../category/entities/category.entity';
     BatchOperationsController,
     EnhancedMaterialController,
     SearchConditionController,
+    OperationLogController,
+    ImageManagementController,
   ],
   providers: [
     MaterialService,
     AdvancedSearchService,
     BatchOperationsService,
     EnhancedMaterialService,
+    OperationLogService,
+    ImageManagementService,
   ],
   exports: [
     MaterialService,
     AdvancedSearchService,
     BatchOperationsService,
     EnhancedMaterialService,
+    OperationLogService,
+    ImageManagementService,
   ],
 })
 export class MaterialModule {}

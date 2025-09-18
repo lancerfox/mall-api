@@ -30,7 +30,7 @@ import {
   MaterialImportResponseDto,
 } from '../dto/batch-operations-response.dto';
 
-@ApiTags('批量操作')
+@ApiTags('材料管理')
 @ApiBearerAuth('JWT-auth')
 @UseGuards(JwtAuthGuard)
 @Controller('material')

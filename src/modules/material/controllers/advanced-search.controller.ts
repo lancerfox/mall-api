@@ -20,7 +20,7 @@ import {
 } from '../dto/advanced-search-response.dto';
 import { SuccessResponseDto } from '../../../common/dto/success-response.dto';
 
-@ApiTags('高级搜索')
+@ApiTags('材料管理')
 @ApiBearerAuth('JWT-auth')
 @UseGuards(JwtAuthGuard)
 @Controller('material')

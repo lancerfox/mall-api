@@ -19,7 +19,7 @@ import {
   CopyMaterialResponseDto,
 } from '../dto/enhanced-material-response.dto';
 
-@ApiTags('增强材料详情')
+@ApiTags('材料管理')
 @ApiBearerAuth('JWT-auth')
 @UseGuards(JwtAuthGuard)
 @Controller('material')
