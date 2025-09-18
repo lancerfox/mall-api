@@ -3,7 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { MaterialController } from './controllers/material.controller';
 import {
   AdvancedSearchController,
-  SearchConditionController,
+  // SearchConditionController,
 } from './controllers/advanced-search.controller';
 import { BatchOperationsController } from './controllers/batch-operations.controller';
 import { EnhancedMaterialController } from './controllers/enhanced-material.controller';
@@ -45,7 +45,6 @@ import { Category, CategorySchema } from '../category/entities/category.entity';
     AdvancedSearchController,
     BatchOperationsController,
     EnhancedMaterialController,
-    SearchConditionController,
     OperationLogController,
   ],
   providers: [

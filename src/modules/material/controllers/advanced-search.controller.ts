@@ -6,19 +6,19 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
-import { CurrentUser } from '../../../common/decorators/user.decorator';
+// import { CurrentUser } from '../../../common/decorators/user.decorator';
 import { AdvancedSearchService } from '../services/advanced-search.service';
 import {
   AdvancedSearchDto,
-  SaveSearchConditionDto,
-  DeleteSearchConditionDto,
+  // SaveSearchConditionDto,
+  // DeleteSearchConditionDto,
 } from '../dto/advanced-search.dto';
 import {
   AdvancedSearchResponseDto,
-  SearchConditionResponseDto,
-  SaveSearchConditionResponseDto,
+  // SearchConditionResponseDto,
+  // SaveSearchConditionResponseDto,
 } from '../dto/advanced-search-response.dto';
-import { SuccessResponseDto } from '../../../common/dto/success-response.dto';
+// import { SuccessResponseDto } from '../../../common/dto/success-response.dto';
 
 @ApiTags('材料管理')
 @ApiBearerAuth('JWT-auth')
@@ -40,3 +40,4 @@ export class AdvancedSearchController {
   async advancedSearch(@Body() searchDto: AdvancedSearchDto) {
     return await this.advancedSearchService.advancedSearch(searchDto);
   }
+}
