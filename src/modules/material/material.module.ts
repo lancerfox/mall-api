@@ -2,11 +2,9 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { MaterialController } from './controllers/material.controller';
 import { BatchOperationsController } from './controllers/batch-operations.controller';
-import { EnhancedMaterialController } from './controllers/enhanced-material.controller';
 import { OperationLogController } from './controllers/operation-log.controller';
 import { MaterialService } from './services/material.service';
 import { BatchOperationsService } from './services/batch-operations.service';
-import { EnhancedMaterialService } from './services/enhanced-material.service';
 import { OperationLogService } from './services/operation-log.service';
 import { UploadModule } from '../upload/upload.module';
 import { Material, MaterialSchema } from './entities/material.entity';
@@ -34,20 +32,9 @@ import { Category, CategorySchema } from '../category/entities/category.entity';
   controllers: [
     MaterialController,
     BatchOperationsController,
-    EnhancedMaterialController,
     OperationLogController,
   ],
-  providers: [
-    MaterialService,
-    BatchOperationsService,
-    EnhancedMaterialService,
-    OperationLogService,
-  ],
-  exports: [
-    MaterialService,
-    BatchOperationsService,
-    EnhancedMaterialService,
-    OperationLogService,
-  ],
+  providers: [MaterialService, BatchOperationsService, OperationLogService],
+  exports: [MaterialService, BatchOperationsService, OperationLogService],
 })
 export class MaterialModule {}

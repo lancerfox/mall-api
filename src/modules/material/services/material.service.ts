@@ -7,17 +7,25 @@ import {
   Category,
   CategoryDocument,
 } from '../../category/entities/category.entity';
+import {
+  MaterialImage,
+  MaterialImageDocument,
+} from '../entities/material-image.entity';
 import { CreateMaterialDto } from '../dto/create-material.dto';
 import { UpdateMaterialDto } from '../dto/update-material.dto';
 import { MaterialListDto } from '../dto/material-list.dto';
+import { MaterialDetailDto } from '../dto/material-detail.dto';
 import { BatchDeleteMaterialDto } from '../dto/batch-delete-material.dto';
 import { ToggleStatusDto } from '../dto/toggle-status.dto';
+import { MaterialStatsDto } from '../dto/material-response.dto';
 
 @Injectable()
 export class MaterialService {
   constructor(
     @InjectModel(Material.name) private materialModel: Model<MaterialDocument>,
     @InjectModel(Category.name) private categoryModel: Model<CategoryDocument>,
+    @InjectModel(MaterialImage.name)
+    private imageModel: Model<MaterialImageDocument>,
   ) {}
 
   async create(
@@ -71,11 +79,11 @@ export class MaterialService {
     pageSize: number;
     totalPages: number;
   }> {
-    const { 
-      page, 
-      pageSize, 
-      keyword, 
-      categoryId, 
+    const {
+      page,
+      pageSize,
+      keyword,
+      categoryId,
       categoryIds,
       status,
       statuses,
@@ -91,7 +99,7 @@ export class MaterialService {
       dateStart,
       dateEnd,
       sortBy = 'createdAt',
-      sortOrder = 'desc'
+      sortOrder = 'desc',
     } = query;
     const skip = (page - 1) * pageSize;
 
@@ -203,12 +211,69 @@ export class MaterialService {
     };
   }
 
-  async findOne(materialId: string): Promise<Material> {
+  /**
+   * 获取材料详情，支持增强模式
+   * @param materialId 材料ID
+   * @param enhanced 是否启用增强模式，包含分类路径、图片、统计信息等
+   */
+  async findOne(materialId: string, enhanced = false): Promise<any> {
     const material = await this.materialModel.findOne({ materialId }).lean();
     if (!material) {
       throw new HttpException('材料不存在', ERROR_CODES.MATERIAL_NOT_FOUND);
     }
-    return material;
+
+    // 基础模式直接返回材料信息
+    if (!enhanced) {
+      return material;
+    }
+
+    // 增强模式：获取分类信息和分类路径
+    const category = await this.categoryModel
+      .findOne({ categoryId: material.categoryId })
+      .lean();
+
+    const categoryName = category?.name || '';
+    const categoryPath = await this.buildCategoryPath(material.categoryId);
+
+    // 获取图片列表
+    const images = await this.imageModel
+      .find({ materialId, status: 'active' })
+      .sort({ sortOrder: 1, createdAt: 1 })
+      .lean();
+
+    // 模拟统计信息（实际应从统计表获取）
+    const stats: MaterialStatsDto = {
+      viewCount: Math.floor(Math.random() * 500) + 50,
+      editCount: Math.floor(Math.random() * 20) + 1,
+      lastViewAt: new Date(),
+      lastEditAt: material.updatedAt,
+    };
+
+    return {
+      ...material,
+      categoryName,
+      categoryPath,
+      images,
+      stats,
+    };
+  }
+
+  /**
+   * 构建分类路径
+   * @param categoryId 分类ID
+   */
+  private async buildCategoryPath(categoryId: string): Promise<string> {
+    const category = await this.categoryModel.findOne({ categoryId }).lean();
+    if (!category) {
+      return '';
+    }
+
+    if (!category.parentId) {
+      return category.name;
+    }
+
+    const parentPath = await this.buildCategoryPath(category.parentId);
+    return parentPath ? `${parentPath}/${category.name}` : category.name;
   }
 
   async update(

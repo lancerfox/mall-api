@@ -56,7 +56,8 @@ export class MaterialController {
   @ApiResponse({ status: 404, description: '材料不存在' })
   @ApiResponse({ status: 500, description: '服务器内部错误' })
   async detail(@Query() query: MaterialDetailDto) {
-    return await this.materialService.findOne(query.materialId);
+    // enhanced 已经在 DTO 中定义为 boolean 类型，直接传递
+    return await this.materialService.findOne(query.materialId, query.enhanced);
   }
 
   @Post('create')

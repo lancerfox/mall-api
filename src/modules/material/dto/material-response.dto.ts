@@ -2,6 +2,26 @@ import { ApiProperty, ApiExtraModels } from '@nestjs/swagger';
 import { Material } from '../entities/material.entity';
 import { SuccessResponseDto } from '../../../common/dto/success-response.dto';
 
+export class MaterialStatsDto {
+  @ApiProperty({ description: '查看次数', example: 150 })
+  viewCount: number;
+
+  @ApiProperty({ description: '编辑次数', example: 5 })
+  editCount: number;
+
+  @ApiProperty({
+    description: '最后查看时间',
+    example: '2024-01-01T00:00:00.000Z',
+  })
+  lastViewAt?: Date;
+
+  @ApiProperty({
+    description: '最后编辑时间',
+    example: '2024-01-01T00:00:00.000Z',
+  })
+  lastEditAt?: Date;
+}
+
 export class MaterialResponseDto {
   @ApiProperty({ description: '材料ID', example: 'M001' })
   materialId: string;
@@ -11,6 +31,16 @@ export class MaterialResponseDto {
 
   @ApiProperty({ description: '分类ID', example: 'C001' })
   categoryId: string;
+
+  @ApiProperty({ description: '分类名称', example: '宝石类', required: false })
+  categoryName?: string;
+
+  @ApiProperty({
+    description: '分类路径',
+    example: '宝石类/玛瑙',
+    required: false,
+  })
+  categoryPath?: string;
 
   @ApiProperty({ description: '价格', example: 15.5 })
   price: number;
@@ -40,6 +70,16 @@ export class MaterialResponseDto {
     enum: ['enabled', 'disabled'],
   })
   status: string;
+
+  @ApiProperty({ description: '图片列表', type: [Object], required: false })
+  images?: any[];
+
+  @ApiProperty({
+    description: '统计信息',
+    type: MaterialStatsDto,
+    required: false,
+  })
+  stats?: MaterialStatsDto;
 
   @ApiProperty({ description: '创建时间', example: '2024-01-01T00:00:00.000Z' })
   createdAt: Date;
