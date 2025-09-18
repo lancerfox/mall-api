@@ -12,7 +12,6 @@ import {
   MaterialImage,
   MaterialImageDocument,
 } from '../entities/material-image.entity';
-import { ERROR_CODES } from '../../../common/constants/error-codes';
 
 describe('EnhancedMaterialService', () => {
   let service: EnhancedMaterialService;
@@ -133,53 +132,6 @@ describe('EnhancedMaterialService', () => {
       await expect(
         service.getEnhancedMaterialDetail(detailDto),
       ).rejects.toThrow(HttpException);
-    });
-  });
-
-  describe('getRelatedMaterials', () => {
-    it('应该成功获取相关材料推荐', async () => {
-      // 安排
-      const relatedDto = { materialId: 'M001', limit: 6 };
-
-      materialModel.findOne.mockReturnValue({
-        lean: jest.fn().mockResolvedValue(mockMaterial),
-      } as any);
-
-      const mockQuery = {
-        limit: jest.fn().mockReturnThis(),
-        lean: jest.fn().mockResolvedValue([
-          {
-            materialId: 'M002',
-            name: '蓝玛瑙',
-            price: 120,
-          },
-        ]),
-      };
-
-      materialModel.find.mockReturnValue(mockQuery as any);
-
-      // 执行
-      const result = await service.getRelatedMaterials(relatedDto);
-
-      // 断言
-      expect(result).toBeDefined();
-      expect(result.sameCategory).toHaveLength(1);
-      expect(result.similarPrice).toHaveLength(1);
-      expect(result.similarProperties).toHaveLength(1);
-    });
-
-    it('材料不存在时应该抛出错误', async () => {
-      // 安排
-      const relatedDto = { materialId: 'nonexistent' };
-
-      materialModel.findOne.mockReturnValue({
-        lean: jest.fn().mockResolvedValue(null),
-      } as any);
-
-      // 执行和断言
-      await expect(service.getRelatedMaterials(relatedDto)).rejects.toThrow(
-        HttpException,
-      );
     });
   });
 

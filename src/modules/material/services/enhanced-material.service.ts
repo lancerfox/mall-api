@@ -13,12 +13,10 @@ import {
 import { ERROR_CODES } from '../../../common/constants/error-codes';
 import {
   MaterialDetailEnhancedDto,
-  RelatedMaterialsDto,
   CopyMaterialDto,
 } from '../dto/enhanced-material.dto';
 import {
   MaterialDetailEnhancedResponseDto,
-  RelatedMaterialsResponseDto,
   CopyMaterialResponseDto,
   MaterialStatsDto,
 } from '../dto/enhanced-material-response.dto';
@@ -90,73 +88,7 @@ export class EnhancedMaterialService {
     };
   }
 
-  async getRelatedMaterials(
-    relatedDto: RelatedMaterialsDto,
-  ): Promise<RelatedMaterialsResponseDto> {
-    const material = await this.materialModel
-      .findOne({ materialId: relatedDto.materialId })
-      .lean();
 
-    if (!material) {
-      throw new HttpException('材料不存在', ERROR_CODES.MATERIAL_NOT_FOUND);
-    }
-
-    const limit = relatedDto.limit || 6;
-
-    // 同分类材料
-    const sameCategory = await this.materialModel
-      .find({
-        categoryId: material.categoryId,
-        materialId: { $ne: material.materialId },
-        status: 'enabled',
-      })
-      .limit(limit)
-      .lean();
-
-    // 相似价格材料（价格相差20%以内）
-    const priceRange = material.price * 0.2;
-    const similarPrice = await this.materialModel
-      .find({
-        price: {
-          $gte: material.price - priceRange,
-          $lte: material.price + priceRange,
-        },
-        materialId: { $ne: material.materialId },
-        status: 'enabled',
-      })
-      .limit(limit)
-      .lean();
-
-    // 相似属性材料（同硬度或同密度）
-    const propertyFilter = {
-      materialId: { $ne: material.materialId },
-      status: 'enabled',
-    };
-
-    const similarProperties = await this.materialModel
-      .find(propertyFilter)
-      .limit(limit)
-      .lean();
-
-    // 转换为响应格式
-
-    const mapToResponse = (materials: any[]) =>
-      materials.map((m) => ({
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-        materialId: m.materialId,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-        name: m.name,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-        price: m.price,
-        mainImage: '', // TODO: 从图片表获取主图
-      }));
-
-    return {
-      sameCategory: mapToResponse(sameCategory),
-      similarPrice: mapToResponse(similarPrice),
-      similarProperties: mapToResponse(similarProperties),
-    };
-  }
 
   async copyMaterial(
     copyDto: CopyMaterialDto,

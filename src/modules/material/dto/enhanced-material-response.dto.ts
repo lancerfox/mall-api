@@ -83,42 +83,7 @@ export class MaterialDetailEnhancedResponseDto {
   updatedBy: string;
 }
 
-export class RelatedMaterialItemDto {
-  @ApiProperty({ description: '材料ID', example: 'M002' })
-  materialId: string;
 
-  @ApiProperty({ description: '材料名称', example: '蓝玛瑙' })
-  name: string;
-
-  @ApiProperty({ description: '价格', example: 18.0 })
-  price: number;
-
-  @ApiProperty({
-    description: '主图路径',
-    example: '/uploads/materials/M002/thumb_IMG001.jpg',
-  })
-  mainImage?: string;
-}
-
-export class RelatedMaterialsResponseDto {
-  @ApiProperty({
-    description: '同分类材料',
-    type: [RelatedMaterialItemDto],
-  })
-  sameCategory: RelatedMaterialItemDto[];
-
-  @ApiProperty({
-    description: '相似价格材料',
-    type: [RelatedMaterialItemDto],
-  })
-  similarPrice: RelatedMaterialItemDto[];
-
-  @ApiProperty({
-    description: '相似属性材料',
-    type: [RelatedMaterialItemDto],
-  })
-  similarProperties: RelatedMaterialItemDto[];
-}
 
 export class CopyMaterialResponseDto {
   @ApiProperty({ description: '新材料ID', example: 'M005' })

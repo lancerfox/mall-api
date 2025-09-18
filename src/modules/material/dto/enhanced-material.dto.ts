@@ -19,29 +19,7 @@ export class MaterialDetailEnhancedDto {
   materialId: string;
 }
 
-export class RelatedMaterialsDto {
-  @ApiProperty({
-    description: '材料ID',
-    example: 'M001',
-    required: true,
-  })
-  @IsString()
-  @IsNotEmpty()
-  materialId: string;
 
-  @ApiProperty({
-    description: '推荐数量',
-    example: 6,
-    required: false,
-    minimum: 1,
-    maximum: 20,
-    default: 6,
-  })
-  @IsOptional()
-  @IsNumber()
-  @Min(1)
-  limit?: number;
-}
 
 export class CopyMaterialDto {
   @ApiProperty({
