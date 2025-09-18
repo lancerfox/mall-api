@@ -1,15 +1,10 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { MaterialController } from './controllers/material.controller';
-import {
-  AdvancedSearchController,
-  // SearchConditionController,
-} from './controllers/advanced-search.controller';
 import { BatchOperationsController } from './controllers/batch-operations.controller';
 import { EnhancedMaterialController } from './controllers/enhanced-material.controller';
 import { OperationLogController } from './controllers/operation-log.controller';
 import { MaterialService } from './services/material.service';
-import { AdvancedSearchService } from './services/advanced-search.service';
 import { BatchOperationsService } from './services/batch-operations.service';
 import { EnhancedMaterialService } from './services/enhanced-material.service';
 import { OperationLogService } from './services/operation-log.service';
@@ -19,10 +14,7 @@ import {
   MaterialImage,
   MaterialImageSchema,
 } from './entities/material-image.entity';
-import {
-  SearchCondition,
-  SearchConditionSchema,
-} from './entities/search-condition.entity';
+
 import {
   OperationLog,
   OperationLogSchema,
@@ -34,7 +26,6 @@ import { Category, CategorySchema } from '../category/entities/category.entity';
     MongooseModule.forFeature([
       { name: Material.name, schema: MaterialSchema },
       { name: MaterialImage.name, schema: MaterialImageSchema },
-      { name: SearchCondition.name, schema: SearchConditionSchema },
       { name: OperationLog.name, schema: OperationLogSchema },
       { name: Category.name, schema: CategorySchema },
     ]),
@@ -42,21 +33,18 @@ import { Category, CategorySchema } from '../category/entities/category.entity';
   ],
   controllers: [
     MaterialController,
-    AdvancedSearchController,
     BatchOperationsController,
     EnhancedMaterialController,
     OperationLogController,
   ],
   providers: [
     MaterialService,
-    AdvancedSearchService,
     BatchOperationsService,
     EnhancedMaterialService,
     OperationLogService,
   ],
   exports: [
     MaterialService,
-    AdvancedSearchService,
     BatchOperationsService,
     EnhancedMaterialService,
     OperationLogService,

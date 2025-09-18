@@ -71,7 +71,28 @@ export class MaterialService {
     pageSize: number;
     totalPages: number;
   }> {
-    const { page, pageSize, keyword, categoryId, status } = query;
+    const { 
+      page, 
+      pageSize, 
+      keyword, 
+      categoryId, 
+      categoryIds,
+      status,
+      statuses,
+      priceMin,
+      priceMax,
+      stockMin,
+      stockMax,
+      colors,
+      hardnessMin,
+      hardnessMax,
+      densityMin,
+      densityMax,
+      dateStart,
+      dateEnd,
+      sortBy = 'createdAt',
+      sortOrder = 'desc'
+    } = query;
     const skip = (page - 1) * pageSize;
 
     // 构建查询条件
@@ -89,14 +110,60 @@ export class MaterialService {
       filter.categoryId = categoryId;
     }
 
+    if (categoryIds && categoryIds.length > 0) {
+      filter.categoryId = { $in: categoryIds };
+    }
+
     if (status) {
       filter.status = status;
     }
 
+    if (statuses && statuses.length > 0) {
+      filter.status = { $in: statuses };
+    }
+
+    if (priceMin !== undefined || priceMax !== undefined) {
+      filter.price = {};
+      if (priceMin !== undefined) filter.price.$gte = priceMin;
+      if (priceMax !== undefined) filter.price.$lte = priceMax;
+    }
+
+    if (stockMin !== undefined || stockMax !== undefined) {
+      filter.stock = {};
+      if (stockMin !== undefined) filter.stock.$gte = stockMin;
+      if (stockMax !== undefined) filter.stock.$lte = stockMax;
+    }
+
+    if (colors && colors.length > 0) {
+      filter.color = { $in: colors };
+    }
+
+    if (hardnessMin !== undefined || hardnessMax !== undefined) {
+      filter.hardness = {};
+      if (hardnessMin !== undefined) filter.hardness.$gte = hardnessMin;
+      if (hardnessMax !== undefined) filter.hardness.$lte = hardnessMax;
+    }
+
+    if (densityMin !== undefined || densityMax !== undefined) {
+      filter.density = {};
+      if (densityMin !== undefined) filter.density.$gte = densityMin;
+      if (densityMax !== undefined) filter.density.$lte = densityMax;
+    }
+
+    if (dateStart || dateEnd) {
+      filter.createdAt = {};
+      if (dateStart) filter.createdAt.$gte = new Date(dateStart);
+      if (dateEnd) filter.createdAt.$lte = new Date(dateEnd);
+    }
+
+    // 构建排序条件
+    const sort: any = {};
+    sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
+
     const [materials, total] = await Promise.all([
       this.materialModel
         .find(filter)
-        .sort({ createdAt: -1 })
+        .sort(sort)
         .skip(skip)
         .limit(pageSize)
         .lean(),
@@ -104,9 +171,9 @@ export class MaterialService {
     ]);
 
     // 获取分类信息
-    const categoryIds = [...new Set(materials.map((m) => m.categoryId))];
+    const uniqueCategoryIds = [...new Set(materials.map((m) => m.categoryId))];
     const categories = await this.categoryModel
-      .find({ categoryId: { $in: categoryIds } })
+      .find({ categoryId: { $in: uniqueCategoryIds } })
       .lean();
 
     const categoryMap = new Map(categories.map((c) => [c.categoryId, c.name]));
