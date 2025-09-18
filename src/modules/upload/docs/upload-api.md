@@ -1,42 +1,54 @@
-# 通用图片上传 API 文档
+# 上传模块接口文档
 
 ## 概述
 
-通用图片上传模块提供了一套完整的图片管理功能，支持多种业务类型（材料、产品、用户、分类等）的图片上传、管理和操作。
+上传模块提供文件上传功能，支持图片、视频等多种文件类型。所有接口都遵循RESTful设计原则。
 
 ## 基础信息
 
-- **模块路径**: `src/modules/upload`
-- **API 前缀**: `/api/v1/upload`
-- **认证要求**: 所有接口都需要 JWT 认证
+- **基础路径**: `/api/upload`
+- **认证方式**: JWT Bearer Token
+- **Content-Type**: `multipart/form-data` (文件上传)
 
-## 业务类型
+## 接口列表
 
-支持以下业务类型：
-- `material` - 材料
-- `product` - 产品  
-- `user` - 用户
-- `category` - 分类
+### 1. 上传图片
 
-## API 接口列表
+**接口说明**: 上传单张图片文件
 
-### 1. 上传单张图片
+**请求方式**: `POST`
 
-**接口地址**: `POST /api/v1/upload/image`
+**接口路径**: `/api/v1/upload/image`
 
-**请求格式**: `multipart/form-data`
+**认证要求**: 需要JWT Token
 
 **请求参数**:
-```typescript
-{
-  businessId: string;      // 业务ID，必填
-  businessType: string;    // 业务类型，必填，枚举值
-  sortOrder?: number;      // 排序值，可选
-  description?: string;    // 图片描述，可选
-  alt?: string;           // Alt文本，可选
-  file: File;             // 图片文件，必填
-}
+
+| 参数名 | 类型 | 必填 | 说明 | 示例 |
+|--------|------|------|------|------|
+| file | file | 是 | 要上传的图片文件 | (二进制文件) |
+
+**请求示例**:
 ```
+POST /api/v1/upload/image
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="file"; filename="example.jpg"
+Content-Type: image/jpeg
+
+(binary data of example.jpg)
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+```
+
+**响应参数**:
+
+| 参数名 | 类型 | 说明 | 示例 |
+|--------|------|------|------|
+| url | string | 上传成功后的文件URL | "https://example.com/uploads/image.jpg" |
+| filename | string | 文件名 | "image.jpg" |
+| size | number | 文件大小 (字节) | 102400 |
+| mimetype | string | 文件MIME类型 | "image/jpeg" |
 
 **响应示例**:
 ```json
@@ -44,201 +56,60 @@
   "code": 200,
   "message": "上传成功",
   "data": {
-    "imageId": "IMG1640995200123abc",
-    "businessId": "64b5f8e8f123456789abcdef",
-    "businessType": "material",
-    "fileName": "red_agate.jpg",
-    "filePath": "/uploads/material/20240101/64b5f8e8f123456789abcdef/IMG1640995200123abc.jpg",
-    "thumbnailPath": "/uploads/material/20240101/64b5f8e8f123456789abcdef/thumb_IMG1640995200123abc.jpg",
-    "mediumPath": "/uploads/material/20240101/64b5f8e8f123456789abcdef/medium_IMG1640995200123abc.jpg",
-    "fileSize": 1024000,
-    "width": 800,
-    "height": 600,
-    "sortOrder": 1,
-    "isMain": false,
-    "description": "这是一张产品图片",
-    "alt": "红色玛瑙石",
-    "createdAt": "2024-01-01T00:00:00.000Z"
+    "url": "https://example.com/uploads/image.jpg",
+    "filename": "image.jpg",
+    "size": 102400,
+    "mimetype": "image/jpeg"
   }
 }
 ```
 
-### 2. 批量上传图片
+**错误码**:
+- `400`: 请求参数错误 (例如，未选择文件或文件类型不支持)
+- `401`: 未授权访问
+- `500`: 服务器内部错误
 
-**接口地址**: `POST /api/v1/upload/batch-images`
+---
 
-**请求格式**: `multipart/form-data`
+## 数据模型
 
-**请求参数**:
+### UploadImageResponseDto - 上传图片响应数据模型
 ```typescript
 {
-  businessId: string;      // 业务ID，必填
-  businessType: string;    // 业务类型，必填
-  files: File[];          // 图片文件数组，最多10个
+  url: string;       // 上传成功后的文件URL
+  filename: string;  // 文件名
+  size: number;      // 文件大小 (字节)
+  mimetype: string;  // 文件MIME类型
 }
 ```
 
-**响应示例**:
+## 错误处理
+
+所有接口都遵循统一的错误响应格式：
+
 ```json
 {
-  "code": 200,
-  "message": "批量上传完成",
-  "data": {
-    "successCount": 3,
-    "failedCount": 1,
-    "successList": [
-      {
-        "imageId": "IMG1640995200123abc",
-        "fileName": "image1.jpg",
-        "filePath": "/uploads/material/20240101/64b5f8e8f123456789abcdef/IMG1640995200123abc.jpg"
-      }
-    ],
-    "failedList": [
-      {
-        "fileName": "invalid_file.txt",
-        "error": "不支持的文件格式"
-      }
-    ]
-  }
+  "statusCode": 400,
+  "message": "错误描述信息",
+  "error": "Bad Request"
 }
 ```
 
-### 3. 删除图片
+常见错误码：
+- `400`: 请求参数错误
+- `401`: 未授权访问
+- `500`: 服务器内部错误
 
-**接口地址**: `POST /api/v1/upload/delete-image`
+## 安全要求
 
-**请求参数**:
-```json
-{
-  "imageId": "IMG1640995200123abc"
-}
-```
+1. **认证**: 所有上传接口都需要有效的JWT Token进行认证。
+2. **文件类型验证**: 严格限制允许上传的文件类型，防止恶意文件上传。
+3. **文件大小限制**: 限制单个文件的大小，防止资源滥用。
+4. **存储路径安全**: 上传文件应存储在非Web可直接访问的目录，通过代理或CDN提供访问。
+5. **病毒扫描**: (可选) 对上传文件进行病毒扫描。
 
-**响应示例**:
-```json
-{
-  "code": 200,
-  "message": "删除成功",
-  "data": null
-}
-```
+## 版本历史
 
-### 4. 获取图片列表
-
-**接口地址**: `GET /api/v1/upload/image-list`
-
-**请求参数**:
-```typescript
-{
-  businessId: string;      // 业务ID
-  businessType: string;    // 业务类型
-}
-```
-
-**响应示例**:
-```json
-{
-  "code": 200,
-  "message": "获取成功",
-  "data": [
-    {
-      "imageId": "IMG1640995200123abc",
-      "businessId": "64b5f8e8f123456789abcdef",
-      "businessType": "material",
-      "fileName": "red_agate.jpg",
-      "filePath": "/uploads/material/20240101/64b5f8e8f123456789abcdef/IMG1640995200123abc.jpg",
-      "thumbnailPath": "/uploads/material/20240101/64b5f8e8f123456789abcdef/thumb_IMG1640995200123abc.jpg",
-      "mediumPath": "/uploads/material/20240101/64b5f8e8f123456789abcdef/medium_IMG1640995200123abc.jpg",
-      "fileSize": 1024000,
-      "width": 800,
-      "height": 600,
-      "sortOrder": 1,
-      "isMain": false,
-      "description": "这是一张产品图片",
-      "alt": "红色玛瑙石",
-      "createdAt": "2024-01-01T00:00:00.000Z"
-    }
-  ]
-}
-```
-
-### 5. 设置主图
-
-**接口地址**: `POST /api/v1/upload/set-main-image`
-
-**请求参数**:
-```json
-{
-  "imageId": "IMG1640995200123abc"
-}
-```
-
-**响应示例**:
-```json
-{
-  "code": 200,
-  "message": "设置成功",
-  "data": null
-}
-```
-
-### 6. 调整图片排序
-
-**接口地址**: `POST /api/v1/upload/sort-images`
-
-**请求参数**:
-```json
-{
-  "businessId": "64b5f8e8f123456789abcdef",
-  "businessType": "material",
-  "imageIds": ["IMG001", "IMG002", "IMG003"]
-}
-```
-
-**响应示例**:
-```json
-{
-  "code": 200,
-  "message": "排序成功",
-  "data": null
-}
-```
-
-## 错误码说明
-
-| 错误码 | 说明 |
-|--------|------|
-| 8500 | 上传失败 |
-| 8501 | 请选择要上传的文件 |
-| 8502 | 不支持的文件格式 |
-| 8503 | 文件大小超过限制 |
-| 8504 | 文件数量超过限制 |
-| 8505 | 图片不存在 |
-
-## 文件限制
-
-- **支持格式**: JPG、PNG、WEBP
-- **文件大小**: 单个文件最大 5MB
-- **批量上传**: 一次最多 10 个文件
-
-## 图片处理
-
-系统会自动为每张上传的图片生成：
-1. **原图**: 压缩质量 90%
-2. **缩略图**: 150x150 像素，压缩质量 80%
-3. **中等尺寸图**: 500x500 像素（等比缩放），压缩质量 85%
-
-## 存储结构
-
-```
-uploads/
-├── material/          # 材料图片
-│   └── 20240101/      # 按日期分组
-│       └── businessId/
-│           ├── IMG001.jpg       # 原图
-│           ├── thumb_IMG001.jpg # 缩略图
-│           └── medium_IMG001.jpg # 中等尺寸
-├── product/           # 产品图片
-├── user/              # 用户头像
-└── category/          # 分类图片
-```
+| 版本 | 日期 | 说明 |
+|------|------|------|
+| v1.0 | 2024-01-01 | 初始版本发布 |
