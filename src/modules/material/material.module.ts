@@ -15,6 +15,8 @@ import { BatchOperationsService } from './services/batch-operations.service';
 import { EnhancedMaterialService } from './services/enhanced-material.service';
 import { OperationLogService } from './services/operation-log.service';
 import { ImageManagementService } from './services/image-management.service';
+import { MaterialImageAdapterService } from './services/material-image-adapter.service';
+import { UploadImageModule } from '../../common/modules/upload-image.module';
 import { Material, MaterialSchema } from './entities/material.entity';
 import {
   MaterialImage,
@@ -39,6 +41,7 @@ import { Category, CategorySchema } from '../category/entities/category.entity';
       { name: OperationLog.name, schema: OperationLogSchema },
       { name: Category.name, schema: CategorySchema },
     ]),
+    UploadImageModule,
   ],
   controllers: [
     MaterialController,
@@ -56,6 +59,7 @@ import { Category, CategorySchema } from '../category/entities/category.entity';
     EnhancedMaterialService,
     OperationLogService,
     ImageManagementService,
+    MaterialImageAdapterService,
   ],
   exports: [
     MaterialService,
@@ -64,6 +68,7 @@ import { Category, CategorySchema } from '../category/entities/category.entity';
     EnhancedMaterialService,
     OperationLogService,
     ImageManagementService,
+    MaterialImageAdapterService,
   ],
 })
 export class MaterialModule {}

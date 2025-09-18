@@ -17,10 +17,9 @@ import {
   ApiBearerAuth,
   ApiConsumes,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
-import { CurrentUser } from '../../../common/decorators/user.decorator';
-import { ImageManagementService } from '../services/image-management.service';
-import { MaterialImageAdapterService } from '../services/material-image-adapter.service';
+import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { CurrentUser } from '../decorators/user.decorator';
+import { UploadImageService } from '../services/upload-image.service';
 import {
   UploadImageDto,
   BatchUploadImagesDto,
@@ -28,22 +27,19 @@ import {
   GetImageListDto,
   SetMainImageDto,
   SortImagesDto,
-} from '../dto/image-management.dto';
+} from '../dto/upload-image.dto';
 import {
   UploadImageResponseDto,
   BatchUploadResponseDto,
   ImageListResponseDto,
-} from '../dto/image-management-response.dto';
+} from '../dto/upload-image-response.dto';
 
-@ApiTags('图片管理')
+@ApiTags('通用图片上传')
 @ApiBearerAuth('JWT-auth')
 @UseGuards(JwtAuthGuard)
-@Controller('upload')
-export class ImageManagementController {
-  constructor(
-    private readonly imageManagementService: ImageManagementService,
-    private readonly materialImageAdapterService: MaterialImageAdapterService,
-  ) {}
+@Controller('api/v1/upload')
+export class UploadImageController {
+  constructor(private readonly uploadImageService: UploadImageService) {}
 
   @Post('image')
   @ApiOperation({ summary: '上传单张图片' })
@@ -62,11 +58,7 @@ export class ImageManagementController {
     @Body() body: UploadImageDto,
     @CurrentUser('sub') userId: string,
   ) {
-    return await this.materialImageAdapterService.uploadImage(
-      file,
-      body,
-      userId,
-    );
+    return await this.uploadImageService.uploadImage(file, body, userId);
   }
 
   @Post('batch-images')
@@ -86,11 +78,7 @@ export class ImageManagementController {
     @Body() body: BatchUploadImagesDto,
     @CurrentUser('sub') userId: string,
   ) {
-    return await this.materialImageAdapterService.batchUploadImages(
-      files,
-      body,
-      userId,
-    );
+    return await this.uploadImageService.batchUploadImages(files, body, userId);
   }
 
   @Post('delete-image')
@@ -103,11 +91,11 @@ export class ImageManagementController {
   @ApiResponse({ status: 401, description: '未授权' })
   @ApiResponse({ status: 500, description: '服务器内部错误' })
   async deleteImage(@Body() body: DeleteImageDto) {
-    return await this.materialImageAdapterService.deleteImage(body);
+    return await this.uploadImageService.deleteImage(body);
   }
 
   @Get('image-list')
-  @ApiOperation({ summary: '获取材料图片列表' })
+  @ApiOperation({ summary: '获取图片列表' })
   @ApiResponse({
     status: 200,
     description: '获取成功',
@@ -117,7 +105,7 @@ export class ImageManagementController {
   @ApiResponse({ status: 401, description: '未授权' })
   @ApiResponse({ status: 500, description: '服务器内部错误' })
   async getImageList(@Query() query: GetImageListDto) {
-    return await this.materialImageAdapterService.getImageList(query);
+    return await this.uploadImageService.getImageList(query);
   }
 
   @Post('set-main-image')
@@ -130,7 +118,7 @@ export class ImageManagementController {
   @ApiResponse({ status: 401, description: '未授权' })
   @ApiResponse({ status: 500, description: '服务器内部错误' })
   async setMainImage(@Body() body: SetMainImageDto) {
-    return await this.materialImageAdapterService.setMainImage(body);
+    return await this.uploadImageService.setMainImage(body);
   }
 
   @Post('sort-images')
@@ -143,6 +131,6 @@ export class ImageManagementController {
   @ApiResponse({ status: 401, description: '未授权' })
   @ApiResponse({ status: 500, description: '服务器内部错误' })
   async sortImages(@Body() body: SortImagesDto) {
-    return await this.materialImageAdapterService.sortImages(body);
+    return await this.uploadImageService.sortImages(body);
   }
 }
