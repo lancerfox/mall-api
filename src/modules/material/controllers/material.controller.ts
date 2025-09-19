@@ -26,7 +26,7 @@ import { SuccessResponseDto } from '../../../common/dto/success-response.dto';
 @ApiTags('素材管理')
 @ApiBearerAuth('JWT-auth')
 @UseGuards(JwtAuthGuard)
-@Controller('v1/materials')
+@Controller('material')
 export class MaterialController {
   constructor(private readonly materialService: MaterialService) {}
 
