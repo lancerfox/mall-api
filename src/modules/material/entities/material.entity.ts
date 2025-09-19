@@ -17,12 +17,6 @@ export class Material {
   @Prop({ required: true, index: true })
   categoryId: string;
 
-  @Prop({ required: true, min: 0 })
-  price: number;
-
-  @Prop({ required: true, min: 0 })
-  stock: number;
-
   @Prop({ maxlength: 500 })
   description?: string;
 
@@ -49,6 +43,9 @@ export class Material {
   @Prop()
   updatedAt: Date;
 
+  @Prop({ type: Date, default: null, index: true })
+  deletedAt?: Date;
+
   @Prop({ required: true })
   createdBy: string;
 
@@ -61,3 +58,4 @@ export const MaterialSchema = SchemaFactory.createForClass(Material);
 // 创建复合索引
 MaterialSchema.index({ name: 1, categoryId: 1 });
 MaterialSchema.index({ status: 1, createdAt: -1 });
+MaterialSchema.index({ deletedAt: 1 });

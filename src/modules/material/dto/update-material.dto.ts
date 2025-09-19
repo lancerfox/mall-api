@@ -42,26 +42,6 @@ export class UpdateMaterialDto {
   categoryId: string;
 
   @ApiProperty({
-    description: '价格',
-    example: 15.5,
-    required: true,
-    minimum: 0,
-  })
-  @IsNumber({ maxDecimalPlaces: 2 })
-  @Min(0)
-  price: number;
-
-  @ApiProperty({
-    description: '库存数量',
-    example: 100,
-    required: true,
-    minimum: 0,
-  })
-  @IsNumber()
-  @Min(0)
-  stock: number;
-
-  @ApiProperty({
     description: '材料描述',
     example: '天然红玛瑙',
     required: false,

@@ -42,12 +42,6 @@ export class MaterialResponseDto {
   })
   categoryPath?: string;
 
-  @ApiProperty({ description: '价格', example: 15.5 })
-  price: number;
-
-  @ApiProperty({ description: '库存数量', example: 100 })
-  stock: number;
-
   @ApiProperty({
     description: '材料描述',
     example: '天然红玛瑙',
@@ -97,8 +91,6 @@ export class MaterialResponseDto {
     this.materialId = material.materialId;
     this.name = material.name;
     this.categoryId = material.categoryId;
-    this.price = material.price;
-    this.stock = material.stock;
     this.description = material.description;
     this.color = material.color;
     this.hardness = material.hardness;

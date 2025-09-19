@@ -68,54 +68,6 @@ export class MaterialListDto {
   statuses?: string[];
 
   @ApiProperty({
-    description: '最低价格',
-    example: 10.0,
-    required: false,
-    minimum: 0,
-  })
-  @IsOptional()
-  @Transform(({ value }) => (value ? parseFloat(value) : undefined))
-  @IsNumber()
-  @Min(0)
-  priceMin?: number;
-
-  @ApiProperty({
-    description: '最高价格',
-    example: 100.0,
-    required: false,
-    minimum: 0,
-  })
-  @IsOptional()
-  @Transform(({ value }) => (value ? parseFloat(value) : undefined))
-  @IsNumber()
-  @Min(0)
-  priceMax?: number;
-
-  @ApiProperty({
-    description: '最低库存',
-    example: 0,
-    required: false,
-    minimum: 0,
-  })
-  @IsOptional()
-  @Transform(({ value }) => (value ? parseInt(value) : undefined))
-  @IsNumber()
-  @Min(0)
-  stockMin?: number;
-
-  @ApiProperty({
-    description: '最高库存',
-    example: 1000,
-    required: false,
-    minimum: 0,
-  })
-  @IsOptional()
-  @Transform(({ value }) => (value ? parseInt(value) : undefined))
-  @IsNumber()
-  @Min(0)
-  stockMax?: number;
-
-  @ApiProperty({
     description: '颜色数组',
     example: ['红色', '蓝色'],
     type: [String],
@@ -197,12 +149,12 @@ export class MaterialListDto {
   @ApiProperty({
     description: '排序字段',
     example: 'createdAt',
-    enum: ['name', 'price', 'stock', 'createdAt', 'updatedAt'],
+    enum: ['name', 'createdAt', 'updatedAt'],
     required: false,
     default: 'createdAt',
   })
   @IsOptional()
-  @IsEnum(['name', 'price', 'stock', 'createdAt', 'updatedAt'])
+  @IsEnum(['name', 'createdAt', 'updatedAt'])
   sortBy?: string;
 
   @ApiProperty({

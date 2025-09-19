@@ -64,46 +64,6 @@ export class BatchOperationsService {
           updateFields.categoryId = updateData.categoryId;
         }
 
-        // 价格调整
-        if (updateData.price) {
-          const currentPrice = material.price;
-          switch (updateData.price.type) {
-            case 'multiply':
-              updateFields.price =
-                Math.round(currentPrice * updateData.price.value * 100) / 100;
-              break;
-            case 'add':
-              updateFields.price =
-                Math.round((currentPrice + updateData.price.value) * 100) / 100;
-              break;
-            case 'set':
-              updateFields.price = updateData.price.value;
-              break;
-          }
-          if (updateFields.price < 0) {
-            updateFields.price = 0;
-          }
-        }
-
-        // 库存调整
-        if (updateData.stock) {
-          const currentStock = material.stock;
-          switch (updateData.stock.type) {
-            case 'add':
-              updateFields.stock = currentStock + updateData.stock.value;
-              break;
-            case 'subtract':
-              updateFields.stock = Math.max(
-                0,
-                currentStock - updateData.stock.value,
-              );
-              break;
-            case 'set':
-              updateFields.stock = updateData.stock.value;
-              break;
-          }
-        }
-
         // 状态更新
         if (updateData.status) {
           updateFields.status = updateData.status;
@@ -219,8 +179,6 @@ export class BatchOperationsService {
       materialId: material.materialId,
       name: material.name,
       categoryName: categoryMap.get(material.categoryId) || '',
-      price: material.price,
-      stock: material.stock,
       description: material.description || '',
       color: material.color || '',
       hardness: material.hardness || '',

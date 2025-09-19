@@ -37,7 +37,7 @@ import {
 @ApiTags('通用图片上传')
 @ApiBearerAuth('JWT-auth')
 @UseGuards(JwtAuthGuard)
-@Controller('api/v1/upload')
+@Controller('v1/upload')
 export class UploadImageController {
   constructor(private readonly uploadImageService: UploadImageService) {}
 

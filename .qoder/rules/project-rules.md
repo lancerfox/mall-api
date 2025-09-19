@@ -149,15 +149,15 @@ src
 
 ### 6.2. 路径 (Endpoint)
 
-- **版本号**: 所有接口路径以 `/api/v1` 作为前缀。
+- **版本号**: 所有接口路径以 `/vn` 作为前缀，n为版本 例如`/v1`。
 - **清晰可辨识**: 接口路径应清晰地描述其功能，由动词和名词组成。
 - **参数**: 所有请求参数都通过 `GET` 的查询字符串（Query String）或 `POST` 的请求体（Request Body）传递，URL 路径中不携带参数。
 - **示例**:
-  - `GET /api/v1/user/list` - 获取用户列表
-  - `POST /api/v1/getUser-by-id` - 获取单个用户 (参数在请求体中)
-  - `POST /api/v1/user/create` - 创建用户
-  - `POST /api/v1/user/update` - 更新用户信息
-  - `POST /api/v1/user/delete` - 删除用户
+  - `GET v1/user/list` - 获取用户列表
+  - `POST v1/getUser-by-id` - 获取单个用户 (参数在请求体中)
+  - `POST v1/user/create` - 创建用户
+  - `POST v1/user/update` - 更新用户信息
+  - `POST v1/user/delete` - 删除用户
 
 ### 6.3. 响应体 (Response Body)
 

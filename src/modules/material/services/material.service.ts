@@ -1,7 +1,8 @@
-import { Injectable, HttpException } from '@nestjs/common';
+import { Injectable, HttpException, Inject } from '@nestjs/common';
 import { ERROR_CODES } from '../../../common/constants/error-codes';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { InventoryService } from '../../inventory/services/inventory.service';
 import { Material, MaterialDocument } from '../entities/material.entity';
 import {
   Category,
@@ -26,6 +27,7 @@ export class MaterialService {
     @InjectModel(Category.name) private categoryModel: Model<CategoryDocument>,
     @InjectModel(MaterialImage.name)
     private imageModel: Model<MaterialImageDocument>,
+    private readonly inventoryService: InventoryService,
   ) {}
 
   async create(
@@ -63,6 +65,9 @@ export class MaterialService {
 
     const savedMaterial = await material.save();
 
+    // 创建关联的库存记录
+    await this.inventoryService.create(savedMaterial.materialId);
+
     // 更新分类的材料数量
     await this.categoryModel.updateOne(
       { categoryId: createMaterialDto.categoryId },
@@ -87,10 +92,6 @@ export class MaterialService {
       categoryIds,
       status,
       statuses,
-      priceMin,
-      priceMax,
-      stockMin,
-      stockMax,
       colors,
       hardnessMin,
       hardnessMax,
@@ -128,18 +129,6 @@ export class MaterialService {
 
     if (statuses && statuses.length > 0) {
       filter.status = { $in: statuses };
-    }
-
-    if (priceMin !== undefined || priceMax !== undefined) {
-      filter.price = {};
-      if (priceMin !== undefined) filter.price.$gte = priceMin;
-      if (priceMax !== undefined) filter.price.$lte = priceMax;
-    }
-
-    if (stockMin !== undefined || stockMax !== undefined) {
-      filter.stock = {};
-      if (stockMin !== undefined) filter.stock.$gte = stockMin;
-      if (stockMax !== undefined) filter.stock.$lte = stockMax;
     }
 
     if (colors && colors.length > 0) {
@@ -191,8 +180,6 @@ export class MaterialService {
       name: material.name,
       categoryId: material.categoryId,
       categoryName: categoryMap.get(material.categoryId) || '',
-      price: material.price,
-      stock: material.stock,
       description: material.description,
       color: material.color,
       hardness: material.hardness,
@@ -217,7 +204,9 @@ export class MaterialService {
    * @param enhanced 是否启用增强模式，包含分类路径、图片、统计信息等
    */
   async findOne(materialId: string, enhanced = false): Promise<any> {
-    const material = await this.materialModel.findOne({ materialId }).lean();
+    const material = await this.materialModel
+      .findOne({ materialId, deletedAt: null })
+      .lean();
     if (!material) {
       throw new HttpException('材料不存在', ERROR_CODES.MATERIAL_NOT_FOUND);
     }
@@ -334,18 +323,30 @@ export class MaterialService {
   }
 
   async remove(materialId: string): Promise<void> {
-    const material = await this.materialModel.findOne({ materialId });
+    const material = await this.materialModel.findOne({
+      materialId,
+      deletedAt: null,
+    });
     if (!material) {
       throw new HttpException('材料不存在', ERROR_CODES.MATERIAL_NOT_FOUND);
     }
 
-    await this.materialModel.deleteOne({ materialId });
+    // 检查库存状态，如果已上架则不允许删除
+    const inventory = await this.inventoryService.findByMaterialId(materialId);
+    if (inventory && inventory.status === 'on_shelf') {
+      throw new HttpException(
+        '该素材已上架，无法删除',
+        ERROR_CODES.MATERIAL_IS_ON_SHELF,
+      );
+    }
 
-    // 更新分类的材料数量
-    await this.categoryModel.updateOne(
-      { categoryId: material.categoryId },
-      { $inc: { materialCount: -1 } },
+    // 软删除
+    await this.materialModel.updateOne(
+      { materialId },
+      { $set: { deletedAt: new Date() } },
     );
+
+    // 软删除后，分类中的数量暂时不减
   }
 
   async batchDelete(batchDeleteDto: BatchDeleteMaterialDto): Promise<{
@@ -379,7 +380,10 @@ export class MaterialService {
   ): Promise<Material> {
     const { materialId, status } = toggleStatusDto;
 
-    const material = await this.materialModel.findOne({ materialId });
+    const material = await this.materialModel.findOne({
+      materialId,
+      deletedAt: null,
+    });
     if (!material) {
       throw new HttpException('材料不存在', ERROR_CODES.MATERIAL_NOT_FOUND);
     }

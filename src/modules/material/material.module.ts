@@ -5,6 +5,7 @@ import { BatchOperationsController } from './controllers/batch-operations.contro
 import { MaterialService } from './services/material.service';
 import { BatchOperationsService } from './services/batch-operations.service';
 import { UploadModule } from '../upload/upload.module';
+import { InventoryModule } from '../inventory/inventory.module';
 import { Material, MaterialSchema } from './entities/material.entity';
 import {
   MaterialImage,
@@ -20,6 +21,7 @@ import { Category, CategorySchema } from '../category/entities/category.entity';
       { name: Category.name, schema: CategorySchema },
     ]),
     UploadModule,
+    InventoryModule,
   ],
   controllers: [MaterialController, BatchOperationsController],
   providers: [MaterialService, BatchOperationsService],
