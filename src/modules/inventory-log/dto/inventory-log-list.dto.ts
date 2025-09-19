@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString, IsDateString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
 
 export class InventoryLogListDto extends PaginationDto {
@@ -15,11 +15,11 @@ export class InventoryLogListDto extends PaginationDto {
 
   @ApiProperty({ description: '开始日期 (YYYY-MM-DD)', required: false })
   @IsOptional()
-  @IsDateString()
+  @IsString()
   startDate?: string;
 
   @ApiProperty({ description: '结束日期 (YYYY-MM-DD)', required: false })
   @IsOptional()
-  @IsDateString()
+  @IsString()
   endDate?: string;
 }
