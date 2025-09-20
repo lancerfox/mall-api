@@ -42,17 +42,6 @@ export class MaterialService {
       throw new HttpException('分类不存在', ERROR_CODES.CATEGORY_NOT_FOUND);
     }
 
-    // 检查材料名称是否已存在
-    const existingMaterial = await this.materialModel.findOne({
-      name: createMaterialDto.name,
-    });
-    if (existingMaterial) {
-      throw new HttpException(
-        '材料名称已存在',
-        ERROR_CODES.MATERIAL_ALREADY_EXISTS,
-      );
-    }
-
     const materialId = `M${Date.now()}${Math.random().toString(36).substr(2, 3).toUpperCase()}`;
 
     const material = new this.materialModel({
@@ -105,7 +94,7 @@ export class MaterialService {
     const skip = (page - 1) * pageSize;
 
     // 构建查询条件
-    const filter: any = {};
+    const filter: any = { deletedAt: null }; // 添加软删除过滤条件
 
     if (keyword) {
       filter.$or = [
@@ -283,20 +272,6 @@ export class MaterialService {
     });
     if (!category) {
       throw new HttpException('分类不存在', ERROR_CODES.CATEGORY_NOT_FOUND);
-    }
-
-    // 检查材料名称是否已被其他材料使用
-    if (updateData.name !== existingMaterial.name) {
-      const duplicateMaterial = await this.materialModel.findOne({
-        name: updateData.name,
-        materialId: { $ne: materialId },
-      });
-      if (duplicateMaterial) {
-        throw new HttpException(
-          '材料名称已存在',
-          ERROR_CODES.MATERIAL_ALREADY_EXISTS,
-        );
-      }
     }
 
     // 如果分类发生变化，更新分类的材料数量
