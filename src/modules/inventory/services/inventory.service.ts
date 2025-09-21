@@ -20,8 +20,6 @@ import { UpdateInventoryDto } from '../dto/update-inventory.dto';
 import { InventoryLogService } from '../../inventory-log/services/inventory-log.service';
 import { OperationType } from '../../inventory-log/entities/inventory-log.entity';
 import { ERROR_CODES } from '../../../common/constants/error-codes';
-import { User, UserDocument } from '../../user/entities/user.entity';
-
 interface InventoryUser {
   id: string;
   username: string;
@@ -77,6 +75,7 @@ export class InventoryService {
       {
         $match: {
           'material.deletedAt': null,
+          'material.status': { $ne: 'disabled' }, // 过滤掉禁用状态的材料
         },
       },
     ];
@@ -100,19 +99,19 @@ export class InventoryService {
       this.inventoryModel.aggregate([...pipeline, { $count: 'total' }]),
     ]);
 
-    const formattedList = list.map((item) => ({
-      inventoryId: item.inventoryId,
-      materialId: item.materialId,
-      materialName: item.material.name,
-      categoryName: item.category.name,
-      price: parseFloat(item.price.toString()),
-      stock: item.stock,
-      status: item.status,
+    const formattedList = list.map((item: any) => ({
+      inventoryId: item.inventoryId as string,
+      materialId: item.materialId as string,
+      materialName: item.material.name as string,
+      categoryName: item.category.name as string,
+      price: item.price ? parseFloat((item.price as any).toString()) : 0,
+      stock: item.stock as number,
+      status: item.status as InventoryStatus,
     }));
 
     return {
       list: formattedList,
-      total: total[0]?.total || 0,
+      total: (total[0] as any)?.total || 0,
     };
   }
 
