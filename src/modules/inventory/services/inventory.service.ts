@@ -104,14 +104,14 @@ export class InventoryService {
       materialId: item.materialId as string,
       materialName: item.material.name as string,
       categoryName: item.category.name as string,
-      price: item.price ? parseFloat((item.price as any).toString()) : 0,
+      price: item.price ? parseFloat(item.price.toString()) : 0,
       stock: item.stock as number,
       status: item.status as InventoryStatus,
     }));
 
     return {
       list: formattedList,
-      total: (total[0] as any)?.total || 0,
+      total: total[0]?.total || 0,
     };
   }
 
