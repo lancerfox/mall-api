@@ -10,12 +10,10 @@ import { ERROR_CODES } from '../../../common/constants/error-codes';
 import {
   BatchUpdateMaterialDto,
   BatchMoveCategoryDto,
-  BatchExportDto,
 } from '../dto/batch-operations.dto';
 import {
   BatchUpdateResponseDto,
   BatchMoveCategoryResponseDto,
-  BatchExportResponseDto,
 } from '../dto/batch-operations-response.dto';
 
 @Injectable()
@@ -146,61 +144,6 @@ export class BatchOperationsService {
       failedCount: failedList.length,
       successIds,
       failedList,
-    };
-  }
-
-  async batchExportMaterials(
-    exportDto: BatchExportDto,
-  ): Promise<BatchExportResponseDto> {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { materialIds, fields, format = 'xlsx' } = exportDto;
-
-    // 构建查询条件
-    const filter: Record<string, any> = {};
-    if (materialIds && materialIds.length > 0) {
-      filter.materialId = { $in: materialIds };
-    }
-
-    // 获取材料数据
-    const materials = await this.materialModel.find(filter).lean();
-
-    // 获取分类信息
-    const categoryIds = [...new Set(materials.map((m) => m.categoryId))];
-    const categories = await this.categoryModel
-      .find({ categoryId: { $in: categoryIds } })
-      .lean();
-
-    const categoryMap = new Map(categories.map((c) => [c.categoryId, c.name]));
-
-    // 组装导出数据
-    const exportData = materials.map((material) => ({
-      materialId: material.materialId,
-      name: material.name,
-      categoryName: categoryMap.get(material.categoryId) || '',
-      description: material.description || '',
-      color: material.color || '',
-      hardness: material.hardness || '',
-      density: material.density || '',
-      status: material.status,
-      createdAt: material.createdAt,
-      updatedAt: material.updatedAt,
-    }));
-
-    // 生成文件名
-    const timestamp = new Date()
-      .toISOString()
-      .replace(/[:.]/g, '-')
-      .split('T')[0];
-    const fileName = `materials_${timestamp}_${Date.now()}.${format}`;
-    const fileUrl = `/exports/${fileName}`;
-
-    // TODO: 实际的文件生成逻辑需要使用 xlsx 库
-    // 这里返回模拟数据
-    return {
-      fileUrl,
-      fileName,
-      fileSize: exportData.length * 1024, // 模拟文件大小
-      recordCount: exportData.length,
     };
   }
 }

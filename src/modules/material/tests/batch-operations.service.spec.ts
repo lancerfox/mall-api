@@ -213,30 +213,4 @@ describe('BatchOperationsService', () => {
       ).rejects.toThrow(HttpException);
     });
   });
-
-  describe('batchExportMaterials', () => {
-    it('应该成功导出材料数据', async () => {
-      // 安排
-      const exportDto = {
-        materialIds: ['M001'],
-        format: 'xlsx',
-      };
-
-      materialModel.find.mockReturnValue({
-        lean: jest.fn().mockResolvedValue([mockMaterial]),
-      } as any);
-
-      categoryModel.find.mockReturnValue({
-        lean: jest.fn().mockResolvedValue([mockCategory]),
-      } as any);
-
-      // 执行
-      const result = await service.batchExportMaterials(exportDto);
-
-      // 断言
-      expect(result.fileUrl).toContain('/exports/');
-      expect(result.fileName).toContain('materials_');
-      expect(result.recordCount).toBe(1);
-    });
-  });
 });

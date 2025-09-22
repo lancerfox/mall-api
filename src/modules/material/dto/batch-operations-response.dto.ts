@@ -41,23 +41,3 @@ export class BatchMoveCategoryResponseDto {
   })
   failedList: { materialId: string; error: string }[];
 }
-
-export class BatchExportResponseDto {
-  @ApiProperty({
-    description: '导出文件URL',
-    example: '/exports/materials_20240101_123456.xlsx',
-  })
-  fileUrl: string;
-
-  @ApiProperty({
-    description: '文件名',
-    example: 'materials_20240101_123456.xlsx',
-  })
-  fileName: string;
-
-  @ApiProperty({ description: '文件大小（字节）', example: 1024000 })
-  fileSize: number;
-
-  @ApiProperty({ description: '导出记录数', example: 100 })
-  recordCount: number;
-}

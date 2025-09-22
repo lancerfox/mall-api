@@ -138,38 +138,3 @@ export class BatchMoveCategoryDto {
   @IsNotEmpty()
   targetCategoryId: string;
 }
-
-export class BatchExportDto {
-  @ApiProperty({
-    description: '材料ID数组',
-    example: ['M001', 'M002'],
-    type: [String],
-    required: false,
-  })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  materialIds?: string[];
-
-  @ApiProperty({
-    description: '导出字段',
-    example: ['name', 'categoryName', 'price', 'stock', 'status'],
-    type: [String],
-    required: false,
-  })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  fields?: string[];
-
-  @ApiProperty({
-    description: '导出格式',
-    enum: ['xlsx'],
-    example: 'xlsx',
-    required: false,
-    default: 'xlsx',
-  })
-  @IsOptional()
-  @IsEnum(['xlsx'])
-  format?: string;
-}

@@ -11,12 +11,10 @@ import { BatchOperationsService } from '../services/batch-operations.service';
 import {
   BatchUpdateMaterialDto,
   BatchMoveCategoryDto,
-  BatchExportDto,
 } from '../dto/batch-operations.dto';
 import {
   BatchUpdateResponseDto,
   BatchMoveCategoryResponseDto,
-  BatchExportResponseDto,
 } from '../dto/batch-operations-response.dto';
 
 @ApiTags('材料管理')
@@ -68,19 +66,5 @@ export class BatchOperationsController {
       batchMoveDto,
       userId,
     );
-  }
-
-  @Post('batch-export')
-  @ApiOperation({ summary: '批量导出材料数据' })
-  @ApiResponse({
-    status: 200,
-    description: '导出成功',
-    type: BatchExportResponseDto,
-  })
-  @ApiResponse({ status: 400, description: '参数错误' })
-  @ApiResponse({ status: 401, description: '未授权' })
-  @ApiResponse({ status: 500, description: '服务器内部错误' })
-  async batchExport(@Body() exportDto: BatchExportDto) {
-    return await this.batchOperationsService.batchExportMaterials(exportDto);
   }
 }
