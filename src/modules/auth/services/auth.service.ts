@@ -71,21 +71,68 @@ export class AuthService {
 
     if (user && isValid) {
       // 验证成功，返回用户信息（排除密码）
-      const userObj = user.toObject?.() ?? user;
-      const { ...result } = userObj as Record<string, unknown>;
+      // 使用类型安全的方式处理 user 对象
+      let userObj: Record<string, unknown>;
+
+      if (typeof user.toObject === 'function') {
+        userObj = user.toObject() as Record<string, unknown>;
+      } else {
+        // 如果没有 toObject 方法，手动构建对象
+        userObj = {};
+        for (const key in user) {
+          if (Object.prototype.hasOwnProperty.call(user, key)) {
+            // 避免复制函数和敏感字段
+            if (
+              typeof (user as unknown as Record<string, unknown>)[key] !==
+                'function' &&
+              key !== 'password'
+            ) {
+              userObj[key] = (user as unknown as Record<string, unknown>)[key];
+            }
+          }
+        }
+      }
+
+      const result: Record<string, unknown> = { ...userObj };
 
       // 确保返回的对象包含正确的id字段
-      const typedResult = result as Record<string, unknown>;
-      const resultWithId = {
-        ...result,
-        id: typedResult._id
-          ? (typedResult._id as { toString: () => string }).toString()
-          : typedResult.id
-            ? (typedResult.id as { toString: () => string }).toString()
-            : '',
-      };
+      let userId: string;
+      if (result._id) {
+        // 如果存在 _id 字段，将其转换为字符串
+        if (typeof result._id === 'string') {
+          userId = result._id;
+        } else if (
+          result._id &&
+          typeof result._id === 'object' &&
+          'toString' in result._id
+        ) {
+          // 安全地调用 toString 方法
+          userId = (result._id as { toString(): string }).toString();
+        } else {
+          userId = '';
+        }
+      } else if (result.id) {
+        // 如果存在 id 字段，将其转换为字符串
+        if (typeof result.id === 'string') {
+          userId = result.id;
+        } else if (
+          result.id &&
+          typeof result.id === 'object' &&
+          'toString' in result.id
+        ) {
+          // 安全地调用 toString 方法
+          userId = (result.id as { toString(): string }).toString();
+        } else {
+          userId = '';
+        }
+      } else {
+        userId = '';
+      }
 
-      return resultWithId as IUserWithoutPassword;
+      return {
+        ...result,
+        id: userId,
+      } as IUserWithoutPassword;
     }
 
     return null;
