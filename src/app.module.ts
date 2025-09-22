@@ -9,11 +9,6 @@ import { AuthModule } from './modules/auth/auth.module';
 import { RoleModule } from './modules/role/role.module';
 import { PermissionModule } from './modules/permission/permission.module';
 import { MenuModule } from './modules/menu/menu.module';
-import { MaterialModule } from './modules/material/material.module';
-import { CategoryModule } from './modules/category/category.module';
-import { UploadModule } from './modules/upload/upload.module';
-import { InventoryModule } from './modules/inventory/inventory.module';
-import { InventoryLogModule } from './modules/inventory-log/inventory-log.module';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
@@ -34,11 +29,6 @@ import { RolesGuard } from './common/guards/roles.guard';
     RoleModule,
     PermissionModule,
     MenuModule,
-    MaterialModule,
-    CategoryModule,
-    UploadModule,
-    InventoryModule,
-    InventoryLogModule,
   ],
   controllers: [AppController],
   providers: [
