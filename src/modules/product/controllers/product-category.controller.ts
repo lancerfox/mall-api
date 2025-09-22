@@ -1,10 +1,11 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Get } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ProductCategoryService } from '../services/product-category.service';
 import { CreateCategoryDto } from '../dto/create-category.dto';
 import { UpdateCategoryDto } from '../dto/update-category.dto';
 import { DeleteCategoryDto } from '../dto/delete-category.dto';
-import { IApiResponse } from '../../../common/types/api-response.interface';
+import { ProductCategoryResponseDto } from '../dto/product-category-response.dto';
+import { ProductCategoryListResponseDto } from '../dto/product-category-response.dto';
 
 @ApiTags('商品分类管理')
 @Controller('product/category')
@@ -27,13 +28,8 @@ export class ProductCategoryController {
   })
   async create(
     @Body() createCategoryDto: CreateCategoryDto,
-  ): Promise<IApiResponse> {
-    const category = await this.categoryService.create(createCategoryDto);
-    return {
-      code: 200,
-      message: '创建成功',
-      data: category,
-    };
+  ): Promise<ProductCategoryResponseDto> {
+    return await this.categoryService.create(createCategoryDto);
   }
 
   @Post('update')
@@ -52,13 +48,11 @@ export class ProductCategoryController {
   })
   async update(
     @Body() updateCategoryDto: UpdateCategoryDto,
-  ): Promise<IApiResponse> {
-    const category = await this.categoryService.update(updateCategoryDto);
-    return {
-      code: 200,
-      message: '更新成功',
-      data: category,
-    };
+  ): Promise<ProductCategoryResponseDto> {
+    return await this.categoryService.update(
+      updateCategoryDto.id,
+      updateCategoryDto,
+    );
   }
 
   @Post('delete')
@@ -77,16 +71,12 @@ export class ProductCategoryController {
   })
   async delete(
     @Body() deleteCategoryDto: DeleteCategoryDto,
-  ): Promise<IApiResponse> {
+  ): Promise<{ message: string }> {
     await this.categoryService.delete(deleteCategoryDto);
-    return {
-      code: 200,
-      message: '删除成功',
-      data: null,
-    };
+    return { message: '删除成功' };
   }
 
-  @Post('list')
+  @Get('list')
   @ApiOperation({ summary: '获取商品分类列表（树形结构）' })
   @ApiResponse({
     status: 200,
@@ -96,19 +86,18 @@ export class ProductCategoryController {
       properties: {
         code: { type: 'number', example: 200 },
         message: { type: 'string', example: '获取成功' },
-        data: {
-          type: 'array',
-          items: { $ref: '#/components/schemas/ProductCategory' },
-        },
+        data: { $ref: '#/components/schemas/ProductCategoryListResponseDto' },
       },
     },
   })
-  async list(): Promise<IApiResponse> {
+  async list(): Promise<ProductCategoryListResponseDto> {
     const categories = await this.categoryService.findAll();
     return {
-      code: 200,
-      message: '获取成功',
       data: categories,
+      total: categories.length,
+      page: 1,
+      pageSize: categories.length,
+      totalPages: 1,
     };
   }
 
@@ -126,12 +115,9 @@ export class ProductCategoryController {
       },
     },
   })
-  async detail(@Body() body: { id: string }): Promise<IApiResponse> {
-    const category = await this.categoryService.findOne(body.id);
-    return {
-      code: 200,
-      message: '获取成功',
-      data: category,
-    };
+  async detail(
+    @Body() body: { id: string },
+  ): Promise<ProductCategoryResponseDto> {
+    return await this.categoryService.findOne(body.id);
   }
 }

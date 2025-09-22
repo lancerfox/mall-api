@@ -11,8 +11,17 @@ export class ProductCategory {
   @Prop({ required: true, maxlength: 50 })
   name: string;
 
+  @Prop({ required: true, maxlength: 20 })
+  code: string;
+
+  @Prop({ required: true, default: 1, min: 1, max: 4 })
+  level: number;
+
   @Prop({ maxlength: 255 })
   icon: string;
+
+  @Prop({ maxlength: 500 })
+  description: string;
 
   @Prop({ default: 0, min: 0, max: 9999 })
   sort: number;

@@ -9,6 +9,7 @@ import {
   CategoryTreeNode,
   ProductCategoryLeanDocument,
 } from '../types/category.types';
+import { ProductCategoryResponseDto } from '../dto/product-category-response.dto';
 
 @Injectable()
 export class ProductCategoryService {
@@ -20,16 +21,22 @@ export class ProductCategoryService {
   /**
    * 创建商品分类
    */
-  async create(createCategoryDto: CreateCategoryDto): Promise<ProductCategory> {
+  async create(
+    createCategoryDto: CreateCategoryDto,
+  ): Promise<ProductCategoryResponseDto> {
     const category = new this.categoryModel(createCategoryDto);
-    return await category.save();
+    const savedCategory = await category.save();
+    return this.transformToResponseDto(savedCategory);
   }
 
   /**
    * 更新商品分类
    */
-  async update(updateCategoryDto: UpdateCategoryDto): Promise<ProductCategory> {
-    const { id, ...updateData } = updateCategoryDto;
+  async update(
+    id: string,
+    updateCategoryDto: UpdateCategoryDto,
+  ): Promise<ProductCategoryResponseDto> {
+    const updateData = updateCategoryDto;
     const category = await this.categoryModel.findByIdAndUpdate(
       id,
       { ...updateData, updateTime: new Date() },
@@ -40,7 +47,7 @@ export class ProductCategoryService {
       throw new NotFoundException('分类不存在');
     }
 
-    return category;
+    return this.transformToResponseDto(category);
   }
 
   /**
@@ -58,27 +65,27 @@ export class ProductCategoryService {
   /**
    * 获取分类列表（树形结构）
    */
-  async findAll(): Promise<CategoryTreeNode[]> {
+  async findAll(): Promise<ProductCategoryResponseDto[]> {
     const categories = await this.categoryModel
       .find({ status: 1 })
       .sort({ sort: 1, createTime: -1 })
       .lean()
       .exec();
 
-    return this.buildCategoryTree(categories as ProductCategoryLeanDocument[]);
+    return categories.map(category => this.transformLeanToResponseDto(category));
   }
 
   /**
    * 获取分类详情
    */
-  async findOne(id: string): Promise<ProductCategory> {
+  async findOne(id: string): Promise<ProductCategoryResponseDto> {
     const category = await this.categoryModel.findById(id);
 
     if (!category) {
       throw new NotFoundException('分类不存在');
     }
 
-    return category;
+    return this.transformToResponseDto(category);
   }
 
   /**
@@ -97,6 +104,9 @@ export class ProductCategoryService {
         id: categoryId,
         parentId: category.parentId ? category.parentId.toString() : null,
         name: category.name,
+        code: category.code,
+        level: category.level,
+        description: category.description,
         icon: category.icon,
         sort: category.sort,
         status: category.status,
@@ -157,5 +167,52 @@ export class ProductCategoryService {
     }
 
     return descendantIds;
+  }
+
+  /**
+   * 转换Lean文档为响应DTO
+   */
+  private transformLeanToResponseDto(
+    category: ProductCategoryLeanDocument,
+  ): ProductCategoryResponseDto {
+    return {
+      id: category._id.toString(),
+      name: category.name,
+      code: category.code,
+      parentId: category.parentId
+        ? category.parentId.toString()
+        : undefined,
+      level: category.level,
+      sortOrder: category.sort,
+      enabled: category.status === 1,
+      icon: category.icon,
+      description: category.description,
+      createdAt: category.createdAt,
+      updatedAt: category.updatedAt,
+    };
+  }
+
+  /**
+   * 转换分类文档为响应DTO
+   */
+  private transformToResponseDto(
+    category: ProductCategory,
+  ): ProductCategoryResponseDto {
+    const categoryObj = (category as any).toObject ? (category as any).toObject() : category;
+    return {
+      id: categoryObj._id.toString(),
+      name: categoryObj.name,
+      code: categoryObj.code,
+      parentId: categoryObj.parentId
+        ? categoryObj.parentId.toString()
+        : undefined,
+      level: categoryObj.level,
+      sortOrder: categoryObj.sort,
+      enabled: categoryObj.status === 1,
+      icon: categoryObj.icon,
+      description: categoryObj.description,
+      createdAt: categoryObj.createdAt,
+      updatedAt: categoryObj.updatedAt,
+    };
   }
 }

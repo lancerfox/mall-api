@@ -17,6 +17,9 @@ export type ProductCategoryLeanDocument = ProductCategory & {
   _id: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
+  code: string;
+  level: number;
+  description?: string;
 };
 
 /**

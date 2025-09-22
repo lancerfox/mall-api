@@ -5,7 +5,9 @@ import { SaveProductDto } from '../dto/save-product.dto';
 import { ProductListDto } from '../dto/product-list.dto';
 import { UpdateStatusDto } from '../dto/update-status.dto';
 import { ProductDetailDto } from '../dto/product-detail.dto';
-import { IApiResponse } from '../../../common/types/api-response.interface';
+import { ProductResponseDto } from '../dto/product-response.dto';
+import { ProductListResponseDto } from '../dto/product-response.dto';
+import { ProductDetailResponseDto } from '../dto/product-response.dto';
 
 @ApiTags('商品管理')
 @Controller('product')
@@ -26,13 +28,10 @@ export class ProductController {
       },
     },
   })
-  async save(@Body() saveProductDto: SaveProductDto): Promise<IApiResponse> {
-    const product = await this.productService.saveProduct(saveProductDto);
-    return {
-      code: 200,
-      message: '保存成功',
-      data: product,
-    };
+  async save(
+    @Body() saveProductDto: SaveProductDto,
+  ): Promise<ProductResponseDto> {
+    return await this.productService.saveProduct(saveProductDto);
   }
 
   @Post('list')
@@ -61,12 +60,16 @@ export class ProductController {
       },
     },
   })
-  async list(@Body() productListDto: ProductListDto): Promise<IApiResponse> {
+  async list(
+    @Body() productListDto: ProductListDto,
+  ): Promise<ProductListResponseDto> {
     const result = await this.productService.getProductList(productListDto);
     return {
-      code: 200,
-      message: '获取成功',
-      data: result,
+      data: result.items,
+      total: result.total,
+      page: result.page,
+      pageSize: result.pageSize,
+      totalPages: result.totalPages,
     };
   }
 
@@ -95,13 +98,8 @@ export class ProductController {
   })
   async detail(
     @Body() productDetailDto: ProductDetailDto,
-  ): Promise<IApiResponse> {
-    const result = await this.productService.getProductDetail(productDetailDto);
-    return {
-      code: 200,
-      message: '获取成功',
-      data: result,
-    };
+  ): Promise<ProductDetailResponseDto> {
+    return await this.productService.getProductDetail(productDetailDto);
   }
 
   @Post('updateStatus')
@@ -120,13 +118,9 @@ export class ProductController {
   })
   async updateStatus(
     @Body() updateStatusDto: UpdateStatusDto,
-  ): Promise<IApiResponse> {
+  ): Promise<{ message: string }> {
     await this.productService.updateProductStatus(updateStatusDto);
-    return {
-      code: 200,
-      message: '更新成功',
-      data: null,
-    };
+    return { message: '更新成功' };
   }
 
   @Post('delete')
@@ -143,12 +137,8 @@ export class ProductController {
       },
     },
   })
-  async delete(@Body() body: { ids: string[] }): Promise<IApiResponse> {
+  async delete(@Body() body: { ids: string[] }): Promise<{ message: string }> {
     await this.productService.deleteProducts(body.ids);
-    return {
-      code: 200,
-      message: '删除成功',
-      data: null,
-    };
+    return { message: '删除成功' };
   }
 }
