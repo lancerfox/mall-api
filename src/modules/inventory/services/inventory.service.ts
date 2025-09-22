@@ -180,18 +180,34 @@ export class InventoryService {
   }
 
   async shelve(inventoryIds: string[]) {
-    await this.inventoryModel.updateMany(
+    const result = await this.inventoryModel.updateMany(
       { inventoryId: { $in: inventoryIds } },
       { $set: { status: InventoryStatus.ON_SHELF } },
     );
-    return null;
+    
+    if (result.matchedCount === 0) {
+      throw new HttpException(
+        '库存记录不存在',
+        ERROR_CODES.INVENTORY_NOT_FOUND,
+      );
+    }
+    
+    return result;
   }
 
   async unshelve(inventoryIds: string[]) {
-    await this.inventoryModel.updateMany(
+    const result = await this.inventoryModel.updateMany(
       { inventoryId: { $in: inventoryIds } },
       { $set: { status: InventoryStatus.OFF_SHELF } },
     );
-    return null;
+    
+    if (result.matchedCount === 0) {
+      throw new HttpException(
+        '库存记录不存在',
+        ERROR_CODES.INVENTORY_NOT_FOUND,
+      );
+    }
+    
+    return result;
   }
 }
