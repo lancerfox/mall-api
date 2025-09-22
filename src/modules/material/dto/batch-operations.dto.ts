@@ -48,6 +48,31 @@ export class StockAdjustmentDto {
   value: number;
 }
 
+export class BatchMoveCategoryDto {
+  @ApiProperty({
+    description: '材料ID数组',
+    example: ['M001', 'M002', 'M003'],
+    type: [String],
+    required: true,
+    minItems: 1,
+    maxItems: 1000,
+  })
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(1000)
+  @IsString({ each: true })
+  materialIds: string[];
+
+  @ApiProperty({
+    description: '目标分类ID',
+    example: 'C002',
+    required: true,
+  })
+  @IsString()
+  @IsNotEmpty()
+  targetCategoryId: string;
+}
+
 export class BatchUpdateDataDto {
   @ApiProperty({
     description: '新分类ID',
@@ -112,29 +137,4 @@ export class BatchUpdateMaterialDto {
   @ValidateNested()
   @Type(() => BatchUpdateDataDto)
   updateData: BatchUpdateDataDto;
-}
-
-export class BatchMoveCategoryDto {
-  @ApiProperty({
-    description: '材料ID数组',
-    example: ['M001', 'M002', 'M003'],
-    type: [String],
-    required: true,
-    minItems: 1,
-    maxItems: 1000,
-  })
-  @IsArray()
-  @ArrayMinSize(1)
-  @ArrayMaxSize(1000)
-  @IsString({ each: true })
-  materialIds: string[];
-
-  @ApiProperty({
-    description: '目标分类ID',
-    example: 'C002',
-    required: true,
-  })
-  @IsString()
-  @IsNotEmpty()
-  targetCategoryId: string;
 }

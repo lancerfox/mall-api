@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { MaterialController } from './controllers/material.controller';
-import { BatchOperationsController } from './controllers/batch-operations.controller';
 import { MaterialService } from './services/material.service';
 import { BatchOperationsService } from './services/batch-operations.service';
 import { UploadModule } from '../upload/upload.module';
@@ -23,7 +22,7 @@ import { Category, CategorySchema } from '../category/entities/category.entity';
     UploadModule,
     InventoryModule,
   ],
-  controllers: [MaterialController, BatchOperationsController],
+  controllers: [MaterialController],
   providers: [MaterialService, BatchOperationsService],
   exports: [MaterialService, BatchOperationsService],
 })

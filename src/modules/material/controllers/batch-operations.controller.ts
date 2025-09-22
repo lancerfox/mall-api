@@ -8,14 +8,8 @@ import {
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../../common/decorators/user.decorator';
 import { BatchOperationsService } from '../services/batch-operations.service';
-import {
-  BatchUpdateMaterialDto,
-  BatchMoveCategoryDto,
-} from '../dto/batch-operations.dto';
-import {
-  BatchUpdateResponseDto,
-  BatchMoveCategoryResponseDto,
-} from '../dto/batch-operations-response.dto';
+import { BatchMoveCategoryDto } from '../dto/batch-operations.dto';
+import { BatchMoveCategoryResponseDto } from '../dto/batch-operations-response.dto';
 
 @ApiTags('材料管理')
 @ApiBearerAuth('JWT-auth')
@@ -25,27 +19,6 @@ export class BatchOperationsController {
   constructor(
     private readonly batchOperationsService: BatchOperationsService,
   ) {}
-
-  @Post('batch-update')
-  @ApiOperation({ summary: '批量更新材料' })
-  @ApiResponse({
-    status: 200,
-    description: '批量更新完成',
-    type: BatchUpdateResponseDto,
-  })
-  @ApiResponse({ status: 400, description: '参数错误' })
-  @ApiResponse({ status: 401, description: '未授权' })
-  @ApiResponse({ status: 404, description: '部分材料不存在' })
-  @ApiResponse({ status: 500, description: '服务器内部错误' })
-  async batchUpdate(
-    @Body() batchUpdateDto: BatchUpdateMaterialDto,
-    @CurrentUser('sub') userId: string,
-  ) {
-    return await this.batchOperationsService.batchUpdateMaterials(
-      batchUpdateDto,
-      userId,
-    );
-  }
 
   @Post('batch-move-category')
   @ApiOperation({ summary: '批量移动分类' })
