@@ -225,7 +225,7 @@ describe('BatchOperationsService', () => {
       materialModel.find.mockReturnValue({
         lean: jest.fn().mockResolvedValue([mockMaterial]),
       } as any);
-      
+
       categoryModel.find.mockReturnValue({
         lean: jest.fn().mockResolvedValue([mockCategory]),
       } as any);
