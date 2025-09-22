@@ -184,14 +184,14 @@ export class InventoryService {
       { inventoryId: { $in: inventoryIds } },
       { $set: { status: InventoryStatus.ON_SHELF } },
     );
-    
+
     if (result.matchedCount === 0) {
       throw new HttpException(
         '库存记录不存在',
         ERROR_CODES.INVENTORY_NOT_FOUND,
       );
     }
-    
+
     return result;
   }
 
@@ -200,14 +200,14 @@ export class InventoryService {
       { inventoryId: { $in: inventoryIds } },
       { $set: { status: InventoryStatus.OFF_SHELF } },
     );
-    
+
     if (result.matchedCount === 0) {
       throw new HttpException(
         '库存记录不存在',
         ERROR_CODES.INVENTORY_NOT_FOUND,
       );
     }
-    
+
     return result;
   }
 }

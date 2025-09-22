@@ -23,7 +23,7 @@ import {
 } from '../dto/material-response.dto';
 import { SuccessResponseDto } from '../../../common/dto/success-response.dto';
 
-@ApiTags('素材管理')
+@ApiTags('材料管理')
 @ApiBearerAuth('JWT-auth')
 @UseGuards(JwtAuthGuard)
 @Controller('material')
@@ -31,7 +31,7 @@ export class MaterialController {
   constructor(private readonly materialService: MaterialService) {}
 
   @Get('list')
-  @ApiOperation({ summary: '获取素材列表' })
+  @ApiOperation({ summary: '获取材料列表' })
   @ApiResponse({
     status: 200,
     description: '获取成功',
@@ -45,7 +45,7 @@ export class MaterialController {
   }
 
   @Get('detail')
-  @ApiOperation({ summary: '获取素材详情' })
+  @ApiOperation({ summary: '获取材料详情' })
   @ApiResponse({
     status: 200,
     description: '获取成功',
@@ -53,7 +53,7 @@ export class MaterialController {
   })
   @ApiResponse({ status: 400, description: '参数错误' })
   @ApiResponse({ status: 401, description: '未授权' })
-  @ApiResponse({ status: 404, description: '素材不存在' })
+  @ApiResponse({ status: 404, description: '材料不存在' })
   @ApiResponse({ status: 500, description: '服务器内部错误' })
   async detail(@Query() query: MaterialDetailDto) {
     // enhanced 已经在 DTO 中定义为 boolean 类型，直接传递
@@ -61,7 +61,7 @@ export class MaterialController {
   }
 
   @Post('create')
-  @ApiOperation({ summary: '创建素材' })
+  @ApiOperation({ summary: '创建材料' })
   @ApiResponse({
     status: 200,
     description: '创建成功',
@@ -69,7 +69,7 @@ export class MaterialController {
   })
   @ApiResponse({ status: 400, description: '参数错误' })
   @ApiResponse({ status: 401, description: '未授权' })
-  @ApiResponse({ status: 409, description: '素材名称已存在' })
+  @ApiResponse({ status: 409, description: '材料名称已存在' })
   @ApiResponse({ status: 500, description: '服务器内部错误' })
   async create(
     @Body() createMaterialDto: CreateMaterialDto,
@@ -83,7 +83,7 @@ export class MaterialController {
   }
 
   @Post('update')
-  @ApiOperation({ summary: '更新素材' })
+  @ApiOperation({ summary: '更新材料' })
   @ApiResponse({
     status: 200,
     description: '更新成功',
@@ -91,7 +91,7 @@ export class MaterialController {
   })
   @ApiResponse({ status: 400, description: '参数错误' })
   @ApiResponse({ status: 401, description: '未授权' })
-  @ApiResponse({ status: 404, description: '素材不存在' })
+  @ApiResponse({ status: 404, description: '材料不存在' })
   @ApiResponse({ status: 500, description: '服务器内部错误' })
   async update(
     @Body() updateMaterialDto: UpdateMaterialDto,
@@ -102,7 +102,7 @@ export class MaterialController {
   }
 
   @Post('delete')
-  @ApiOperation({ summary: '删除素材 (软删除)' })
+  @ApiOperation({ summary: '删除材料 (软删除)' })
   @ApiResponse({
     status: 200,
     description: '删除成功',
@@ -110,8 +110,8 @@ export class MaterialController {
   })
   @ApiResponse({ status: 400, description: '参数错误' })
   @ApiResponse({ status: 401, description: '未授权' })
-  @ApiResponse({ status: 404, description: '素材不存在' })
-  @ApiResponse({ status: 400, description: '素材已上架，无法删除' })
+  @ApiResponse({ status: 404, description: '材料不存在' })
+  @ApiResponse({ status: 400, description: '材料已上架，无法删除' })
   @ApiResponse({ status: 500, description: '服务器内部错误' })
   async delete(@Body() deleteMaterialDto: DeleteMaterialDto) {
     await this.materialService.remove(deleteMaterialDto.materialId);
@@ -119,7 +119,7 @@ export class MaterialController {
   }
 
   @Post('batch-delete')
-  @ApiOperation({ summary: '批量删除素材 (软删除)' })
+  @ApiOperation({ summary: '批量删除材料 (软删除)' })
   @ApiResponse({
     status: 200,
     description: '批量删除成功',
@@ -127,14 +127,14 @@ export class MaterialController {
   })
   @ApiResponse({ status: 400, description: '参数错误' })
   @ApiResponse({ status: 401, description: '未授权' })
-  @ApiResponse({ status: 404, description: '部分素材不存在' })
+  @ApiResponse({ status: 404, description: '部分材料不存在' })
   @ApiResponse({ status: 500, description: '服务器内部错误' })
   async batchDelete(@Body() batchDeleteDto: BatchDeleteMaterialDto) {
     return await this.materialService.batchDelete(batchDeleteDto);
   }
 
   @Post('toggle-status')
-  @ApiOperation({ summary: '切换素材状态' })
+  @ApiOperation({ summary: '切换材料状态' })
   @ApiResponse({
     status: 200,
     description: '状态更新成功',
@@ -142,7 +142,7 @@ export class MaterialController {
   })
   @ApiResponse({ status: 400, description: '参数错误' })
   @ApiResponse({ status: 401, description: '未授权' })
-  @ApiResponse({ status: 404, description: '素材不存在' })
+  @ApiResponse({ status: 404, description: '材料不存在' })
   @ApiResponse({ status: 500, description: '服务器内部错误' })
   async toggleStatus(
     @Body() toggleStatusDto: ToggleStatusDto,

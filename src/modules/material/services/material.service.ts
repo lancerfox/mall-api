@@ -310,7 +310,7 @@ export class MaterialService {
     const inventory = await this.inventoryService.findByMaterialId(materialId);
     if (inventory && inventory.status === 'on_shelf') {
       throw new HttpException(
-        '该素材已上架，无法删除',
+        '该材料已上架，无法删除',
         ERROR_CODES.MATERIAL_IS_ON_SHELF,
       );
     }

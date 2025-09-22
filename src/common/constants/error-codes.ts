@@ -119,7 +119,7 @@ export const ERROR_MESSAGES = {
   // 物料相关
   [ERROR_CODES.MATERIAL_NOT_FOUND]: '物料不存在',
   [ERROR_CODES.MATERIAL_ALREADY_EXISTS]: '物料已存在',
-  [ERROR_CODES.MATERIAL_IS_ON_SHELF]: '该素材已上架，无法删除',
+  [ERROR_CODES.MATERIAL_IS_ON_SHELF]: '该材料已上架，无法删除',
 
   // 分类相关
   [ERROR_CODES.CATEGORY_NOT_FOUND]: '分类不存在',
