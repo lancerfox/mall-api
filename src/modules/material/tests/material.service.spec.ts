@@ -419,46 +419,6 @@ describe('MaterialService', () => {
     });
   });
 
-  describe('batchDelete', () => {
-    it('应该成功批量删除材料', async () => {
-      // 安排
-      const batchDeleteDto = {
-        materialIds: ['M1234567890ABC', 'M1234567890DEF'],
-      };
-
-      // Mock每个删除操作都成功
-      jest.spyOn(service, 'remove').mockResolvedValue(undefined);
-
-      // 执行
-      const result = await service.batchDelete(batchDeleteDto);
-
-      // 断言
-      expect(result.successCount).toBe(2);
-      expect(result.failedCount).toBe(0);
-      expect(result.failedIds).toHaveLength(0);
-    });
-
-    it('部分删除失败时应该返回正确的统计信息', async () => {
-      // 安排
-      const batchDeleteDto = {
-        materialIds: ['M1234567890ABC', 'nonexistent-id'],
-      };
-
-      jest
-        .spyOn(service, 'remove')
-        .mockResolvedValueOnce(undefined) // 第一个成功
-        .mockRejectedValueOnce(new HttpException('材料不存在', 404)); // 第二个失败
-
-      // 执行
-      const result = await service.batchDelete(batchDeleteDto);
-
-      // 断言
-      expect(result.successCount).toBe(1);
-      expect(result.failedCount).toBe(1);
-      expect(result.failedIds).toContain('nonexistent-id');
-    });
-  });
-
   describe('toggleStatus', () => {
     it('应该成功切换材料状态', async () => {
       // 安排

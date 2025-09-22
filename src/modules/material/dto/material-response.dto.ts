@@ -1,6 +1,5 @@
-import { ApiProperty, ApiExtraModels } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { Material } from '../entities/material.entity';
-import { SuccessResponseDto } from '../../../common/dto/success-response.dto';
 
 export class MaterialStatsDto {
   @ApiProperty({ description: '查看次数', example: 150 })
@@ -12,14 +11,23 @@ export class MaterialStatsDto {
   @ApiProperty({
     description: '最后查看时间',
     example: '2024-01-01T00:00:00.000Z',
+    required: false,
   })
   lastViewAt?: Date;
 
   @ApiProperty({
     description: '最后编辑时间',
     example: '2024-01-01T00:00:00.000Z',
+    required: false,
   })
   lastEditAt?: Date;
+
+  constructor(stats?: Partial<MaterialStatsDto>) {
+    this.viewCount = stats?.viewCount || 0;
+    this.editCount = stats?.editCount || 0;
+    this.lastViewAt = stats?.lastViewAt || null;
+    this.lastEditAt = stats?.lastEditAt || null;
+  }
 }
 
 export class MaterialResponseDto {
@@ -32,31 +40,23 @@ export class MaterialResponseDto {
   @ApiProperty({ description: '分类ID', example: 'C001' })
   categoryId: string;
 
-  @ApiProperty({ description: '分类名称', example: '宝石类', required: false })
-  categoryName?: string;
+  @ApiProperty({ description: '分类名称', example: '宝石类' })
+  categoryName: string;
 
-  @ApiProperty({
-    description: '分类路径',
-    example: '宝石类/玛瑙',
-    required: false,
-  })
-  categoryPath?: string;
+  @ApiProperty({ description: '分类路径', example: '宝石类/玛瑙' })
+  categoryPath: string;
 
-  @ApiProperty({
-    description: '材料描述',
-    example: '天然红玛瑙',
-    required: false,
-  })
-  description?: string;
+  @ApiProperty({ description: '材料描述', example: '天然红玛瑙' })
+  description: string;
 
-  @ApiProperty({ description: '颜色', example: '红色', required: false })
-  color?: string;
+  @ApiProperty({ description: '颜色', example: '红色' })
+  color: string;
 
-  @ApiProperty({ description: '硬度', example: 7, required: false })
-  hardness?: number;
+  @ApiProperty({ description: '硬度(1-10)', example: 7 })
+  hardness: number;
 
-  @ApiProperty({ description: '密度', example: 2.65, required: false })
-  density?: number;
+  @ApiProperty({ description: '密度', example: 2.65 })
+  density: number;
 
   @ApiProperty({
     description: '状态',
@@ -65,20 +65,22 @@ export class MaterialResponseDto {
   })
   status: string;
 
-  @ApiProperty({ description: '图片列表', type: [Object], required: false })
-  images?: any[];
+  @ApiProperty({ description: '图片URL列表', example: [] })
+  images: string[];
+
+  @ApiProperty({ description: '统计信息' })
+  stats: MaterialStatsDto;
 
   @ApiProperty({
-    description: '统计信息',
-    type: MaterialStatsDto,
-    required: false,
+    description: '创建时间',
+    example: '2024-01-01T00:00:00.000Z',
   })
-  stats?: MaterialStatsDto;
-
-  @ApiProperty({ description: '创建时间', example: '2024-01-01T00:00:00.000Z' })
   createdAt: Date;
 
-  @ApiProperty({ description: '更新时间', example: '2024-01-01T00:00:00.000Z' })
+  @ApiProperty({
+    description: '更新时间',
+    example: '2024-01-01T00:00:00.000Z',
+  })
   updatedAt: Date;
 
   @ApiProperty({ description: '创建人ID', example: 'user123' })
@@ -135,14 +137,5 @@ export class CreateMaterialResponseDto {
 
   constructor(materialId: string) {
     this.materialId = materialId;
-  }
-}
-
-export class BatchDeleteResponseDto {
-  @ApiProperty({ description: '删除成功的数量', example: 5 })
-  deletedCount: number;
-
-  constructor(deletedCount: number) {
-    this.deletedCount = deletedCount;
   }
 }

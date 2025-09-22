@@ -11,14 +11,12 @@ import { UpdateMaterialDto } from '../dto/update-material.dto';
 import { MaterialListDto } from '../dto/material-list.dto';
 import { MaterialDetailDto } from '../dto/material-detail.dto';
 import { DeleteMaterialDto } from '../dto/delete-material.dto';
-import { BatchDeleteMaterialDto } from '../dto/batch-delete-material.dto';
 import { ToggleStatusDto } from '../dto/toggle-status.dto';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../../common/decorators/user.decorator';
 import {
   MaterialListResponseDto,
   CreateMaterialResponseDto,
-  BatchDeleteResponseDto,
   MaterialResponseDto,
 } from '../dto/material-response.dto';
 import { SuccessResponseDto } from '../../../common/dto/success-response.dto';
@@ -116,21 +114,6 @@ export class MaterialController {
   async delete(@Body() deleteMaterialDto: DeleteMaterialDto) {
     await this.materialService.remove(deleteMaterialDto.materialId);
     return null;
-  }
-
-  @Post('batch-delete')
-  @ApiOperation({ summary: '批量删除材料 (软删除)' })
-  @ApiResponse({
-    status: 200,
-    description: '批量删除成功',
-    type: BatchDeleteResponseDto,
-  })
-  @ApiResponse({ status: 400, description: '参数错误' })
-  @ApiResponse({ status: 401, description: '未授权' })
-  @ApiResponse({ status: 404, description: '部分材料不存在' })
-  @ApiResponse({ status: 500, description: '服务器内部错误' })
-  async batchDelete(@Body() batchDeleteDto: BatchDeleteMaterialDto) {
-    return await this.materialService.batchDelete(batchDeleteDto);
   }
 
   @Post('toggle-status')

@@ -16,7 +16,6 @@ import { CreateMaterialDto } from '../dto/create-material.dto';
 import { UpdateMaterialDto } from '../dto/update-material.dto';
 import { MaterialListDto } from '../dto/material-list.dto';
 import { MaterialDetailDto } from '../dto/material-detail.dto';
-import { BatchDeleteMaterialDto } from '../dto/batch-delete-material.dto';
 import { ToggleStatusDto } from '../dto/toggle-status.dto';
 import { MaterialStatsDto } from '../dto/material-response.dto';
 
@@ -124,59 +123,87 @@ export class MaterialService {
       filter.color = { $in: colors };
     }
 
-    if (hardnessMin !== undefined || hardnessMax !== undefined) {
-      filter.hardness = {};
-      if (hardnessMin !== undefined) filter.hardness.$gte = hardnessMin;
-      if (hardnessMax !== undefined) filter.hardness.$lte = hardnessMax;
+    if (hardnessMin !== undefined) {
+      filter.hardness = { ...filter.hardness, $gte: hardnessMin };
     }
 
-    if (densityMin !== undefined || densityMax !== undefined) {
-      filter.density = {};
-      if (densityMin !== undefined) filter.density.$gte = densityMin;
-      if (densityMax !== undefined) filter.density.$lte = densityMax;
+    if (hardnessMax !== undefined) {
+      filter.hardness = { ...filter.hardness, $lte: hardnessMax };
     }
 
-    if (dateStart || dateEnd) {
-      filter.createdAt = {};
-      if (dateStart) filter.createdAt.$gte = new Date(dateStart);
-      if (dateEnd) filter.createdAt.$lte = new Date(dateEnd);
+    if (densityMin !== undefined) {
+      filter.density = { ...filter.density, $gte: densityMin };
     }
+
+    if (densityMax !== undefined) {
+      filter.density = { ...filter.density, $lte: densityMax };
+    }
+
+    if (dateStart) {
+      filter.createdAt = { ...filter.createdAt, $gte: new Date(dateStart) };
+    }
+
+    if (dateEnd) {
+      filter.createdAt = { ...filter.createdAt, $lte: new Date(dateEnd) };
+    }
+
+    const total = await this.materialModel.countDocuments(filter);
 
     // 构建排序条件
     const sort: any = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    const [materials, total] = await Promise.all([
-      this.materialModel
-        .find(filter)
-        .sort(sort)
-        .skip(skip)
-        .limit(pageSize)
-        .lean(),
-      this.materialModel.countDocuments(filter),
-    ]);
-
-    // 获取分类信息
-    const uniqueCategoryIds = [...new Set(materials.map((m) => m.categoryId))];
-    const categories = await this.categoryModel
-      .find({ categoryId: { $in: uniqueCategoryIds } })
+    // 执行查询
+    const materials = await this.materialModel
+      .find(filter)
+      .sort(sort)
+      .skip(skip)
+      .limit(pageSize)
       .lean();
 
-    const categoryMap = new Map(categories.map((c) => [c.categoryId, c.name]));
+    // 获取分类信息
+    const categoryIdsInResult = [
+      ...new Set(materials.map((m) => m.categoryId)),
+    ];
+    const categories = await this.categoryModel
+      .find({ categoryId: { $in: categoryIdsInResult } })
+      .select('categoryId name path')
+      .lean();
 
-    const list = materials.map((material) => ({
-      materialId: material.materialId,
-      name: material.name,
-      categoryId: material.categoryId,
-      categoryName: categoryMap.get(material.categoryId) || '',
-      description: material.description,
-      color: material.color,
-      hardness: material.hardness,
-      density: material.density,
-      status: material.status,
-      createdAt: material.createdAt,
-      updatedAt: material.updatedAt,
-    }));
+    const categoryMap = new Map(
+      categories.map((c) => [c.categoryId, { name: c.name, path: c.path }]),
+    );
+
+    // 获取图片信息
+    const materialIds = materials.map((m) => m.materialId);
+    const images = await this.imageModel
+      .find({ materialId: { $in: materialIds } })
+      .select('materialId url')
+      .lean();
+
+    const imageMap = new Map<string, string[]>();
+    images.forEach((img) => {
+      if (!imageMap.has(img.materialId)) {
+        imageMap.set(img.materialId, []);
+      }
+      imageMap.get(img.materialId)!.push(img.url);
+    });
+
+    // 组装结果
+    const list = materials.map((material) => {
+      const categoryInfo = categoryMap.get(material.categoryId) || {
+        name: '',
+        path: '',
+      };
+      const materialImages = imageMap.get(material.materialId) || [];
+
+      return {
+        ...material,
+        categoryName: categoryInfo.name,
+        categoryPath: categoryInfo.path,
+        images: materialImages,
+      };
+    });
 
     return {
       list,
@@ -187,71 +214,46 @@ export class MaterialService {
     };
   }
 
-  /**
-   * 获取材料详情，支持增强模式
-   * @param materialId 材料ID
-   * @param enhanced 是否启用增强模式，包含分类路径、图片、统计信息等
-   */
   async findOne(materialId: string, enhanced = false): Promise<any> {
     const material = await this.materialModel
       .findOne({ materialId, deletedAt: null })
       .lean();
+
     if (!material) {
       throw new HttpException('材料不存在', ERROR_CODES.MATERIAL_NOT_FOUND);
     }
 
-    // 基础模式直接返回材料信息
     if (!enhanced) {
       return material;
     }
 
-    // 增强模式：获取分类信息和分类路径
+    // 获取分类信息
     const category = await this.categoryModel
       .findOne({ categoryId: material.categoryId })
+      .select('name path')
       .lean();
 
-    const categoryName = category?.name || '';
-    const categoryPath = await this.buildCategoryPath(material.categoryId);
-
-    // 获取图片列表
+    // 获取图片信息
     const images = await this.imageModel
-      .find({ materialId, status: 'active' })
-      .sort({ sortOrder: 1, createdAt: 1 })
+      .find({ materialId })
+      .select('url')
       .lean();
 
-    // 模拟统计信息（实际应从统计表获取）
+    // 获取统计数据
     const stats: MaterialStatsDto = {
-      viewCount: Math.floor(Math.random() * 500) + 50,
-      editCount: Math.floor(Math.random() * 20) + 1,
-      lastViewAt: new Date(),
-      lastEditAt: material.updatedAt,
+      viewCount: material.stats?.viewCount || 0,
+      editCount: material.stats?.editCount || 0,
+      lastViewAt: material.stats?.lastViewAt || null,
+      lastEditAt: material.stats?.lastEditAt || null,
     };
 
     return {
       ...material,
-      categoryName,
-      categoryPath,
-      images,
+      categoryName: category?.name || '',
+      categoryPath: category?.path || '',
+      images: images.map((img) => img.url),
       stats,
     };
-  }
-
-  /**
-   * 构建分类路径
-   * @param categoryId 分类ID
-   */
-  private async buildCategoryPath(categoryId: string): Promise<string> {
-    const category = await this.categoryModel.findOne({ categoryId }).lean();
-    if (!category) {
-      return '';
-    }
-
-    if (!category.parentId) {
-      return category.name;
-    }
-
-    const parentPath = await this.buildCategoryPath(category.parentId);
-    return parentPath ? `${parentPath}/${category.name}` : category.name;
   }
 
   async update(
@@ -322,31 +324,6 @@ export class MaterialService {
     );
 
     // 软删除后，分类中的数量暂时不减
-  }
-
-  async batchDelete(batchDeleteDto: BatchDeleteMaterialDto): Promise<{
-    successCount: number;
-    failedCount: number;
-    failedIds: string[];
-  }> {
-    const { materialIds } = batchDeleteDto;
-    const successIds: string[] = [];
-    const failedIds: string[] = [];
-
-    for (const materialId of materialIds) {
-      try {
-        await this.remove(materialId);
-        successIds.push(materialId);
-      } catch (error) {
-        failedIds.push(materialId);
-      }
-    }
-
-    return {
-      successCount: successIds.length,
-      failedCount: failedIds.length,
-      failedIds,
-    };
   }
 
   async toggleStatus(

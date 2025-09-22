@@ -331,55 +331,6 @@ describe('MaterialController', () => {
     });
   });
 
-  describe('batchDelete', () => {
-    it('应该成功批量删除材料', async () => {
-      // 安排
-      const batchDeleteDto = {
-        materialIds: ['M1234567890ABC', 'M1234567890DEF'],
-      };
-
-      const batchDeleteResult = {
-        successCount: 2,
-        failedCount: 0,
-        failedIds: [],
-      };
-
-      materialService.batchDelete.mockResolvedValue(batchDeleteResult);
-
-      // 执行
-      const result = await controller.batchDelete(batchDeleteDto);
-
-      // 断言
-      expect(materialService.batchDelete).toHaveBeenCalledWith(batchDeleteDto);
-      expect(result).toEqual(batchDeleteResult);
-      expect(result.successCount).toBe(2);
-      expect(result.failedCount).toBe(0);
-    });
-
-    it('部分删除失败时应该返回正确的统计信息', async () => {
-      // 安排
-      const batchDeleteDto = {
-        materialIds: ['M1234567890ABC', 'nonexistent-id'],
-      };
-
-      const batchDeleteResult = {
-        successCount: 1,
-        failedCount: 1,
-        failedIds: ['nonexistent-id'],
-      };
-
-      materialService.batchDelete.mockResolvedValue(batchDeleteResult);
-
-      // 执行
-      const result = await controller.batchDelete(batchDeleteDto);
-
-      // 断言
-      expect(result.successCount).toBe(1);
-      expect(result.failedCount).toBe(1);
-      expect(result.failedIds).toContain('nonexistent-id');
-    });
-  });
-
   describe('toggleStatus', () => {
     it('应该成功切换材料状态', async () => {
       // 安排
