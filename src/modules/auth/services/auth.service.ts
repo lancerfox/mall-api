@@ -74,7 +74,7 @@ export class AuthService {
     if (user && isValid) {
       // 验证成功，返回用户信息（排除密码）
       const userObj = user.toObject?.() ?? user;
-      const { password, ...result } = userObj as Record<string, unknown>;
+      const { ...result } = userObj as Record<string, unknown>;
 
       // 确保返回的对象包含正确的id字段
       const typedResult = result as Record<string, unknown>;

@@ -288,64 +288,64 @@ export class SecurityService {
    * @param ip IP地址
    * @param userAgent 用户代理
    */
-  private async checkSuspiciousLogin(
-    username: string,
-    ip: string,
-    userAgent?: string,
-  ) {
-    try {
-      // 检查最近24小时内的登录IP数量
-      const timeWindow = new Date(
-        Date.now() - this.config.suspiciousTimeWindow * 60 * 60 * 1000,
-      );
+  // private async checkSuspiciousLogin(
+  //   username: string,
+  //   ip: string,
+  //   userAgent?: string,
+  // ) {
+  //   try {
+  //     // 检查最近24小时内的登录IP数量
+  //     const timeWindow = new Date(
+  //       Date.now() - this.config.suspiciousTimeWindow * 60 * 60 * 1000,
+  //     );
 
-      // const recentLogins = await this.operationLogService.create({
-      //   userId: 'system',
-      //   username: 'system',
-      //   action: 'check_suspicious_login',
-      //   module: 'security',
-      //   description: `检查用户 ${username} 的可疑登录行为`,
-      //   ip,
-      //   userAgent,
-      //   status: 'success',
-      //   method: 'SYSTEM',
-      //   url: '/security/check',
-      // });
+  //     // const recentLogins = await this.operationLogService.create({
+  //     //   userId: 'system',
+  //     //   username: 'system',
+  //     //   action: 'check_suspicious_login',
+  //     //   module: 'security',
+  //     //   description: `检查用户 ${username} 的可疑登录行为`,
+  //     //   ip,
+  //     //   userAgent,
+  //     //   status: 'success',
+  //     //   method: 'SYSTEM',
+  //     //   url: '/security/check',
+  //     // });
 
-      // 这里可以添加更复杂的异常检测逻辑
-      // 比如：
-      // 1. 检查地理位置变化
-      // 2. 检查设备指纹变化
-      // 3. 检查登录时间模式
-      // 4. 检查用户行为模式
+  //     // 这里可以添加更复杂的异常检测逻辑
+  //     // 比如：
+  //     // 1. 检查地理位置变化
+  //     // 2. 检查设备指纹变化
+  //     // 3. 检查登录时间模式
+  //     // 4. 检查用户行为模式
 
-      // 简单的IP变化检测示例
-      const uniqueIPs = new Set();
-      for (const [key, attempts] of this.loginAttempts.entries()) {
-        if (key.startsWith(`${username}:`)) {
-          attempts.forEach((attempt) => {
-            if (attempt.success && attempt.timestamp > timeWindow) {
-              uniqueIPs.add(attempt.ip);
-            }
-          });
-        }
-      }
+  //     // 简单的IP变化检测示例
+  //     const uniqueIPs = new Set();
+  //     for (const [key, attempts] of this.loginAttempts.entries()) {
+  //       if (key.startsWith(`${username}:`)) {
+  //         attempts.forEach((attempt) => {
+  //           if (attempt.success && attempt.timestamp > timeWindow) {
+  //             uniqueIPs.add(attempt.ip);
+  //           }
+  //         });
+  //       }
+  //     }
 
-      if (uniqueIPs.size >= this.config.suspiciousLoginThreshold) {
-        // 记录可疑登录警告到控制台
-        console.warn(
-          `检测到用户 ${username} 存在可疑登录行为：${uniqueIPs.size} 个不同IP地址`,
-          {
-            username,
-            uniqueIPCount: uniqueIPs.size,
-            ips: Array.from(uniqueIPs),
-          },
-        );
-      }
-    } catch (error) {
-      console.error('检查可疑登录行为时出错:', error);
-    }
-  }
+  //     if (uniqueIPs.size >= this.config.suspiciousLoginThreshold) {
+  //       // 记录可疑登录警告到控制台
+  //       console.warn(
+  //         `检测到用户 ${username} 存在可疑登录行为：${uniqueIPs.size} 个不同IP地址`,
+  //         {
+  //           username,
+  //           uniqueIPCount: uniqueIPs.size,
+  //           ips: Array.from(uniqueIPs),
+  //         },
+  //       );
+  //     }
+  //   } catch (error) {
+  //     console.error('检查可疑登录行为时出错:', error);
+  //   }
+  // }
 
   /**
    * 清理过期的登录尝试记录

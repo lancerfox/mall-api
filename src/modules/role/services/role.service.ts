@@ -58,10 +58,10 @@ export class RoleService {
   }
 
   async findAll(): Promise<RoleListResponseDto[]> {
-    return this.roleModel
+    return (await this.roleModel
       .find()
       .select('-permissions')
-      .exec() as unknown as RoleListResponseDto[];
+      .exec()) as unknown as RoleListResponseDto[];
   }
 
   async findOne(id: string): Promise<Role> {
@@ -284,7 +284,7 @@ export class RoleService {
    * 获取所有角色类型枚举值
    * @returns 角色类型列表，包含value和label
    */
-  async getRoleTypes(): Promise<Array<{ value: string; label: string }>> {
+  getRoleTypes(): Array<{ value: string; label: string }> {
     const roleTypes = Object.values(RoleType);
 
     // 映射为前端友好的格式
