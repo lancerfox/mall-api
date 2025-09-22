@@ -1,0 +1,49 @@
+import { ApiProperty } from '@nestjs/swagger';
+import {
+  IsNotEmpty,
+  IsString,
+  IsOptional,
+  IsNumber,
+  IsIn,
+  IsMongoId,
+} from 'class-validator';
+
+export class CreateCategoryDto {
+  @ApiProperty({
+    description: '上级分类ID，一级分类为null',
+    example: null,
+    required: false,
+  })
+  @IsOptional()
+  @IsMongoId()
+  parentId?: string;
+
+  @ApiProperty({ description: '分类名称', example: '沉香手串', required: true })
+  @IsNotEmpty({ message: '分类名称不能为空' })
+  @IsString({ message: '分类名称必须是字符串' })
+  name: string;
+
+  @ApiProperty({
+    description: '分类图标URL',
+    example: 'https://example.com/icon.png',
+    required: false,
+  })
+  @IsOptional()
+  @IsString({ message: '图标必须是字符串' })
+  icon?: string;
+
+  @ApiProperty({ description: '排序号', example: 0, required: false })
+  @IsOptional()
+  @IsNumber({}, { message: '排序号必须是数字' })
+  sort?: number;
+
+  @ApiProperty({
+    description: '状态 (0: 隐藏, 1: 显示)',
+    example: 1,
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber({}, { message: '状态必须是数字' })
+  @IsIn([0, 1], { message: '状态只能是0或1' })
+  status?: number;
+}
