@@ -23,14 +23,12 @@ export class AuthService {
    * @param username 用户名
    * @param password 明文密码
    * @param ip 客户端IP地址
-   * @param userAgent 用户代理
    * @returns 验证成功返回用户信息（不含密码），失败返回null
    */
   async validateUser(
     username: string,
     password: string,
     ip?: string,
-    userAgent?: string,
   ): Promise<IUserWithoutPassword | null> {
     // 检查账户是否被锁定
     if (ip && this.securityService.isAccountLocked(username, ip)) {
@@ -68,7 +66,7 @@ export class AuthService {
 
     // 记录登录尝试
     if (ip) {
-      this.securityService.recordLoginAttempt(username, ip, isValid, userAgent);
+      this.securityService.recordLoginAttempt(username, ip, isValid);
     }
 
     if (user && isValid) {
@@ -81,9 +79,9 @@ export class AuthService {
       const resultWithId = {
         ...result,
         id: typedResult._id
-          ? String(typedResult._id)
+          ? (typedResult._id as { toString: () => string }).toString()
           : typedResult.id
-            ? String(typedResult.id)
+            ? (typedResult.id as { toString: () => string }).toString()
             : '',
       };
 
@@ -97,13 +95,11 @@ export class AuthService {
    * 用户登录
    * @param user 已验证的用户信息
    * @param ip 客户端IP地址
-   * @param userAgent 用户代理
    * @returns 包含access_token的对象
    */
   async login(
     user: IUserWithoutPassword,
     ip?: string,
-    userAgent?: string,
   ): Promise<ILoginResponse> {
     // 使用username作为备用标识符，如果id不存在
     let userId = user.id;
@@ -205,15 +201,11 @@ export class AuthService {
    * @param userId 用户ID
    * @param currentPassword 当前密码
    * @param newPassword 新密码
-   * @param ip 客户端IP地址
-   * @param userAgent 用户代理
    */
   async changePassword(
     userId: string,
     currentPassword: string,
     newPassword: string,
-    ip?: string,
-    userAgent?: string,
   ): Promise<void> {
     try {
       const user = await this.userService.findById(userId);

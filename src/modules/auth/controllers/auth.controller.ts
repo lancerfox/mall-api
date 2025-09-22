@@ -4,7 +4,6 @@ import {
   Get,
   Body,
   UseGuards,
-  Req,
   Ip,
   UnauthorizedException,
   BadRequestException,
@@ -58,17 +57,13 @@ export class AuthController {
   @Post('login')
   async login(
     @Body() loginDto: LoginDto,
-    @Req() req: Request,
     @Ip() ip: string,
   ): Promise<ILoginResponse> {
-    const userAgent = req.headers['user-agent'];
-
     try {
       const user = await this.authService.validateUser(
         loginDto.username,
         loginDto.password,
         ip,
-        userAgent,
       );
 
       if (!user) {
@@ -78,7 +73,7 @@ export class AuthController {
         });
       }
 
-      return await this.authService.login(user, ip, userAgent);
+      return await this.authService.login(user, ip);
     } catch (error: unknown) {
       if (error instanceof UnauthorizedException) {
         throw error;
@@ -148,11 +143,7 @@ export class AuthController {
   async changePassword(
     @Body() changePasswordDto: ChangePasswordDto,
     @CurrentUser('sub') userId: string,
-    @Req() req: Request,
-    @Ip() ip: string,
   ): Promise<{ message: string }> {
-    const userAgent = req.headers['user-agent'];
-
     // 验证新密码和确认密码是否一致
     if (changePasswordDto.newPassword !== changePasswordDto.confirmPassword) {
       throw new BadRequestException({
@@ -165,8 +156,6 @@ export class AuthController {
       userId,
       changePasswordDto.currentPassword,
       changePasswordDto.newPassword,
-      ip,
-      userAgent,
     );
 
     return { message: '密码修改成功' };
