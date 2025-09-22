@@ -59,6 +59,10 @@ export class PermissionController {
     type: [Permission],
   })
   findAll(@Query('type') type?: string) {
+    // 如果提供了type参数，则按类型过滤权限
+    if (type) {
+      return this.permissionService.findByType(type);
+    }
     return this.permissionService.findAll();
   }
 
