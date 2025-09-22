@@ -62,14 +62,15 @@ export class MenuService {
     // 获取角色拥有的权限ID列表（处理Permission对象和ObjectId两种情况）
     const permissionIds = (role.permissions || [])
       .map((permission) => {
+        // 使用类型守卫来安全地处理不同的权限类型
         if (permission instanceof Types.ObjectId) {
           return permission.toString();
-        } else if (permission && (permission as any)._id) {
-          return (permission as any)._id.toString();
+        } else if (this.isPermissionObject(permission)) {
+          return permission._id.toString();
         }
         return '';
       })
-      .filter((id) => id);
+      .filter((id): id is string => id !== '');
 
     if (permissionIds.length === 0) {
       return [];
@@ -299,5 +300,21 @@ export class MenuService {
   private getPermissionName(menuName: string): string {
     // 将菜单名转换为权限名格式，如 'User Management' -> 'user-management'
     return menuName.toLowerCase().replace(/\s+/g, '-');
+  }
+
+  /**
+   * 类型守卫函数，用于安全地检查权限对象
+   * @param permission 权限对象
+   * @returns 如果是有效的权限对象则返回true
+   */
+  private isPermissionObject(
+    permission: unknown,
+  ): permission is { _id: Types.ObjectId } {
+    return (
+      permission !== null &&
+      typeof permission === 'object' &&
+      '_id' in permission &&
+      permission._id instanceof Types.ObjectId
+    );
   }
 }
