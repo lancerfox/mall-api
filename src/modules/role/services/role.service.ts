@@ -59,17 +59,23 @@ export class RoleService {
   async findAll(): Promise<RoleListResponseDto[]> {
     const roles = await this.roleModel.find().select('-permissions').exec();
     return roles.map((role) => {
-      // 安全地访问Mongoose文档属性
-      const roleObject: any = role.toObject();
+      // 使用类型断言替代 any，提高类型安全性
+      const roleObject = role.toObject() as Partial<Role> & {
+        _id: Types.ObjectId;
+        createdAt?: Date;
+        updatedAt?: Date;
+      };
+
+      // 确保必需的属性有默认值，避免 undefined
       return {
         id: roleObject._id.toString(),
-        name: roleObject.name,
-        type: roleObject.type,
-        description: roleObject.description,
-        status: roleObject.status,
-        isSystem: roleObject.isSystem,
-        createdAt: roleObject.createdAt,
-        updatedAt: roleObject.updatedAt,
+        name: roleObject.name || '',
+        type: roleObject.type || RoleType.OPERATOR,
+        description: roleObject.description || '',
+        status: roleObject.status || 'active',
+        isSystem: roleObject.isSystem || false,
+        createdAt: roleObject.createdAt || new Date(),
+        updatedAt: roleObject.updatedAt || new Date(),
       };
     });
   }
