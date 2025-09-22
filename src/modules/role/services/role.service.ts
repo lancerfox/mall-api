@@ -44,8 +44,7 @@ export class RoleService {
       const permissions = await this.permissionService.findByIds(
         createRoleDto.permissions,
       );
-      const permissionIds = createRoleDto.permissions as string[];
-      if (permissions.length !== permissionIds.length) {
+      if (permissions.length !== createRoleDto.permissions.length) {
         throw new HttpException(
           '部分权限不存在',
           ERROR_CODES.PERMISSION_NOT_FOUND,
@@ -58,10 +57,21 @@ export class RoleService {
   }
 
   async findAll(): Promise<RoleListResponseDto[]> {
-    return (await this.roleModel
-      .find()
-      .select('-permissions')
-      .exec()) as unknown as RoleListResponseDto[];
+    const roles = await this.roleModel.find().select('-permissions').exec();
+    return roles.map((role) => {
+      // 安全地访问Mongoose文档属性
+      const roleObject: any = role.toObject();
+      return {
+        id: roleObject._id.toString(),
+        name: roleObject.name,
+        type: roleObject.type,
+        description: roleObject.description,
+        status: roleObject.status,
+        isSystem: roleObject.isSystem,
+        createdAt: roleObject.createdAt,
+        updatedAt: roleObject.updatedAt,
+      };
+    });
   }
 
   async findOne(id: string): Promise<Role> {
@@ -135,8 +145,7 @@ export class RoleService {
       const permissions = await this.permissionService.findByIds(
         updateRoleDto.permissions,
       );
-      const permissionIds = updateRoleDto.permissions as string[];
-      if (permissions.length !== permissionIds.length) {
+      if (permissions.length !== updateRoleDto.permissions.length) {
         throw new HttpException(
           '部分权限不存在',
           ERROR_CODES.PERMISSION_NOT_FOUND,
@@ -149,7 +158,11 @@ export class RoleService {
       .populate('permissions')
       .exec();
 
-    return role!;
+    if (!role) {
+      throw new HttpException('角色不存在', ERROR_CODES.ROLE_NOT_FOUND);
+    }
+
+    return role;
   }
 
   async remove(id: string): Promise<void> {
@@ -191,10 +204,16 @@ export class RoleService {
       ...new Set([...currentPermissionIds, ...permissionIds]),
     ];
 
-    return this.roleModel
+    const updatedRole = await this.roleModel
       .findByIdAndUpdate(roleId, { permissions: newPermissions }, { new: true })
       .populate('permissions')
-      .exec() as Promise<Role>;
+      .exec();
+
+    if (!updatedRole) {
+      throw new HttpException('角色不存在', ERROR_CODES.ROLE_NOT_FOUND);
+    }
+
+    return updatedRole;
   }
 
   async updatePermissions(
@@ -218,10 +237,16 @@ export class RoleService {
     }
 
     // 更新权限（完全替换）
-    return this.roleModel
+    const updatedRole = await this.roleModel
       .findByIdAndUpdate(roleId, { permissions: permissionIds }, { new: true })
       .populate('permissions')
-      .exec() as Promise<Role>;
+      .exec();
+
+    if (!updatedRole) {
+      throw new HttpException('角色不存在', ERROR_CODES.ROLE_NOT_FOUND);
+    }
+
+    return updatedRole;
   }
 
   async findPermissionsByRoleId(
@@ -247,25 +272,28 @@ export class RoleService {
 
     // 首先过滤出已填充的权限对象（包含type字段）
     const populatedPermissions = role.permissions.filter(
-      (permission: Permission | Types.ObjectId | any) => {
-        return (
-          permission && typeof permission === 'object' && 'type' in permission
-        );
-      },
-    ) as Permission[];
+      (permission) =>
+        permission && typeof permission === 'object' && 'type' in permission,
+    );
 
     // 然后根据类型进行过滤（如果指定了类型）
-    let filteredPermissions = populatedPermissions;
+    let filteredPermissions: Permission[] = [];
     if (type) {
-      filteredPermissions = populatedPermissions.filter(
-        (permission: Permission) => {
-          return permission.type === type;
-        },
-      );
+      const typedPermissions: Permission[] = populatedPermissions;
+      filteredPermissions = typedPermissions.filter((permission) => {
+        // 使用类型守卫确保类型安全
+        if (typeof permission !== 'object' || !('type' in permission)) {
+          return false;
+        }
+        // 确保类型匹配
+        return String(permission.type) === String(type);
+      });
+    } else {
+      filteredPermissions = populatedPermissions;
     }
 
     // 返回权限信息（只返回完整的权限对象）
-    return filteredPermissions.map((permission: Permission) => {
+    return filteredPermissions.map((permission) => {
       const permissionDoc = permission as Permission & {
         _id?: Types.ObjectId;
         id?: string;
