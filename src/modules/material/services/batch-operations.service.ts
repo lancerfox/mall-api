@@ -11,13 +11,11 @@ import {
   BatchUpdateMaterialDto,
   BatchMoveCategoryDto,
   BatchExportDto,
-  MaterialImportDto,
 } from '../dto/batch-operations.dto';
 import {
   BatchUpdateResponseDto,
   BatchMoveCategoryResponseDto,
   BatchExportResponseDto,
-  MaterialImportResponseDto,
 } from '../dto/batch-operations-response.dto';
 
 @Injectable()
@@ -203,30 +201,6 @@ export class BatchOperationsService {
       fileName,
       fileSize: exportData.length * 1024, // 模拟文件大小
       recordCount: exportData.length,
-    };
-  }
-
-  importMaterials(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    importDto: MaterialImportDto,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    userId: string,
-  ): MaterialImportResponseDto {
-    // TODO: 实现Excel文件解析和材料导入
-    // 这里返回模拟数据
-    return {
-      totalCount: 100,
-      successCount: 95,
-      failedCount: 5,
-      createdCount: 80,
-      updatedCount: 15,
-      failedList: [
-        {
-          row: 2,
-          data: { name: '测试材料', price: 'abc' },
-          errors: ['价格必须为数值'],
-        },
-      ],
     };
   }
 }

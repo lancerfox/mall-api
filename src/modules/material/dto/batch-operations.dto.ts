@@ -173,16 +173,3 @@ export class BatchExportDto {
   @IsEnum(['xlsx'])
   format?: string;
 }
-
-export class MaterialImportDto {
-  @ApiProperty({
-    description: '导入模式',
-    enum: ['create', 'update', 'upsert'],
-    example: 'upsert',
-    required: false,
-    default: 'upsert',
-  })
-  @IsOptional()
-  @IsEnum(['create', 'update', 'upsert'])
-  mode?: string;
-}

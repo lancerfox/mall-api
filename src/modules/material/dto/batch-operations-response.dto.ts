@@ -61,36 +61,3 @@ export class BatchExportResponseDto {
   @ApiProperty({ description: '导出记录数', example: 100 })
   recordCount: number;
 }
-
-export class MaterialImportResponseDto {
-  @ApiProperty({ description: '总记录数', example: 100 })
-  totalCount: number;
-
-  @ApiProperty({ description: '成功处理数量', example: 95 })
-  successCount: number;
-
-  @ApiProperty({ description: '失败处理数量', example: 5 })
-  failedCount: number;
-
-  @ApiProperty({ description: '创建记录数', example: 80 })
-  createdCount: number;
-
-  @ApiProperty({ description: '更新记录数', example: 15 })
-  updatedCount: number;
-
-  @ApiProperty({
-    description: '失败处理的记录列表',
-    example: [
-      {
-        row: 2,
-        data: { name: '测试材料', price: 'abc' },
-        errors: ['价格必须为数值'],
-      },
-    ],
-  })
-  failedList: {
-    row: number;
-    data: Record<string, any>;
-    errors: string[];
-  }[];
-}

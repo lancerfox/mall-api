@@ -1,18 +1,9 @@
-import {
-  Controller,
-  Post,
-  Body,
-  UseGuards,
-  UseInterceptors,
-  UploadedFile,
-} from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { Controller, Post, Body, UseGuards } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
-  ApiConsumes,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../../common/decorators/user.decorator';
@@ -21,13 +12,11 @@ import {
   BatchUpdateMaterialDto,
   BatchMoveCategoryDto,
   BatchExportDto,
-  MaterialImportDto,
 } from '../dto/batch-operations.dto';
 import {
   BatchUpdateResponseDto,
   BatchMoveCategoryResponseDto,
   BatchExportResponseDto,
-  MaterialImportResponseDto,
 } from '../dto/batch-operations-response.dto';
 
 @ApiTags('材料管理')
@@ -93,25 +82,5 @@ export class BatchOperationsController {
   @ApiResponse({ status: 500, description: '服务器内部错误' })
   async batchExport(@Body() exportDto: BatchExportDto) {
     return await this.batchOperationsService.batchExportMaterials(exportDto);
-  }
-
-  @Post('import')
-  @ApiOperation({ summary: '导入材料数据' })
-  @ApiConsumes('multipart/form-data')
-  @ApiResponse({
-    status: 200,
-    description: '导入完成',
-    type: MaterialImportResponseDto,
-  })
-  @ApiResponse({ status: 400, description: '参数错误' })
-  @ApiResponse({ status: 401, description: '未授权' })
-  @ApiResponse({ status: 500, description: '服务器内部错误' })
-  @UseInterceptors(FileInterceptor('file'))
-  importMaterials(
-    @UploadedFile() file: any,
-    @Body() importDto: MaterialImportDto,
-    @CurrentUser('sub') userId: string,
-  ) {
-    return this.batchOperationsService.importMaterials(importDto, userId);
   }
 }
