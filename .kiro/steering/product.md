@@ -1,24 +1,24 @@
-# Product Overview
+# 产品概述
 
-This is a **mall backend management system** (商城后台管理系统) built with NestJS and MongoDB. The system provides comprehensive e-commerce management capabilities including:
+这是一个基于 NestJS 和 MongoDB 构建的**商城后台管理系统**，提供全面的电商管理功能：
 
-## Core Features
-- **User Management**: User accounts, roles, and permissions with RBAC (Role-Based Access Control)
-- **Authentication**: JWT-based authentication with security features
-- **Product Management**: Complete SPU/SKU product catalog with categories, specifications, and inventory
-- **Menu Management**: Dynamic menu system with permission-based access control
-- **Permission System**: Granular permission management for different user roles
+## 核心功能
+- **用户管理**：用户账户、角色和权限管理，采用 RBAC（基于角色的访问控制）
+- **身份认证**：基于 JWT 的身份验证和安全功能
+- **商品管理**：完整的 SPU/SKU 商品目录，包含分类、规格和库存管理
+- **菜单管理**：基于权限的动态菜单系统
+- **权限系统**：针对不同用户角色的细粒度权限管理
 
-## Business Domain
-The system is designed for Chinese e-commerce operations, specifically targeting jewelry and accessories (沉香手串 - agarwood bracelets) with features like:
-- Material and origin tracking
-- Grade classification
-- Specification management (diameter, style variations)
-- Inventory and pricing management
+## 业务领域
+系统专为中国电商运营设计，主要面向珠宝饰品行业（如沉香手串），具备以下特色功能：
+- 材质和产地追踪
+- 品级分类管理
+- 规格管理（直径、款式变化）
+- 库存和价格管理
 
-## Target Users
-- **Operations Staff**: Product catalog management, inventory control
-- **Administrators**: User and permission management
-- **System Managers**: Role and menu configuration
+## 目标用户
+- **运营人员**：商品目录管理、库存控制
+- **管理员**：用户和权限管理
+- **系统管理员**：角色和菜单配置
 
-The system emphasizes data accuracy, operational efficiency, and comprehensive audit trails for e-commerce business operations.
+系统强调数据准确性、运营效率和电商业务操作的全面审计追踪。

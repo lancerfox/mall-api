@@ -36,6 +36,8 @@ src
 ├── config/         # 项目配置
 └── modules/        # 业务模块 (按业务划分)
     ├── <module-name>/ # 例如: user (用户模块)
+    │   ├── tests/     # 单元测试
+    │   ├── types/     # 类型定义
     │   ├── docs/      # 接口文档 (.md)
     │   ├── dto/       # 数据传输对象
     │   ├── entities/  # 数据库实体 (可选)
@@ -94,35 +96,6 @@ src
 ### 4.2. 代码质量 (Linting)
 
 - **工具**: 使用 **ESLint** 进行代码质量检查和风格约束。
-- **配置**: 在项目根目录创建 `.eslintrc.js` 文件。
-
-  ```javascript
-  module.exports = {
-    parser: '@typescript-eslint/parser',
-    parserOptions: {
-      project: 'tsconfig.json',
-      sourceType: 'module',
-    },
-    plugins: ['@typescript-eslint/eslint-plugin'],
-    extends: [
-      'plugin:@typescript-eslint/recommended',
-      'plugin:prettier/recommended',
-    ],
-    root: true,
-    env: {
-      node: true,
-      jest: true,
-    },
-    rules: {
-      '@typescript-eslint/interface-name-prefix': 'off',
-      '@typescript-eslint/explicit-function-return-type': 'off',
-      '@typescript-eslint/explicit-module-boundary-types': 'off',
-      '@typescript-eslint/no-explicit-any': 'warn',
-    },
-  };
-  ```
-
----
 
 ## 5. TypeScript 类型规范
 
@@ -188,10 +161,10 @@ export interface IApiResponse<T = any> {
     "code": 200,
     "message": "查询成功",
     "data": {
-      "items": [ ... ],
+      "data": [ ... ],
       "total": 100,
       "page": 1,
-      "limit": 10,
+      "pageSize": 10,
       "totalPages": 10
     }
   }
@@ -268,7 +241,7 @@ export class CreateUserDto {
 
 遵守的核心规则
 
-	1.	优先调用官方文档解析接口，禁止无依据猜测API功能，确保代码调用准确性。
+	1.	优先调用文档解析接口，禁止无依据猜测API功能，确保代码调用准确性。
 
 	2.	面对模糊需求或逻辑时，需主动提示用户补充细节、确认诉求，不盲目生成模糊代码。
 
@@ -283,3 +256,5 @@ export class CreateUserDto {
 	7.	遇到未收录的API知识或不确定的技术细节时，需明确告知用户“当前无法确定该信息”，不编造代码逻辑或API用法。
 
 	8.	对用户提供的待优化代码，需先分析原有逻辑关联性，再生成结构化重构方案，禁止无逻辑的盲目修改（如随意删改变量、函数逻辑）。
+
+  9.  禁止修改.env环境配置文件。
