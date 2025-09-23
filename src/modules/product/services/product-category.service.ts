@@ -183,7 +183,7 @@ export class ProductCategoryService {
       code: category.code,
       parentId: category.parentId ? category.parentId.toString() : undefined,
       level: category.level,
-      sortOrder: category.sort,
+      sort: category.sort,
       enabled: category.enabled,
       icon: category.icon,
       description: category.description,
@@ -209,7 +209,7 @@ export class ProductCategoryService {
         ? categoryObj.parentId.toString()
         : undefined,
       level: categoryObj.level,
-      sortOrder: categoryObj.sort,
+      sort: categoryObj.sort,
       enabled: categoryObj.enabled,
       icon: categoryObj.icon,
       description: categoryObj.description,

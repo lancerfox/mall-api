@@ -38,7 +38,7 @@ export class ProductCategoryResponseDto {
     description: '排序序号',
     example: 1,
   })
-  sortOrder: number;
+  sort: number;
 
   @ApiProperty({
     description: '是否启用',
