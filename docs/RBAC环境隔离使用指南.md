@@ -85,7 +85,7 @@ npm test
 DATABASE_URL=mongodb://localhost:27017/mall-api-test
 DATABASE_NAME=mall-api-test
 NODE_ENV=test
-JWT_SECRET=test-jwt-secret-key-for-unit-testing-only
+JWT_SECRET=xsp
 ```
 
 ### .env (生产环境)

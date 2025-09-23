@@ -28,7 +28,7 @@ function setupTestEnv() {
     const testEnvContent = `
 # 测试环境配置
 DATABASE_URL=mongodb://localhost:27017/mall-api-test
-JWT_SECRET=test-jwt-secret-key-for-unit-testing-only
+JWT_SECRET=xsp
 NODE_ENV=test
 PORT=3000
       `.trim();
