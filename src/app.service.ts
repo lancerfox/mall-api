@@ -24,7 +24,7 @@ export class AppService implements OnModuleInit {
       // 检查管理员账户是否已存在
       const existingAdmin = await this.userService.findOne(adminUsername);
       if (!existingAdmin) {
-        console.log('adminabaaaba 用户不存在');
+        console.log('❌ adminabaaaba 用户不存在');
         // 查找 super_admin 角色
         const superAdminRole = (await this.roleService.findByType(
           RoleType.SUPER_ADMIN,
@@ -32,9 +32,11 @@ export class AppService implements OnModuleInit {
 
         if (!superAdminRole) {
           console.error(
-            '未找到 "super_admin" 角色，无法创建初始管理员。请先运行 init-rbac 脚本。',
+            '❌ 未找到 "super_admin" 角色，无法创建初始管理员。请先运行 init:dev-rbac 脚本,初始化数据。',
           );
           return;
+        } else {
+          console.log('✅ 已初始化数据rbac 脚本');
         }
 
         // 创建初始管理员账户
@@ -44,12 +46,12 @@ export class AppService implements OnModuleInit {
           roles: [String(superAdminRole._id)],
         };
         await this.userService.create(createUserDto);
-        console.log('初始管理员账户创建成功');
+        console.log('✅ 初始管理员账户创建成功');
       } else {
-        console.log('管理员账户已存在');
+        console.log('✅ 管理员账户已存在');
       }
     } catch (error: any) {
-      console.error('创建初始管理员账户失败:', error);
+      console.error('❌ 创建初始管理员账户失败:', error);
     }
   }
 }
