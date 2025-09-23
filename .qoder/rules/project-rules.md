@@ -2,6 +2,7 @@
 trigger: always_on
 alwaysApply: true
 ---
+
 # 项目规范文档
 
 ## 1. 引言
