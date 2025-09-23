@@ -13,7 +13,6 @@ import {
   SkuResponseDto,
 } from '../dto/product-response.dto';
 
-
 interface SPUData {
   id?: string;
   name?: string;
@@ -158,7 +157,7 @@ export class ProductService {
     ]);
 
     const responseItems = items.map((item) =>
-      this.transformToResponseDto(item)
+      this.transformToResponseDto(item),
     );
 
     return {
@@ -295,7 +294,7 @@ export class ProductService {
     const spuObj = spu as unknown as Record<string, any>;
     const hasToObject = typeof spuObj.toObject === 'function';
     const data = hasToObject ? spuObj.toObject() : spuObj;
-    
+
     return {
       id: data._id?.toString() || '',
       spuCode: data.spuCode || '',
@@ -320,7 +319,7 @@ export class ProductService {
     const skuObj = sku as unknown as Record<string, any>;
     const hasToObject = typeof skuObj.toObject === 'function';
     const data = hasToObject ? skuObj.toObject() : skuObj;
-    
+
     return {
       id: data._id?.toString() || '',
       skuCode: data.skuCode || '',
@@ -345,7 +344,7 @@ export class ProductService {
     const spuObj = spu as unknown as Record<string, any>;
     const hasToObject = typeof spuObj.toObject === 'function';
     const data = hasToObject ? spuObj.toObject() : spuObj;
-    
+
     return {
       id: data._id?.toString() || '',
       spuCode: data.spuCode || '',

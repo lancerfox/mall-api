@@ -62,8 +62,19 @@ async function bootstrap() {
   });
 
   const port = process.env.PORT || 3000;
-  await app.listen(port);
 
+  await app.listen(port);
+  // 打印数据库连接信息
+  const databaseUrl = process.env.DATABASE_URL;
+  if (databaseUrl) {
+    // 安全地显示数据库连接信息（隐藏密码）
+    const maskedUrl = databaseUrl.replace(/:([^:@]+)@/, ':***@');
+    console.log(`🗄️  Database connection: ${maskedUrl}`);
+  } else {
+    console.log(
+      '⚠️  Database connection: DATABASE_URL environment variable not set',
+    );
+  }
   console.log(`🚀 Application is running on: http://localhost:${port}`);
   console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
 }

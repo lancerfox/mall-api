@@ -23,8 +23,8 @@ export class AppService implements OnModuleInit {
     try {
       // 检查管理员账户是否已存在
       const existingAdmin = await this.userService.findOne(adminUsername);
-
       if (!existingAdmin) {
+        console.log('adminabaaaba 用户不存在');
         // 查找 super_admin 角色
         const superAdminRole = (await this.roleService.findByType(
           RoleType.SUPER_ADMIN,

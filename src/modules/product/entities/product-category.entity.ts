@@ -26,8 +26,8 @@ export class ProductCategory {
   @Prop({ default: 0, min: 0, max: 9999 })
   sort: number;
 
-  @Prop({ default: 1, enum: [0, 1] })
-  status: number;
+  @Prop({ default: true })
+  enabled: boolean;
 
   @Prop({ default: Date.now })
   createdAt: Date;

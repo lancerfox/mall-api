@@ -67,12 +67,14 @@ export class ProductCategoryService {
    */
   async findAll(): Promise<ProductCategoryResponseDto[]> {
     const categories = await this.categoryModel
-      .find({ status: 1 })
+      .find({ enabled: true })
       .sort({ sort: 1, createTime: -1 })
       .lean()
       .exec();
 
-    return categories.map(category => this.transformLeanToResponseDto(category));
+    return categories.map((category) =>
+      this.transformLeanToResponseDto(category),
+    );
   }
 
   /**
@@ -109,7 +111,7 @@ export class ProductCategoryService {
         description: category.description,
         icon: category.icon,
         sort: category.sort,
-        status: category.status,
+        enabled: category.enabled,
         createdAt: category.createdAt,
         updatedAt: category.updatedAt,
         children: [],
@@ -179,12 +181,10 @@ export class ProductCategoryService {
       id: category._id.toString(),
       name: category.name,
       code: category.code,
-      parentId: category.parentId
-        ? category.parentId.toString()
-        : undefined,
+      parentId: category.parentId ? category.parentId.toString() : undefined,
       level: category.level,
       sortOrder: category.sort,
-      enabled: category.status === 1,
+      enabled: category.enabled,
       icon: category.icon,
       description: category.description,
       createdAt: category.createdAt,
@@ -198,7 +198,9 @@ export class ProductCategoryService {
   private transformToResponseDto(
     category: ProductCategory,
   ): ProductCategoryResponseDto {
-    const categoryObj = (category as any).toObject ? (category as any).toObject() : category;
+    const categoryObj = (category as any).toObject
+      ? (category as any).toObject()
+      : category;
     return {
       id: categoryObj._id.toString(),
       name: categoryObj.name,
@@ -208,7 +210,7 @@ export class ProductCategoryService {
         : undefined,
       level: categoryObj.level,
       sortOrder: categoryObj.sort,
-      enabled: categoryObj.status === 1,
+      enabled: categoryObj.enabled,
       icon: categoryObj.icon,
       description: categoryObj.description,
       createdAt: categoryObj.createdAt,

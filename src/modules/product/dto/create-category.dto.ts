@@ -4,7 +4,7 @@ import {
   IsString,
   IsOptional,
   IsNumber,
-  IsIn,
+  IsBoolean,
   IsMongoId,
 } from 'class-validator';
 
@@ -43,12 +43,11 @@ export class CreateCategoryDto {
   sort?: number;
 
   @ApiProperty({
-    description: '状态 (0: 隐藏, 1: 显示)',
-    example: 1,
+    description: '是否启用',
+    example: true,
     required: false,
   })
   @IsOptional()
-  @IsNumber({}, { message: '状态必须是数字' })
-  @IsIn([0, 1], { message: '状态只能是0或1' })
-  status?: number;
+  @IsBoolean({ message: '启用状态必须是布尔值' })
+  enabled?: boolean;
 }
