@@ -39,26 +39,7 @@ export class ProductController {
   @ApiResponse({
     status: 200,
     description: '获取成功',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: '获取成功' },
-        data: {
-          type: 'object',
-          properties: {
-            items: {
-              type: 'array',
-              items: { $ref: '#/components/schemas/ProductSPU' },
-            },
-            total: { type: 'number', example: 100 },
-            page: { type: 'number', example: 1 },
-            pageSize: { type: 'number', example: 10 },
-            totalPages: { type: 'number', example: 10 },
-          },
-        },
-      },
-    },
+    type: ProductListResponseDto,
   })
   async list(
     @Body() productListDto: ProductListDto,

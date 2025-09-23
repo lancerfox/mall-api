@@ -81,14 +81,7 @@ export class ProductCategoryController {
   @ApiResponse({
     status: 200,
     description: '获取成功',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: '获取成功' },
-        data: { $ref: '#/components/schemas/ProductCategoryListResponseDto' },
-      },
-    },
+    type: ProductCategoryListResponseDto,
   })
   async list(): Promise<ProductCategoryListResponseDto> {
     const categories = await this.categoryService.findAll();
