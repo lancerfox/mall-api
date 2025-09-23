@@ -23,6 +23,11 @@ export class CreateCategoryDto {
   @IsString({ message: '分类名称必须是字符串' })
   name: string;
 
+  @ApiProperty({ description: '分类编码', example: 'INCENSE', required: true })
+  @IsNotEmpty({ message: '分类编码不能为空' })
+  @IsString({ message: '分类编码必须是字符串' })
+  code: string;
+
   @ApiProperty({
     description: '分类图标URL',
     example: 'https://example.com/icon.png',

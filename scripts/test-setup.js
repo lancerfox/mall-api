@@ -30,7 +30,7 @@ function setupTestEnv() {
 DATABASE_URL=mongodb://localhost:27017/mall-api-test
 JWT_SECRET=test-jwt-secret-key-for-unit-testing-only
 NODE_ENV=test
-PORT=3001
+PORT=3000
       `.trim();
     fs.writeFileSync(envTestPath, testEnvContent);
     console.log('✅ 已创建 .env.test 文件');

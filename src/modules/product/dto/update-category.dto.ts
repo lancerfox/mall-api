@@ -37,6 +37,15 @@ export class UpdateCategoryDto {
   name?: string;
 
   @ApiProperty({
+    description: '分类编码',
+    example: 'INCENSE',
+    required: false,
+  })
+  @IsOptional()
+  @IsString({ message: '分类编码必须是字符串' })
+  code?: string;
+
+  @ApiProperty({
     description: '分类图标URL',
     example: 'https://example.com/icon.png',
     required: false,
