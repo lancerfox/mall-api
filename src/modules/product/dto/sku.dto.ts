@@ -7,6 +7,7 @@ import {
   IsArray,
   ValidateNested,
   IsIn,
+  Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { SpecificationDto } from './specification.dto';
@@ -55,6 +56,7 @@ export class SkuDto {
   @ApiProperty({ description: '库存', example: 100, required: true })
   @IsNotEmpty({ message: '库存不能为空' })
   @IsNumber({}, { message: '库存必须是数字' })
+  @Min(0, { message: '库存不能为负数' })
   stock: number;
 
   @ApiProperty({ description: 'SKU编码', example: 'SKU001', required: false })

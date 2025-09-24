@@ -1,10 +1,17 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import { ProductSKU } from './product-sku.entity';
 
 export type ProductSPUDocument = ProductSPU & Document;
 
-@Schema({ timestamps: true })
+@Schema({
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true },
+})
 export class ProductSPU {
+  skus: ProductSKU[];
+
   @Prop({ required: true, maxlength: 200 })
   name: string;
 
@@ -49,3 +56,9 @@ export class ProductSPU {
 }
 
 export const ProductSPUSchema = SchemaFactory.createForClass(ProductSPU);
+
+ProductSPUSchema.virtual('skus', {
+  ref: 'ProductSKU',
+  localField: '_id',
+  foreignField: 'spuId',
+});

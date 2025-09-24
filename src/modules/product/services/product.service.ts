@@ -301,20 +301,29 @@ export class ProductService {
   ): Promise<ProductResponseDto> {
     const populatedSpu = await spu.populate<{
       categoryId: ProductCategoryDocument;
-    }>('categoryId');
-    const data = populatedSpu.toObject();
-    const category = data.categoryId as ProductCategoryDocument;
+      skus: ProductSKUDocument[];
+    }>(['categoryId', 'skus']);
+
+    const skusData = (populatedSpu.skus || []).map((sku) =>
+      this.transformSkuToResponseDto(sku),
+    );
+    const data = populatedSpu.toObject() as ProductSPU & {
+      _id: Types.ObjectId;
+    };
+    const category = data.categoryId as unknown as ProductCategoryDocument;
 
     // 1. 获取SKUs
-    const skus = await this.skuModel.find({ spuId: data._id });
-    const skusData = skus.map((sku) => this.transformSkuToResponseDto(sku));
+    // const skus = await this.skuModel.find({ spuId: data._id });
+    // const skusData = skus.map((sku) => this.transformSkuToResponseDto(sku));
 
     // 2. 计算总库存和价格范围
     let totalStock = 0;
     const prices: number[] = [];
     skusData.forEach((sku) => {
-      totalStock += sku.stock;
-      if (sku.price > 0) prices.push(sku.price);
+      if (sku.enabled) {
+        totalStock += sku.stock;
+        if (sku.price > 0) prices.push(sku.price);
+      }
     });
     const priceRange: [number, number] =
       prices.length > 0 ? [Math.min(...prices), Math.max(...prices)] : [0, 0];
@@ -343,7 +352,7 @@ export class ProductService {
         };
 
     return {
-      id: (data._id as any)?.toString() || '',
+      id: data._id?.toString() || '',
       spuCode: '', // SPU实体中没有spuCode字段，使用空字符串
       name: data.name || '',
       category: categoryDto,
@@ -366,7 +375,7 @@ export class ProductService {
    * 转换SKU文档为响应DTO
    */
   private transformSkuToResponseDto(sku: ProductSKUDocument): SkuResponseDto {
-    const data = sku.toObject() as any;
+    const data = sku.toObject() as ProductSKU & { _id: Types.ObjectId };
 
     return {
       id: data._id?.toString() || '',
@@ -395,7 +404,6 @@ export class ProductService {
     spu: ProductSPUDocument,
   ): Promise<ProductDetailResponseDto> {
     const baseDto = await this.transformToResponseDto(spu);
-    const data = spu.toObject() as any;
 
     return {
       ...baseDto,
