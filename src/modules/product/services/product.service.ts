@@ -20,6 +20,10 @@ import {
   ProductDetailResponseDto,
   SkuResponseDto,
 } from '../dto/product-response.dto';
+import { ProductEditResponseDto } from '../dto/product-edit-response.dto';
+import { SpuDto } from '../dto/spu.dto';
+import { SkuDto } from '../dto/sku.dto';
+import { SpecificationDto } from '../dto/specification.dto';
 
 interface SPUData {
   id?: string;
@@ -184,7 +188,7 @@ export class ProductService {
    */
   async getProductDetail(
     productDetailDto: ProductDetailDto,
-  ): Promise<ProductDetailResponseDto> {
+  ): Promise<ProductEditResponseDto> {
     const { id } = productDetailDto;
 
     const spu = await this.spuModel.findById(id);
@@ -192,7 +196,7 @@ export class ProductService {
       throw new NotFoundException('商品不存在');
     }
 
-    return this.transformToDetailResponseDto(spu);
+    return this.transformToEditResponseDto(spu);
   }
 
   /**
@@ -411,6 +415,65 @@ export class ProductService {
       parameters: {}, // SPU实体中没有parameters字段，使用空对象
       afterSalesService: '', // SPU实体中没有afterSalesService字段，使用空字符串
       packageList: [], // SPU实体中没有packageList字段，使用空数组
+    };
+  }
+
+  /**
+   * 转换SPU文档为编辑响应DTO（与保存接口兼容）
+   */
+  private async transformToEditResponseDto(
+    spu: ProductSPUDocument,
+  ): Promise<ProductEditResponseDto> {
+    const spuData = spu.toObject() as ProductSPU & { _id: Types.ObjectId };
+    
+    // 获取SKUs
+    const skus = await this.skuModel.find({ spuId: spuData._id });
+
+    // 转换SPU数据
+    const spuDto: SpuDto = {
+      id: spuData._id?.toString(),
+      name: spuData.name || '',
+      subtitle: spuData.subtitle,
+      categoryId: spuData.categoryId?.toString() || '',
+      mainImage: spuData.mainImage,
+      video: spuData.video,
+      material: spuData.material || '',
+      origin: spuData.origin,
+      grade: spuData.grade,
+      description: spuData.description,
+      freight: spuData.freight,
+      sort: spuData.sort,
+    };
+
+    // 转换SKU数据
+    const skuDtos: SkuDto[] = skus.map((sku) => {
+      const skuData = sku.toObject() as ProductSKU & { _id: Types.ObjectId };
+      
+      // 转换规格数据
+      const specifications: SpecificationDto[] = (skuData.specifications || []).map((spec) => ({
+        key: spec.key,
+        value: spec.value,
+      }));
+
+      return {
+        id: skuData._id?.toString(),
+        specifications,
+        image: skuData.image,
+        price: skuData.price || 0,
+        marketPrice: skuData.marketPrice,
+        stock: skuData.stock || 0,
+        skuCode: skuData.skuCode,
+        status: skuData.status,
+      };
+    });
+
+    // 根据当前状态确定action
+    const action = spuData.status === 'On-shelf' ? 'publish' : 'saveToDraft';
+
+    return {
+      spu: spuDto,
+      skus: skuDtos,
+      action,
     };
   }
 }

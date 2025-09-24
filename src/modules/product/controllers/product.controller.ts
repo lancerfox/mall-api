@@ -8,6 +8,7 @@ import { ProductDetailDto } from '../dto/product-detail.dto';
 import { ProductResponseDto } from '../dto/product-response.dto';
 import { ProductListResponseDto } from '../dto/product-response.dto';
 import { ProductDetailResponseDto } from '../dto/product-response.dto';
+import { ProductEditResponseDto } from '../dto/product-edit-response.dto';
 
 @ApiTags('商品管理')
 @Controller('product')
@@ -55,31 +56,15 @@ export class ProductController {
   }
 
   @Post('detail')
-  @ApiOperation({ summary: '获取商品详情' })
+  @ApiOperation({ summary: '获取商品详情（用于编辑）' })
   @ApiResponse({
     status: 200,
     description: '获取成功',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: '获取成功' },
-        data: {
-          type: 'object',
-          properties: {
-            spu: { $ref: '#/components/schemas/ProductSPU' },
-            skus: {
-              type: 'array',
-              items: { $ref: '#/components/schemas/ProductSKU' },
-            },
-          },
-        },
-      },
-    },
+    type: ProductEditResponseDto,
   })
   async detail(
     @Body() productDetailDto: ProductDetailDto,
-  ): Promise<ProductDetailResponseDto> {
+  ): Promise<ProductEditResponseDto> {
     return await this.productService.getProductDetail(productDetailDto);
   }
 

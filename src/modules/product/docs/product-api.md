@@ -268,7 +268,7 @@
 
 ### 3. 获取商品详情
 - **接口路径**: `POST /product/detail`
-- **功能描述**: 获取商品详情（包含SPU和SKU信息）
+- **功能描述**: 获取商品详情（用于编辑，返回结构与保存接口兼容）
 - **请求参数**:
 
 | 参数名 | 类型 | 必填 | 描述 | 示例值 |
@@ -282,42 +282,42 @@
   "message": "获取成功",
   "data": {
     "spu": {
-      "_id": "60d5f9b8f8b8b8b8b8b8b8b8",
-      "name": "iPhone 15",
+      "id": "60d5f9b8f8b8b8b8b8b8b8b8",
+      "name": "越南芽庄沉香手串",
+      "subtitle": "天然沉香，香气持久",
       "categoryId": "60d5f9b8f8b8b8b8b8b8b8b8",
-      "description": "最新款iPhone",
-      "mainImage": "https://example.com/image.jpg",
-      "images": ["https://example.com/image1.jpg"],
+      "mainImage": "https://example.com/main.jpg",
       "video": "https://example.com/video.mp4",
-      "detail": "商品详情HTML",
-      "status": "On-shelf",
-      "createTime": "2024-01-01T00:00:00.000Z",
-      "updateTime": "2024-01-01T00:00:00.000Z"
+      "material": "沉香",
+      "origin": "越南芽庄",
+      "grade": "A级",
+      "description": "<p>天然沉香手串</p>",
+      "freight": 10,
+      "sort": 0
     },
     "skus": [
       {
-        "_id": "60d5f9b8f8b8b8b8b8b8b8b9",
-        "spuId": "60d5f9b8f8b8b8b8b8b8b8b8",
+        "id": "60d5f9b8f8b8b8b8b8b8b8b9",
         "specifications": [
           {
-            "name": "颜色",
-            "value": "黑色"
-          },
-          {
-            "name": "存储",
-            "value": "128GB"
+            "key": "珠子直径",
+            "value": "8mm"
           }
         ],
-        "price": 5999,
+        "image": "https://example.com/sku.jpg",
+        "price": 299.99,
+        "marketPrice": 399.99,
         "stock": 100,
-        "image": "https://example.com/sku-image.jpg",
-        "createTime": "2024-01-01T00:00:00.000Z",
-        "updateTime": "2024-01-01T00:00:00.000Z"
+        "skuCode": "SKU001",
+        "status": 1
       }
-    ]
+    ],
+    "action": "publish"
   }
 }
 ```
+
+**注意**: 此接口返回的数据结构与保存接口 `/product/save` 的输入结构完全一致，可直接用于商品编辑回显。
 
 ### 4. 更新商品状态
 - **接口路径**: `POST /product/updateStatus`
