@@ -1,8 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, UpdateQuery } from 'mongoose';
-import { ProductSPU } from '../entities/product-spu.entity';
-import { ProductSKU } from '../entities/product-sku.entity';
+import { Model, Types, UpdateQuery } from 'mongoose';
+import { ProductSPU, ProductSPUDocument } from '../entities/product-spu.entity';
+import {
+  ProductSKU,
+  ProductSKUDocument,
+  Specification,
+} from '../entities/product-sku.entity';
+import {
+  ProductCategory,
+  ProductCategoryDocument,
+} from '../entities/product-category.entity';
 import { SaveProductDto } from '../dto/save-product.dto';
 import { ProductListDto } from '../dto/product-list.dto';
 import { UpdateStatusDto } from '../dto/update-status.dto';
@@ -45,9 +53,11 @@ interface SKUData {
 export class ProductService {
   constructor(
     @InjectModel(ProductSPU.name)
-    private readonly spuModel: Model<ProductSPU>,
+    private readonly spuModel: Model<ProductSPUDocument>,
     @InjectModel(ProductSKU.name)
-    private readonly skuModel: Model<ProductSKU>,
+    private readonly skuModel: Model<ProductSKUDocument>,
+    @InjectModel(ProductCategory.name)
+    private readonly categoryModel: Model<ProductCategoryDocument>,
   ) {}
 
   /**
@@ -92,9 +102,9 @@ export class ProductService {
     }
 
     // 保存SKUs
-    await this.saveSKUs(savedSpu._id.toString(), skus);
+    await this.saveSKUs(String(savedSpu._id), skus);
 
-    return this.transformToResponseDto(savedSpu);
+    return await this.transformToResponseDto(savedSpu);
   }
 
   /**
@@ -156,8 +166,8 @@ export class ProductService {
       this.spuModel.countDocuments(query),
     ]);
 
-    const responseItems = items.map((item) =>
-      this.transformToResponseDto(item),
+    const responseItems = await Promise.all(
+      items.map((item) => this.transformToResponseDto(item)),
     );
 
     return {
@@ -182,10 +192,7 @@ export class ProductService {
       throw new NotFoundException('商品不存在');
     }
 
-    const skus = await this.skuModel.find({ spuId: id });
-    const responseSkus = skus.map((sku) => this.transformSkuToResponseDto(sku));
-
-    return this.transformToDetailResponseDto(spu, responseSkus);
+    return this.transformToDetailResponseDto(spu);
   }
 
   /**
@@ -282,86 +289,120 @@ export class ProductService {
   /**
    * 根据ID查找商品
    */
-  async findById(id: string): Promise<ProductSPU | null> {
+  async findById(id: string): Promise<ProductSPUDocument | null> {
     return this.spuModel.findById(id).exec();
   }
 
   /**
    * 转换SPU文档为响应DTO
    */
-  private transformToResponseDto(spu: ProductSPU): ProductResponseDto {
-    // 使用类型安全的转换 - 处理Mongoose文档
-    const spuObj = spu as unknown as Record<string, any>;
-    const hasToObject = typeof spuObj.toObject === 'function';
-    const data = hasToObject ? spuObj.toObject() : spuObj;
+  private async transformToResponseDto(
+    spu: ProductSPUDocument,
+  ): Promise<ProductResponseDto> {
+    const populatedSpu = await spu.populate<{
+      categoryId: ProductCategoryDocument;
+    }>('categoryId');
+    const data = populatedSpu.toObject();
+    const category = data.categoryId as ProductCategoryDocument;
+
+    // 1. 获取SKUs
+    const skus = await this.skuModel.find({ spuId: data._id });
+    const skusData = skus.map((sku) => this.transformSkuToResponseDto(sku));
+
+    // 2. 计算总库存和价格范围
+    let totalStock = 0;
+    const prices: number[] = [];
+    skusData.forEach((sku) => {
+      totalStock += sku.stock;
+      if (sku.price > 0) prices.push(sku.price);
+    });
+    const priceRange: [number, number] =
+      prices.length > 0 ? [Math.min(...prices), Math.max(...prices)] : [0, 0];
+
+    // 3. 获取分类
+    const categoryDto = category
+      ? {
+          id: String((category as any)._id) || '',
+          name: category.name,
+          code: category.code,
+          level: category.level,
+          sort: category.sort,
+          enabled: category.enabled,
+          createdAt: category.createdAt,
+          updatedAt: category.updatedAt,
+        }
+      : {
+          id: '',
+          name: '',
+          code: '',
+          level: 1,
+          sort: 0,
+          enabled: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
 
     return {
-      id: data._id?.toString() || '',
-      spuCode: data.spuCode || '',
+      id: (data._id as any)?.toString() || '',
+      spuCode: '', // SPU实体中没有spuCode字段，使用空字符串
       name: data.name || '',
-      category: data.categoryId, // 需要转换为ProductCategoryResponseDto
+      category: categoryDto,
+      categoryName: category ? category.name : '',
       description: data.description || '',
       mainImage: data.mainImage || '',
-      imageGallery: data.images || [],
-      specifications: data.specifications || [],
-      skus: [], // 需要单独查询SKU数据
-      enabled: data.status === 'On-shelf',
+      imageGallery: [], // SPU实体中没有images字段，使用空数组
+      specifications: [], // SPU实体中没有specifications字段，使用空数组
+      skus: skusData,
+      status: data.status,
+      totalStock,
+      priceRange,
+      material: data.material || '',
       createdAt: data.createdAt,
       updatedAt: data.updatedAt,
-    } as ProductResponseDto;
+    };
   }
 
   /**
    * 转换SKU文档为响应DTO
    */
-  private transformSkuToResponseDto(sku: ProductSKU): SkuResponseDto {
-    // 使用类型安全的转换 - 处理Mongoose文档
-    const skuObj = sku as unknown as Record<string, any>;
-    const hasToObject = typeof skuObj.toObject === 'function';
-    const data = hasToObject ? skuObj.toObject() : skuObj;
+  private transformSkuToResponseDto(sku: ProductSKUDocument): SkuResponseDto {
+    const data = sku.toObject() as any;
 
     return {
       id: data._id?.toString() || '',
       skuCode: data.skuCode || '',
       price: data.price || 0,
-      originalPrice: data.originalPrice || 0,
+      originalPrice: data.marketPrice || 0,
       stock: data.stock || 0,
-      specs: data.specifications || {},
-      enabled: data.status !== 'Deleted',
+      specs:
+        data.specifications?.reduce(
+          (acc: Record<string, string>, spec: Specification) => {
+            acc[spec.key] = spec.value;
+            return acc;
+          },
+          {},
+        ) || {},
+      enabled: data.status === 1,
       createdAt: data.createdAt,
       updatedAt: data.updatedAt,
-    } as SkuResponseDto;
+    };
   }
 
   /**
    * 转换SPU文档为详情响应DTO
    */
-  private transformToDetailResponseDto(
-    spu: ProductSPU,
-    skus: SkuResponseDto[],
-  ): ProductDetailResponseDto {
-    // 使用类型安全的转换 - 处理Mongoose文档
-    const spuObj = spu as unknown as Record<string, any>;
-    const hasToObject = typeof spuObj.toObject === 'function';
-    const data = hasToObject ? spuObj.toObject() : spuObj;
+  private async transformToDetailResponseDto(
+    spu: ProductSPUDocument,
+  ): Promise<ProductDetailResponseDto> {
+    const baseDto = await this.transformToResponseDto(spu);
+    const data = spu.toObject() as any;
 
     return {
-      id: data._id?.toString() || '',
-      spuCode: data.spuCode || '',
-      name: data.name || '',
-      category: data.categoryId, // 需要转换为ProductCategoryResponseDto
-      description: data.description || '',
-      mainImage: data.mainImage || '',
-      imageGallery: data.images || [],
-      specifications: data.specifications || [],
-      skus: skus,
-      enabled: data.status === 'On-shelf',
-      createdAt: data.createdAt,
-      updatedAt: data.updatedAt,
-      detailHtml: data.detail || '',
-      parameters: data.parameters || {},
-      afterSalesService: data.afterSalesService || '',
-      packageList: data.packageList || [],
-    } as ProductDetailResponseDto;
+      ...baseDto,
+      detailHtml: '', // SPU实体中没有detail字段，使用空字符串
+      parameters: {}, // SPU实体中没有parameters字段，使用空对象
+      afterSalesService: '', // SPU实体中没有afterSalesService字段，使用空字符串
+      packageList: [], // SPU实体中没有packageList字段，使用空数组
+    };
   }
 }

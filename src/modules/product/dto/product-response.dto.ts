@@ -136,6 +136,12 @@ export class ProductResponseDto {
   category: ProductCategoryResponseDto;
 
   @ApiProperty({
+    description: '分类名称',
+    example: '手机',
+  })
+  categoryName: string;
+
+  @ApiProperty({
     description: '商品描述',
     example: '最新款iPhone手机',
   })
@@ -170,10 +176,30 @@ export class ProductResponseDto {
   skus: SkuResponseDto[];
 
   @ApiProperty({
-    description: '是否启用',
-    example: true,
+    description: '总库存',
+    example: 1000,
   })
-  enabled: boolean;
+  totalStock: number;
+
+  @ApiProperty({
+    description: '价格范围',
+    example: [5999, 6999],
+    type: [Number],
+  })
+  priceRange: [number, number];
+
+  @ApiProperty({
+    description: '材质',
+    example: '和田玉',
+  })
+  material: string;
+
+  @ApiProperty({
+    description: '商品状态',
+    example: 'On-shelf',
+    enum: ['Draft', 'On-shelf', 'Off-shelf'],
+  })
+  status: string;
 
   @ApiProperty({
     description: '创建时间',
