@@ -375,22 +375,19 @@ export class ProductService {
   private async transformToResponseDto(
     spu: ProductSPUDocument,
   ): Promise<ProductResponseDto> {
-    const populatedSpu = await spu.populate<{
-      categoryId: ProductCategoryDocument;
-      skus: ProductSKUDocument[];
-    }>(['categoryId', 'skus']);
-
-    const skusData = (populatedSpu.skus || []).map((sku) =>
-      this.transformSkuToResponseDto(sku),
-    );
-    const data = populatedSpu.toObject() as ProductSPU & {
+    const data = spu.toObject() as ProductSPU & {
       _id: Types.ObjectId;
     };
-    const category = data.categoryId as unknown as ProductCategoryDocument;
 
-    // 1. 获取SKUs
-    // const skus = await this.skuModel.find({ spuId: data._id });
-    // const skusData = skus.map((sku) => this.transformSkuToResponseDto(sku));
+    // 1. 获取SKUs - 直接查询而不是使用虚拟字段
+    const skus = await this.skuModel.find({ spuId: data._id.toString() });
+    const skusData = skus.map((sku) => this.transformSkuToResponseDto(sku));
+
+    // 2. 获取分类信息
+    const populatedSpu = await spu.populate<{
+      categoryId: ProductCategoryDocument;
+    }>('categoryId');
+    const category = populatedSpu.categoryId as ProductCategoryDocument;
 
     // 2. 计算总库存和价格范围
     let totalStock = 0;
@@ -498,8 +495,8 @@ export class ProductService {
   ): Promise<ProductEditResponseDto> {
     const spuData = spu.toObject() as ProductSPU & { _id: Types.ObjectId };
 
-    // 获取SKUs
-    const skus = await this.skuModel.find({ spuId: spuData._id });
+    // 获取SKUs - 使用字符串类型的spuId进行查询
+    const skus = await this.skuModel.find({ spuId: spuData._id.toString() });
 
     // 转换SPU数据
     const spuDto: SpuDto = {
