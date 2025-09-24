@@ -115,19 +115,91 @@ export class ProductService {
    * 保存SKU列表
    */
   private async saveSKUs(spuId: string, skus: SKUData[]): Promise<void> {
-    // 删除旧的SKU
-    await this.skuModel.deleteMany({ spuId });
+    const now = new Date();
 
-    // 创建新的SKU
-    const skuDocuments = skus.map((sku: SKUData) => ({
-      ...sku,
-      spuId,
-      createTime: new Date(),
-      updateTime: new Date(),
-    }));
+    // 获取当前数据库中该SPU的所有SKU
+    const existingSkus = await this.skuModel.find({ spuId });
+    const existingSkuIds = existingSkus.map((sku) => String(sku._id));
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    await this.skuModel.insertMany(skuDocuments);
+    // 分类处理提交的SKU数据
+    const skusToUpdate: SKUData[] = [];
+    const skusToCreate: SKUData[] = [];
+    const submittedSkuIds: string[] = [];
+
+    for (const sku of skus) {
+      if (sku.id) {
+        // 有ID的是更新操作
+        skusToUpdate.push(sku);
+        submittedSkuIds.push(sku.id);
+      } else {
+        // 没有ID的是新增操作
+        skusToCreate.push(sku);
+      }
+    }
+
+    // 找出需要删除的SKU（存在于数据库中但不在提交列表中）
+    const skuIdsToDelete = existingSkuIds.filter(
+      (id) => !submittedSkuIds.includes(id),
+    );
+
+    // 1. 删除不再需要的SKU
+    if (skuIdsToDelete.length > 0) {
+      await this.skuModel.deleteMany({ _id: { $in: skuIdsToDelete } });
+    }
+
+    // 2. 更新现有的SKU
+    for (const sku of skusToUpdate) {
+      if (!sku.id) continue;
+
+      // 如果skuCode发生了变化，需要检查新的skuCode是否与其他SKU冲突
+      if (sku.skuCode) {
+        const existingSku = await this.skuModel.findById(sku.id);
+        if (existingSku && existingSku.skuCode !== sku.skuCode) {
+          // skuCode发生了变化，检查新的skuCode是否与其他SKU冲突
+          const conflictingSku = await this.skuModel.findOne({
+            skuCode: sku.skuCode,
+            _id: { $ne: sku.id }, // 排除自己
+          });
+          if (conflictingSku) {
+            throw new Error(
+              `SKU编码 "${sku.skuCode}" 已被其他商品使用，请使用不同的编码`,
+            );
+          }
+        }
+      }
+
+      await this.skuModel.findByIdAndUpdate(sku.id, {
+        ...sku,
+        spuId,
+        updateTime: now,
+      });
+    }
+
+    // 3. 创建新的SKU
+    if (skusToCreate.length > 0) {
+      // 检查新SKU的skuCode唯一性
+      for (const sku of skusToCreate) {
+        if (sku.skuCode) {
+          const existingSku = await this.skuModel.findOne({
+            skuCode: sku.skuCode,
+          });
+          if (existingSku) {
+            throw new Error(
+              `SKU编码 "${sku.skuCode}" 已被其他商品使用，请使用不同的编码`,
+            );
+          }
+        }
+      }
+
+      const skuDocuments = skusToCreate.map((sku: SKUData) => ({
+        ...sku,
+        spuId,
+        createTime: now,
+        updateTime: now,
+      }));
+
+      await this.skuModel.insertMany(skuDocuments);
+    }
   }
 
   /**
@@ -425,7 +497,7 @@ export class ProductService {
     spu: ProductSPUDocument,
   ): Promise<ProductEditResponseDto> {
     const spuData = spu.toObject() as ProductSPU & { _id: Types.ObjectId };
-    
+
     // 获取SKUs
     const skus = await this.skuModel.find({ spuId: spuData._id });
 
@@ -448,9 +520,11 @@ export class ProductService {
     // 转换SKU数据
     const skuDtos: SkuDto[] = skus.map((sku) => {
       const skuData = sku.toObject() as ProductSKU & { _id: Types.ObjectId };
-      
+
       // 转换规格数据
-      const specifications: SpecificationDto[] = (skuData.specifications || []).map((spec) => ({
+      const specifications: SpecificationDto[] = (
+        skuData.specifications || []
+      ).map((spec) => ({
         key: spec.key,
         value: spec.value,
       }));

@@ -9,10 +9,10 @@ export class ProductEditResponseDto {
   @ApiProperty({ description: 'SKU列表', type: [SkuDto] })
   skus: SkuDto[];
 
-  @ApiProperty({ 
-    description: '操作类型', 
+  @ApiProperty({
+    description: '操作类型',
     example: 'saveToDraft',
-    enum: ['saveToDraft', 'publish'] 
+    enum: ['saveToDraft', 'publish'],
   })
   action: string;
 }
