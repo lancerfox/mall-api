@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Document } from 'mongoose';
 import { ProductCategory } from '../entities/product-category.entity';
+import { ProductCategoryDocument } from '../entities/product-category.entity';
 import { CreateCategoryDto } from '../dto/create-category.dto';
 import { UpdateCategoryDto } from '../dto/update-category.dto';
 import { DeleteCategoryDto } from '../dto/delete-category.dto';
@@ -196,11 +197,24 @@ export class ProductCategoryService {
    * 转换分类文档为响应DTO
    */
   private transformToResponseDto(
-    category: ProductCategory,
+    category: ProductCategoryDocument,
   ): ProductCategoryResponseDto {
-    const categoryObj = (category as any).toObject
-      ? (category as any).toObject()
-      : category;
+    // 确保我们处理的是Mongoose文档
+    // 显式类型转换以满足TypeScript类型检查
+    const categoryObj = category.toObject() as unknown as {
+      _id: { toString: () => string };
+      name: string;
+      code: string;
+      parentId?: { toString: () => string };
+      level: number;
+      sort: number;
+      enabled: boolean;
+      icon?: string;
+      description?: string;
+      createdAt: Date;
+      updatedAt: Date;
+    };
+
     return {
       id: categoryObj._id.toString(),
       name: categoryObj.name,

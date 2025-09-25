@@ -7,7 +7,6 @@ import { UpdateStatusDto } from '../dto/update-status.dto';
 import { ProductDetailDto } from '../dto/product-detail.dto';
 import { ProductResponseDto } from '../dto/product-response.dto';
 import { ProductListResponseDto } from '../dto/product-response.dto';
-import { ProductDetailResponseDto } from '../dto/product-response.dto';
 import { ProductEditResponseDto } from '../dto/product-edit-response.dto';
 
 @ApiTags('商品管理')
