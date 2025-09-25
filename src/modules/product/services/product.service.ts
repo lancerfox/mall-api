@@ -65,6 +65,24 @@ export class ProductService {
   ) {}
 
   /**
+   * 类型守卫函数，用于安全地检查分类文档对象
+   * @param category 分类对象
+   * @returns 如果是有效的分类文档则返回true
+   */
+  private isCategoryDocument(
+    category: unknown,
+  ): category is ProductCategoryDocument & { _id: Types.ObjectId } {
+    return (
+      category !== null &&
+      typeof category === 'object' &&
+      '_id' in category &&
+      category._id instanceof Types.ObjectId &&
+      'name' in category &&
+      'code' in category
+    );
+  }
+
+  /**
    * 保存商品（保存草稿或发布）
    */
   async saveProduct(
@@ -387,7 +405,7 @@ export class ProductService {
     const populatedSpu = await spu.populate<{
       categoryId: ProductCategoryDocument;
     }>('categoryId');
-    const category = populatedSpu.categoryId as ProductCategoryDocument;
+    const category = populatedSpu.categoryId;
 
     // 2. 计算总库存和价格范围
     let totalStock = 0;
@@ -402,27 +420,28 @@ export class ProductService {
       prices.length > 0 ? [Math.min(...prices), Math.max(...prices)] : [0, 0];
 
     // 3. 获取分类
-    const categoryDto = category
-      ? {
-          id: String((category as any)._id) || '',
-          name: category.name,
-          code: category.code,
-          level: category.level,
-          sort: category.sort,
-          enabled: category.enabled,
-          createdAt: category.createdAt,
-          updatedAt: category.updatedAt,
-        }
-      : {
-          id: '',
-          name: '',
-          code: '',
-          level: 1,
-          sort: 0,
-          enabled: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
+    const categoryDto =
+      category && this.isCategoryDocument(category)
+        ? {
+            id: category._id.toString(),
+            name: category.name,
+            code: category.code,
+            level: category.level,
+            sort: category.sort,
+            enabled: category.enabled,
+            createdAt: category.createdAt,
+            updatedAt: category.updatedAt,
+          }
+        : {
+            id: '',
+            name: '',
+            code: '',
+            level: 1,
+            sort: 0,
+            enabled: true,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
 
     return {
       id: data._id?.toString() || '',
