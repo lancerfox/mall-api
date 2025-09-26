@@ -65,15 +65,19 @@ async function bootstrap() {
 
   await app.listen(port);
   // 打印数据库连接信息
-  const databaseUrl = process.env.DATABASE_URL;
-  if (databaseUrl) {
+  const dbHost = process.env.DB_HOST;
+  const dbPort = process.env.DB_PORT;
+  const dbUsername = process.env.DB_USERNAME;
+  const dbDatabase = process.env.DB_DATABASE;
+  const dbType = process.env.DB_TYPE;
+
+  if (dbHost && dbPort && dbUsername && dbDatabase) {
     // 安全地显示数据库连接信息（隐藏密码）
-    const maskedUrl = databaseUrl.replace(/:([^:@]+)@/, ':***@');
-    console.log(`🗄️  Database connection: ${maskedUrl}`);
-  } else {
     console.log(
-      '⚠️  Database connection: DATABASE_URL environment variable not set',
+      `🗄️  Database connection: ${dbType}://${dbUsername}:***@${dbHost}:${dbPort}/${dbDatabase}`,
     );
+  } else {
+    console.log('⚠️  Database connection: Database configuration incomplete');
   }
   console.log(`🚀 Application is running on: http://localhost:${port}`);
   console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
