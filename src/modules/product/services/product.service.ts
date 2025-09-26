@@ -366,11 +366,12 @@ export class ProductService {
     const skusData = skus.map((sku) => this.transformSkuToResponseDto(sku));
 
     // 2. 获取分类信息
-    const category = spu.categoryId
-      ? await this.categoryRepository.findOne({
-          where: { id: spu.categoryId },
-        })
-      : null;
+    let category: ProductCategory | null = spu.category;
+    if (!category && spu.categoryId) {
+      category = await this.categoryRepository.findOne({
+        where: { id: spu.categoryId },
+      });
+    }
 
     // 3. 计算总库存和价格范围
     let totalStock = 0;

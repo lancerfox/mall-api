@@ -29,6 +29,8 @@ export const validationSchema = Joi.object({
   DB_PASSWORD: Joi.string().required(),
   // 数据库名称
   DB_DATABASE: Joi.string().required(),
+  // 数据库 schema
+  DB_SCHEMA: Joi.string().required(),
   // 是否同步
   DB_SYNCHRONIZE: Joi.boolean().default(true),
 

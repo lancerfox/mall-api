@@ -33,6 +33,7 @@ import { RolesGuard } from './common/guards/roles.guard';
           username: configService.get<string>('DB_USERNAME'),
           password: configService.get<string>('DB_PASSWORD'),
           database: configService.get<string>('DB_DATABASE'),
+          schema: configService.get<string>('DB_SCHEMA'),
           entities: [__dirname + '/../**/*.entity.js'],
           synchronize: configService.get<boolean>('DB_SYNCHRONIZE'),
         };

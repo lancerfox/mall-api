@@ -5,9 +5,12 @@ import {
   OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { ProductSKU } from './product-sku.entity';
+import { ProductCategory } from './product-category.entity';
 
 @Entity()
 export class ProductSPU {
@@ -26,6 +29,10 @@ export class ProductSPU {
   @ApiProperty({ description: '分类ID' })
   @Column()
   categoryId: string;
+
+  @ManyToOne(() => ProductCategory, (category) => category.products)
+  @JoinColumn({ name: 'categoryId' })
+  category: ProductCategory;
 
   @ApiProperty({ description: '主图', required: false })
   @Column({ nullable: true })

@@ -19,12 +19,6 @@
     }
   ],
   "status": "active",
-  "createdAt": {
-    "$date": "2025-09-05T06:56:02.379Z"
-  },
-  "updatedAt": {
-    "$date": "2025-09-05T07:00:24.559Z"
-  },
   "metaAlwaysShow": false,
   "metaHidden": false,
   "redirect": "/user/list"

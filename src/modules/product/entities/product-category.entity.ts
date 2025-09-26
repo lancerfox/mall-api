@@ -8,6 +8,7 @@ import {
   TreeChildren,
   TreeParent,
 } from 'typeorm';
+import { ProductSPU } from './product-spu.entity';
 
 @Entity('product_categories')
 @Tree('nested-set')
@@ -20,6 +21,9 @@ export class ProductCategory {
 
   @TreeChildren()
   children: ProductCategory[];
+
+  @OneToMany(() => ProductSPU, (spu) => spu.category)
+  products: ProductSPU[];
 
   @Column({ type: 'varchar', length: 50 })
   name: string;

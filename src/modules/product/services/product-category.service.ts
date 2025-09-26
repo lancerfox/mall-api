@@ -113,6 +113,7 @@ export class ProductCategoryService {
         createdAt: category.createdAt,
         updatedAt: category.updatedAt,
         children: [],
+        products: [],
       });
     });
 
