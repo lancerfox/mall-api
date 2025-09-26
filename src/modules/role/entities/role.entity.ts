@@ -1,67 +1,58 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToMany,
+  JoinTable,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { Permission } from '../../permission/entities/permission.entity';
+import { User } from '../../user/entities/user.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { RoleType } from '../../../common/enums/role-type.enum';
 
-export type RoleDocument = Role & Document;
-
-@Schema({
-  timestamps: true,
-  toJSON: {
-    virtuals: true,
-    transform: (doc, ret: any) => {
-      delete ret._id;
-      delete ret.__v;
-    },
-  },
-})
+@Entity()
 export class Role {
-  @ApiProperty({ description: 'The ID of the role' })
+  @ApiProperty({ description: '角色ID' })
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ApiProperty({ description: 'The name of the role' })
-  @Prop({ required: true, unique: true })
+  @ApiProperty({ description: '角色名称' })
+  @Column({ unique: true })
   name: string;
 
-  @ApiProperty({
-    description: 'The type of the role',
-    enum: RoleType,
-    enumName: 'RoleType',
-  })
-  @Prop({
-    type: String,
-    enum: RoleType,
-    required: true,
-    default: RoleType.OPERATOR,
-  })
+  @ApiProperty({ description: '角色类型', enum: RoleType })
+  @Column({ type: 'enum', enum: RoleType, default: RoleType.OPERATOR })
   type: RoleType;
 
-  @ApiProperty({ description: 'The description of the role' })
-  @Prop({ required: true })
+  @ApiProperty({ description: '角色描述' })
+  @Column()
   description: string;
 
-  @ApiProperty({
-    description: 'The permissions of the role',
-    type: () => [Permission],
+  @ApiProperty({ description: '角色权限', type: () => [Permission] })
+  @ManyToMany(() => Permission, { cascade: true, eager: true })
+  @JoinTable({
+    name: 'role_permissions',
+    joinColumn: { name: 'role_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'permission_id', referencedColumnName: 'id' },
   })
-  @Prop({ type: [{ type: Types.ObjectId, ref: 'Permission' }] })
-  permissions: Permission[] | Types.ObjectId[];
+  permissions: Permission[];
 
-  @ApiProperty({
-    description: 'The status of the role',
-    enum: ['active', 'inactive'],
-  })
-  @Prop({
-    type: String,
-    enum: ['active', 'inactive'],
-    default: 'active',
-  })
+  @ApiProperty({ description: '角色状态', enum: ['active', 'inactive'] })
+  @Column({ default: 'active' })
   status: string;
 
-  @ApiProperty({ description: 'Whether the role is a system role' })
-  @Prop({ default: false })
-  isSystem: boolean; // 标识是否为系统内置角色，系统角色不可删除
-}
+  @ApiProperty({ description: '是否为系统角色' })
+  @Column({ default: false })
+  isSystem: boolean;
 
-export const RoleSchema = SchemaFactory.createForClass(Role);
+  @ManyToMany(() => User, (user) => user.roles)
+  users: User[];
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+}

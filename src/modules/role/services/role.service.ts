@@ -5,9 +5,9 @@ import {
   // NotFoundException,
   // BadRequestException,
 } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import { Role, RoleDocument } from '../entities/role.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, In } from 'typeorm';
+import { Role } from '../entities/role.entity';
 import { RoleType } from '../../../common/enums/role-type.enum';
 import { CreateRoleDto } from '../dto/create-role.dto';
 import { UpdateRoleDto } from '../dto/update-role.dto';
@@ -19,13 +19,13 @@ import { ERROR_CODES } from '../../../common/constants/error-codes';
 @Injectable()
 export class RoleService {
   constructor(
-    @InjectModel(Role.name)
-    private roleModel: Model<RoleDocument>,
+    @InjectRepository(Role)
+    private roleRepository: Repository<Role>,
     private permissionService: PermissionService,
   ) {}
 
   async create(createRoleDto: CreateRoleDto): Promise<Role> {
-    const existingRole = await this.roleModel.findOne({
+    const existingRole = await this.roleRepository.findOneBy({
       name: createRoleDto.name,
     });
 
@@ -34,12 +34,20 @@ export class RoleService {
     }
 
     // 验证角色类型是否合法
-    const validRoleTypes = Object.values(RoleType) as RoleType[];
+    const validRoleTypes = Object.values(RoleType);
     if (!validRoleTypes.includes(createRoleDto.type)) {
       throw new HttpException('无效的角色类型', ERROR_CODES.VALIDATION_FAILED);
     }
 
-    // 验证权限是否存在
+    const newRole = this.roleRepository.create({
+      name: createRoleDto.name,
+      type: createRoleDto.type,
+      description: createRoleDto.description,
+      status: createRoleDto.status || 'active',
+      isSystem: createRoleDto.isSystem || false,
+    });
+
+    // 验证并关联权限
     if (createRoleDto.permissions && createRoleDto.permissions.length > 0) {
       const permissions = await this.permissionService.findByIds(
         createRoleDto.permissions,
@@ -50,41 +58,36 @@ export class RoleService {
           ERROR_CODES.PERMISSION_NOT_FOUND,
         );
       }
+      newRole.permissions = permissions;
     }
 
-    const role = new this.roleModel(createRoleDto);
-    return role.save();
+    const savedRole = await this.roleRepository.save(newRole);
+    return savedRole;
   }
 
   async findAll(): Promise<RoleListResponseDto[]> {
-    const roles = await this.roleModel.find().select('-permissions').exec();
-    return roles.map((role) => {
-      // 使用类型断言替代 any，提高类型安全性
-      const roleObject = role.toObject() as Partial<Role> & {
-        _id: Types.ObjectId;
-        createdAt?: Date;
-        updatedAt?: Date;
-      };
-
-      // 确保必需的属性有默认值，避免 undefined
-      return {
-        id: roleObject._id.toString(),
-        name: roleObject.name || '',
-        type: roleObject.type || RoleType.OPERATOR,
-        description: roleObject.description || '',
-        status: roleObject.status || 'active',
-        isSystem: roleObject.isSystem || false,
-        createdAt: roleObject.createdAt || new Date(),
-        updatedAt: roleObject.updatedAt || new Date(),
-      };
+    const roles = await this.roleRepository.find({
+      select: [
+        'id',
+        'name',
+        'type',
+        'description',
+        'status',
+        'isSystem',
+        'createdAt',
+        'updatedAt',
+      ],
     });
+    return roles.map((role) => ({
+      ...role,
+    }));
   }
 
   async findOne(id: string): Promise<Role> {
-    const role = await this.roleModel
-      .findById(id)
-      .populate('permissions')
-      .exec();
+    const role = await this.roleRepository.findOne({
+      where: { id },
+      relations: ['permissions'],
+    });
     if (!role) {
       throw new HttpException('角色不存在', ERROR_CODES.ROLE_NOT_FOUND);
     }
@@ -96,28 +99,35 @@ export class RoleService {
   }
 
   async findByName(name: string): Promise<Role | null> {
-    return this.roleModel.findOne({ name }).populate('permissions').exec();
+    return this.roleRepository.findOne({
+      where: { name },
+      relations: ['permissions'],
+    });
   }
 
   async findByType(type: RoleType): Promise<Role | null> {
-    return this.roleModel.findOne({ type }).populate('permissions').exec();
+    return this.roleRepository.findOne({
+      where: { type },
+      relations: ['permissions'],
+    });
   }
 
   async findByIds(ids: string[]): Promise<Role[]> {
-    return this.roleModel
-      .find({ _id: { $in: ids } })
-      .populate('permissions')
-      .exec();
+    return this.roleRepository.findBy({ id: In(ids) });
   }
 
   async update(id: string, updateRoleDto: UpdateRoleDto): Promise<Role> {
-    const existingRole = await this.roleModel.findById(id);
-    if (!existingRole) {
+    const roleToUpdate = await this.roleRepository.findOne({
+      where: { id },
+      relations: ['permissions'],
+    });
+
+    if (!roleToUpdate) {
       throw new HttpException('角色不存在', ERROR_CODES.ROLE_NOT_FOUND);
     }
 
     // 系统角色不允许修改某些字段
-    if (existingRole.isSystem && updateRoleDto.isSystem === false) {
+    if (roleToUpdate.isSystem && updateRoleDto.isSystem === false) {
       throw new HttpException(
         '不能修改系统角色的系统标识',
         ERROR_CODES.PERMISSION_INSUFFICIENT,
@@ -125,7 +135,7 @@ export class RoleService {
     }
 
     // 角色类型不允许修改
-    if (updateRoleDto.type && updateRoleDto.type !== existingRole.type) {
+    if (updateRoleDto.type && updateRoleDto.type !== roleToUpdate.type) {
       throw new HttpException(
         '角色类型不允许修改',
         ERROR_CODES.PERMISSION_INSUFFICIENT,
@@ -133,12 +143,11 @@ export class RoleService {
     }
 
     if (updateRoleDto.name) {
-      const duplicateRole = await this.roleModel.findOne({
-        name: updateRoleDto.name,
-        _id: { $ne: id },
+      const duplicateRole = await this.roleRepository.findOne({
+        where: { name: updateRoleDto.name },
       });
 
-      if (duplicateRole) {
+      if (duplicateRole && duplicateRole.id !== id) {
         throw new HttpException(
           '角色名称已存在',
           ERROR_CODES.USER_ALREADY_EXISTS,
@@ -146,33 +155,29 @@ export class RoleService {
       }
     }
 
-    // 验证权限是否存在
-    if (updateRoleDto.permissions && updateRoleDto.permissions.length > 0) {
-      const permissions = await this.permissionService.findByIds(
-        updateRoleDto.permissions,
-      );
-      if (permissions.length !== updateRoleDto.permissions.length) {
-        throw new HttpException(
-          '部分权限不存在',
-          ERROR_CODES.PERMISSION_NOT_FOUND,
+    // 验证并更新权限
+    if (updateRoleDto.permissions) {
+      if (updateRoleDto.permissions.length > 0) {
+        const permissions = await this.permissionService.findByIds(
+          updateRoleDto.permissions,
         );
+        if (permissions.length !== updateRoleDto.permissions.length) {
+          throw new HttpException(
+            '部分权限不存在',
+            ERROR_CODES.PERMISSION_NOT_FOUND,
+          );
+        }
+        roleToUpdate.permissions = permissions;
+      } else {
+        roleToUpdate.permissions = [];
       }
     }
 
-    const role = await this.roleModel
-      .findByIdAndUpdate(id, updateRoleDto, { new: true })
-      .populate('permissions')
-      .exec();
-
-    if (!role) {
-      throw new HttpException('角色不存在', ERROR_CODES.ROLE_NOT_FOUND);
-    }
-
-    return role;
+    return this.roleRepository.save(roleToUpdate);
   }
 
   async remove(id: string): Promise<void> {
-    const role = await this.roleModel.findById(id);
+    const role = await this.roleRepository.findOneBy({ id });
     if (!role) {
       throw new HttpException('角色不存在', ERROR_CODES.ROLE_NOT_FOUND);
     }
@@ -184,18 +189,25 @@ export class RoleService {
       );
     }
 
-    await this.roleModel.findByIdAndDelete(id).exec();
+    const result = await this.roleRepository.delete(id);
+    if (result.affected === 0) {
+      throw new HttpException('角色不存在', ERROR_CODES.ROLE_NOT_FOUND);
+    }
   }
 
   async addPermissions(roleId: string, permissionIds: string[]): Promise<Role> {
-    const role = await this.roleModel.findById(roleId);
+    const role = await this.roleRepository.findOne({
+      where: { id: roleId },
+      relations: ['permissions'],
+    });
     if (!role) {
       throw new HttpException('角色不存在', ERROR_CODES.ROLE_NOT_FOUND);
     }
 
     // 验证权限是否存在
-    const permissions = await this.permissionService.findByIds(permissionIds);
-    if (permissions.length !== permissionIds.length) {
+    const newPermissions =
+      await this.permissionService.findByIds(permissionIds);
+    if (newPermissions.length !== permissionIds.length) {
       throw new HttpException(
         '部分权限不存在',
         ERROR_CODES.PERMISSION_NOT_FOUND,
@@ -203,37 +215,29 @@ export class RoleService {
     }
 
     // 添加权限（去重）
-    const currentPermissionIds = (
-      role.permissions as { toString(): string }[]
-    ).map((p) => p.toString());
-    const newPermissions = [
-      ...new Set([...currentPermissionIds, ...permissionIds]),
-    ];
+    const currentPermissionIds = role.permissions.map((p) => p.id);
+    const permissionsToAdd = newPermissions.filter(
+      (p) => !currentPermissionIds.includes(p.id),
+    );
 
-    const updatedRole = await this.roleModel
-      .findByIdAndUpdate(roleId, { permissions: newPermissions }, { new: true })
-      .populate('permissions')
-      .exec();
+    role.permissions.push(...permissionsToAdd);
 
-    if (!updatedRole) {
-      throw new HttpException('角色不存在', ERROR_CODES.ROLE_NOT_FOUND);
-    }
-
-    return updatedRole;
+    return this.roleRepository.save(role);
   }
 
   async updatePermissions(
     roleId: string,
     permissionIds: string[],
   ): Promise<Role> {
-    const role = await this.roleModel.findById(roleId);
+    const role = await this.roleRepository.findOneBy({ id: roleId });
     if (!role) {
       throw new HttpException('角色不存在', ERROR_CODES.ROLE_NOT_FOUND);
     }
 
+    let permissions: Permission[] = [];
     // 验证权限是否存在
     if (permissionIds.length > 0) {
-      const permissions = await this.permissionService.findByIds(permissionIds);
+      permissions = await this.permissionService.findByIds(permissionIds);
       if (permissions.length !== permissionIds.length) {
         throw new HttpException(
           '部分权限不存在',
@@ -243,16 +247,8 @@ export class RoleService {
     }
 
     // 更新权限（完全替换）
-    const updatedRole = await this.roleModel
-      .findByIdAndUpdate(roleId, { permissions: permissionIds }, { new: true })
-      .populate('permissions')
-      .exec();
-
-    if (!updatedRole) {
-      throw new HttpException('角色不存在', ERROR_CODES.ROLE_NOT_FOUND);
-    }
-
-    return updatedRole;
+    role.permissions = permissions;
+    return this.roleRepository.save(role);
   }
 
   async findPermissionsByRoleId(
@@ -267,51 +263,28 @@ export class RoleService {
       type?: string;
     }>
   > {
-    const role = await this.roleModel
-      .findById(roleId)
-      .populate('permissions')
-      .exec();
+    const role = await this.roleRepository.findOne({
+      where: { id: roleId },
+      relations: ['permissions'],
+    });
 
     if (!role) {
       throw new HttpException('角色不存在', ERROR_CODES.ROLE_NOT_FOUND);
     }
 
-    // 首先过滤出已填充的权限对象（包含type字段）
-    const populatedPermissions = role.permissions.filter(
-      (permission) =>
-        permission && typeof permission === 'object' && 'type' in permission,
-    );
+    let permissions = role.permissions || [];
 
-    // 然后根据类型进行过滤（如果指定了类型）
-    let filteredPermissions: Permission[] = [];
     if (type) {
-      const typedPermissions: Permission[] = populatedPermissions;
-      filteredPermissions = typedPermissions.filter((permission) => {
-        // 使用类型守卫确保类型安全
-        if (typeof permission !== 'object' || !('type' in permission)) {
-          return false;
-        }
-        // 确保类型匹配
-        return String(permission.type) === String(type);
-      });
-    } else {
-      filteredPermissions = populatedPermissions;
+      permissions = permissions.filter((p) => p.type === type);
     }
 
-    // 返回权限信息（只返回完整的权限对象）
-    return filteredPermissions.map((permission) => {
-      const permissionDoc = permission as Permission & {
-        _id?: Types.ObjectId;
-        id?: string;
-      };
-      return {
-        id: permissionDoc._id?.toString() || permissionDoc.id || '',
-        name: permissionDoc.name,
-        description: permissionDoc.description,
-        code: permissionDoc.name, // 使用name作为code
-        type: permissionDoc.type, // 添加权限类型
-      };
-    });
+    return permissions.map((p) => ({
+      id: p.id,
+      name: p.name,
+      description: p.description,
+      code: p.name, // 使用name作为code
+      type: p.type,
+    }));
   }
 
   /**

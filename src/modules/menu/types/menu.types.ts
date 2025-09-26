@@ -1,9 +1,5 @@
-import { Types } from 'mongoose';
 import { Menu } from '../entities/menu.entity';
 
-export interface MenuTree extends Menu {
-  _id: Types.ObjectId;
-  createdAt?: Date;
-  updatedAt?: Date;
+export interface MenuTree extends Omit<Menu, 'children'> {
   children: MenuTree[];
 }

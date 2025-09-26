@@ -1,21 +1,22 @@
 import { Injectable, HttpException } from '@nestjs/common';
 import { ERROR_CODES } from '../../../common/constants/error-codes';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, FilterQuery, Types } from 'mongoose';
-import { User, UserDocument } from '../entities/user.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, FindManyOptions, Like } from 'typeorm';
+import { User } from '../entities/user.entity';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { QueryUserDto } from '../dto/query-user.dto';
 import { UserResponseDto } from '../dto/user-response.dto';
 import { UserListResponseDto } from '../dto/user-list-response.dto';
 import { RoleService } from '../../role/services/role.service';
-import { Role, RoleDocument } from '../../role/entities/role.entity';
+import { Role } from '../../role/entities/role.entity';
 import { RoleType } from '../../../common/enums/role-type.enum';
 
 @Injectable()
 export class UserService {
   constructor(
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
     private roleService: RoleService,
   ) {}
 
@@ -24,16 +25,11 @@ export class UserService {
    * @param username 用户名
    * @returns 用户信息或null
    */
-  async findOne(username: string): Promise<UserDocument | null> {
-    return this.userModel
-      .findOne({ username })
-      .populate({
-        path: 'roles',
-        populate: {
-          path: 'permissions',
-        },
-      })
-      .exec();
+  async findOne(username: string): Promise<User | null> {
+    return this.userRepository.findOne({
+      where: { username },
+      relations: ['roles', 'roles.permissions'],
+    });
   }
 
   /**
@@ -43,16 +39,10 @@ export class UserService {
    */
   async findById(id: string): Promise<UserResponseDto | null> {
     try {
-      const user = await this.userModel
-        .findById(id)
-        .select('-password')
-        .populate({
-          path: 'roles',
-          populate: {
-            path: 'permissions',
-          },
-        })
-        .exec();
+      const user = await this.userRepository.findOne({
+        where: { id },
+        relations: ['roles', 'roles.permissions'],
+      });
       if (!user) {
         console.log(`User not found with ID: ${id}`);
         return null;
@@ -79,7 +69,7 @@ export class UserService {
       updateData.lastLoginIp = ip;
     }
 
-    await this.userModel.findByIdAndUpdate(id, updateData).exec();
+    await this.userRepository.update(id, updateData);
   }
 
   /**
@@ -94,16 +84,11 @@ export class UserService {
       avatar?: string;
     },
   ): Promise<UserResponseDto> {
-    const updatedUser = await this.userModel
-      .findByIdAndUpdate(id, updateData, { new: true })
-      .select('-password')
-      .populate({
-        path: 'roles',
-        populate: {
-          path: 'permissions',
-        },
-      })
-      .exec();
+    await this.userRepository.update(id, updateData);
+    const updatedUser = await this.userRepository.findOne({
+      where: { id },
+      relations: ['roles', 'roles.permissions'],
+    });
 
     if (!updatedUser) {
       throw new HttpException('用户不存在', ERROR_CODES.USER_NOT_FOUND);
@@ -118,14 +103,13 @@ export class UserService {
    * @param newPassword 新密码（将自动加密）
    */
   async updatePassword(id: string, newPassword: string): Promise<void> {
-    const user = await this.userModel.findById(id).exec();
+    const user = await this.userRepository.findOneBy({ id });
     if (!user) {
       throw new HttpException('用户不存在', ERROR_CODES.USER_NOT_FOUND);
     }
 
-    // 直接设置密码并保存，这样会触发密码加密中间件
     user.password = newPassword;
-    await user.save();
+    await this.userRepository.save(user);
   }
 
   /**
@@ -136,45 +120,31 @@ export class UserService {
   async findAll(query: QueryUserDto): Promise<UserListResponseDto> {
     const { page = 1, pageSize = 10, username, status, roles } = query;
 
-    // 构建查询条件
-    const filter: FilterQuery<UserDocument> = {};
+    const qb = this.userRepository.createQueryBuilder('user');
+    qb.leftJoinAndSelect('user.roles', 'role');
+    qb.leftJoinAndSelect('role.permissions', 'permission');
 
     if (username) {
-      filter.username = { $regex: username, $options: 'i' };
+      qb.andWhere('user.username LIKE :username', {
+        username: `%${username}%`,
+      });
     }
 
     if (status) {
-      filter.status = status;
+      qb.andWhere('user.status = :status', { status });
     }
 
-    if (roles) {
-      filter.roles = roles;
+    if (roles && roles.length > 0) {
+      qb.andWhere('role.id IN (:...roles)', { roles });
     }
 
-    // 计算跳过的文档数量
-    const skip = (page - 1) * pageSize;
+    qb.orderBy('user.createdAt', 'DESC');
+    qb.skip((page - 1) * pageSize);
+    qb.take(pageSize);
 
-    // 执行查询
-    const [users, total] = await Promise.all([
-      this.userModel
-        .find(filter)
-        .select('-password')
-        .populate({
-          path: 'roles',
-          populate: {
-            path: 'permissions',
-          },
-        })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(pageSize)
-        .exec(),
-      this.userModel.countDocuments(filter).exec(),
-    ]);
+    const [users, total] = await qb.getManyAndCount();
 
-    // 转换数据格式
     const data = users.map((user) => this.transformUserToResponse(user));
-
     const totalPages = Math.ceil(total / pageSize);
 
     return {
@@ -193,35 +163,38 @@ export class UserService {
    */
   async create(createUserDto: CreateUserDto): Promise<UserResponseDto> {
     // 检查用户名是否已存在
-    const existingUser = await this.userModel
-      .findOne({ username: createUserDto.username })
-      .exec();
+    const existingUser = await this.userRepository.findOneBy({
+      username: createUserDto.username,
+    });
     if (existingUser) {
       throw new HttpException('用户名已存在', ERROR_CODES.USER_ALREADY_EXISTS);
     }
 
-    // 验证角色是否存在
+    const newUser = this.userRepository.create({
+      username: createUserDto.username,
+      password: createUserDto.password,
+      status: 'active', // 默认状态
+      avatar: createUserDto.avatar,
+    });
+
+    // 验证并关联角色
     if (createUserDto.roles && createUserDto.roles.length > 0) {
       const roles = await this.roleService.findByIds(createUserDto.roles);
       if (roles.length !== createUserDto.roles.length) {
         throw new HttpException('部分角色不存在', ERROR_CODES.ROLE_NOT_FOUND);
       }
+      newUser.roles = roles;
     }
 
-    // 创建新用户
-    const savedUser = await this.userModel.create(createUserDto);
+    // 保存新用户, BeforeInsert会自动加密密码
+    const savedUser = await this.userRepository.save(newUser);
 
-    // 重新查询以获取populated的数据
-    const userWithRoles = await this.userModel
-      .findById(savedUser._id)
-      .select('-password')
-      .populate({
-        path: 'roles',
-        populate: {
-          path: 'permissions',
-        },
-      })
-      .exec();
+    // TypeORM的save操作后，如果设置了eager loading，关联的角色也会被加载
+    // 如果没有，需要重新查询
+    const userWithRoles = await this.userRepository.findOne({
+      where: { id: savedUser.id },
+      relations: ['roles', 'roles.permissions'],
+    });
 
     return this.transformUserToResponse(userWithRoles!);
   }
@@ -236,37 +209,44 @@ export class UserService {
     id: string,
     updateUserDto: UpdateUserDto,
   ): Promise<UserResponseDto> {
-    // 检查用户是否存在
-    const existingUser = await this.userModel.findById(id).exec();
-    if (!existingUser) {
+    // 使用 preload 来加载并合并更新
+    const userToUpdate = await this.userRepository.findOne({
+      where: { id },
+      relations: ['roles'],
+    });
+
+    if (!userToUpdate) {
       throw new HttpException('用户不存在', ERROR_CODES.USER_NOT_FOUND);
     }
 
-    // 验证角色是否存在
-    if (updateUserDto.roles && updateUserDto.roles.length > 0) {
-      const roles = await this.roleService.findByIds(updateUserDto.roles);
-      if (roles.length !== updateUserDto.roles.length) {
-        throw new HttpException('部分角色不存在', ERROR_CODES.ROLE_NOT_FOUND);
+    // 验证并更新角色
+    if (updateUserDto.roles) {
+      if (updateUserDto.roles.length > 0) {
+        const roles = await this.roleService.findByIds(updateUserDto.roles);
+        if (roles.length !== updateUserDto.roles.length) {
+          throw new HttpException('部分角色不存在', ERROR_CODES.ROLE_NOT_FOUND);
+        }
+        userToUpdate.roles = roles;
+      } else {
+        // 如果传入空数组，则清空角色
+        userToUpdate.roles = [];
       }
     }
 
-    // 更新用户信息
-    const updatedUser = await this.userModel
-      .findByIdAndUpdate(id, updateUserDto, { new: true })
-      .select('-password')
-      .populate({
-        path: 'roles',
-        populate: {
-          path: 'permissions',
-        },
-      })
-      .exec();
+    // 保存更新
+    const updatedUser = await this.userRepository.save(userToUpdate);
 
-    if (!updatedUser) {
+    // 重新查询以获取完整的关联数据
+    const userWithRelations = await this.userRepository.findOne({
+      where: { id: updatedUser.id },
+      relations: ['roles', 'roles.permissions'],
+    });
+
+    if (!userWithRelations) {
       throw new HttpException('更新用户失败', ERROR_CODES.VALIDATION_FAILED);
     }
 
-    return this.transformUserToResponse(updatedUser);
+    return this.transformUserToResponse(userWithRelations);
   }
 
   /**
@@ -274,8 +254,8 @@ export class UserService {
    * @param id 用户ID
    */
   async remove(id: string): Promise<void> {
-    const result = await this.userModel.findByIdAndDelete(id).exec();
-    if (!result) {
+    const result = await this.userRepository.delete(id);
+    if (result.affected === 0) {
       throw new HttpException('用户不存在', ERROR_CODES.USER_NOT_FOUND);
     }
   }
@@ -302,15 +282,10 @@ export class UserService {
    * @returns 是否有权限
    */
   async hasPermission(userId: string, permission: string): Promise<boolean> {
-    const user = await this.userModel
-      .findById(userId)
-      .populate({
-        path: 'roles',
-        populate: {
-          path: 'permissions',
-        },
-      })
-      .exec();
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['roles', 'roles.permissions'],
+    });
     if (!user) {
       return false;
     }
@@ -327,21 +302,15 @@ export class UserService {
    * @returns 是否有角色
    */
   async hasRole(userId: string, roleNames: string[]): Promise<boolean> {
-    const user = await this.userModel
-      .findById(userId)
-      .populate({
-        path: 'roles',
-        populate: {
-          path: 'permissions',
-        },
-      })
-      .exec();
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['roles'],
+    });
     if (!user) {
       return false;
     }
 
-    const userRoles = user.roles as RoleDocument[];
-    const userRoleNames = userRoles.map((role) => role.name);
+    const userRoleNames = user.roles.map((role) => role.name);
 
     return roleNames.some((roleName) => userRoleNames.includes(roleName));
   }
@@ -351,29 +320,17 @@ export class UserService {
    * @param user 用户文档
    * @returns 权限列表
    */
-  getUserPermissions(user: UserDocument): string[] {
-    const roles = (user.roles as Role[]) || [];
+  getUserPermissions(user: User): string[] {
     const allPermissions = new Set<string>();
-
-    for (const role of roles) {
-      if (role?.permissions) {
-        // Assuming permissions can be populated Permission documents or just strings
-        const permissions = role.permissions as (
-          | { name: string }
-          | string
-          | { toObject: () => { name: string } }
-        )[];
-        permissions.forEach((p) => {
-          if (typeof p === 'string') {
-            allPermissions.add(p);
-          } else if (p && 'name' in p) {
-            allPermissions.add(p.name);
+    if (user.roles) {
+      for (const role of user.roles) {
+        if (role.permissions) {
+          for (const permission of role.permissions) {
+            allPermissions.add(permission.name);
           }
-        });
+        }
       }
     }
-
-    // 去重
     return [...allPermissions];
   }
 
@@ -386,15 +343,10 @@ export class UserService {
     permissions: string[];
     menus: any[];
   }> {
-    const user = await this.userModel
-      .findById(userId)
-      .populate({
-        path: 'roles',
-        populate: {
-          path: 'permissions',
-        },
-      })
-      .exec();
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['roles', 'roles.permissions'],
+    });
 
     if (!user) {
       throw new HttpException('用户不存在', ERROR_CODES.USER_NOT_FOUND);
@@ -517,9 +469,9 @@ export class UserService {
       return;
     }
 
-    const superAdminRole = (await this.roleService.findByType(
+    const superAdminRole = await this.roleService.findByType(
       RoleType.SUPER_ADMIN,
-    )) as RoleDocument;
+    );
 
     if (!superAdminRole) {
       console.error(
@@ -531,7 +483,7 @@ export class UserService {
     const createUserDto: CreateUserDto = {
       username: adminUsername,
       password: 'admin',
-      roles: [String(superAdminRole._id)],
+      roles: [superAdminRole.id],
     };
 
     await this.create(createUserDto);
@@ -543,18 +495,9 @@ export class UserService {
    * @param user 用户文档
    * @returns 用户响应数据
    */
-  public transformUserToResponse(user: UserDocument): UserResponseDto {
-    const userObj = user.toObject<
-      User & {
-        _id: Types.ObjectId;
-        roles: (Role & { _id: Types.ObjectId })[];
-        createdAt: Date;
-        updatedAt: Date;
-      }
-    >();
-
-    const roles = (userObj.roles || []).map((role) => ({
-      id: role._id.toString(),
+  public transformUserToResponse(user: User): UserResponseDto {
+    const roles = (user.roles || []).map((role) => ({
+      id: role.id,
       name: role.name,
       type: role.type,
     }));
@@ -568,16 +511,16 @@ export class UserService {
     const permissions = this.getUserPermissions(user);
 
     return {
-      id: userObj._id.toString(),
-      username: userObj.username,
+      id: user.id,
+      username: user.username,
       roles,
-      status: userObj.status,
-      avatar: userObj.avatar,
+      status: user.status,
+      avatar: user.avatar,
       permissions: permissions, // 使用实际计算的权限
-      lastLoginTime: userObj.lastLoginTime,
-      lastLoginIp: userObj.lastLoginIp,
-      createdAt: userObj.createdAt,
-      updatedAt: userObj.updatedAt,
+      lastLoginTime: user.lastLoginTime,
+      lastLoginIp: user.lastLoginIp,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
       isSuperAdmin,
     };
   }

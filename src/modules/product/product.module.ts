@@ -1,21 +1,14 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProductCategoryController, ProductController } from './controllers';
 import { ProductCategoryService, ProductService } from './services';
-import {
-  ProductCategory,
-  ProductCategorySchema,
-} from './entities/product-category.entity';
-import { ProductSPU, ProductSPUSchema } from './entities/product-spu.entity';
-import { ProductSKU, ProductSKUSchema } from './entities/product-sku.entity';
+import { ProductCategory } from './entities/product-category.entity';
+import { ProductSPU } from './entities/product-spu.entity';
+import { ProductSKU } from './entities/product-sku.entity';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: ProductCategory.name, schema: ProductCategorySchema },
-      { name: ProductSPU.name, schema: ProductSPUSchema },
-      { name: ProductSKU.name, schema: ProductSKUSchema },
-    ]),
+    TypeOrmModule.forFeature([ProductCategory, ProductSPU, ProductSKU]),
   ],
   controllers: [ProductCategoryController, ProductController],
   providers: [ProductCategoryService, ProductService],

@@ -1,22 +1,18 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Document } from 'mongoose';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { ProductCategory } from '../entities/product-category.entity';
-import { ProductCategoryDocument } from '../entities/product-category.entity';
 import { CreateCategoryDto } from '../dto/create-category.dto';
 import { UpdateCategoryDto } from '../dto/update-category.dto';
 import { DeleteCategoryDto } from '../dto/delete-category.dto';
-import {
-  CategoryTreeNode,
-  ProductCategoryLeanDocument,
-} from '../types/category.types';
+import { CategoryTreeNode } from '../types/category.types';
 import { ProductCategoryResponseDto } from '../dto/product-category-response.dto';
 
 @Injectable()
 export class ProductCategoryService {
   constructor(
-    @InjectModel(ProductCategory.name)
-    private readonly categoryModel: Model<ProductCategory>,
+    @InjectRepository(ProductCategory)
+    private readonly categoryRepository: Repository<ProductCategory>,
   ) {}
 
   /**
@@ -25,8 +21,8 @@ export class ProductCategoryService {
   async create(
     createCategoryDto: CreateCategoryDto,
   ): Promise<ProductCategoryResponseDto> {
-    const category = new this.categoryModel(createCategoryDto);
-    const savedCategory = await category.save();
+    const category = this.categoryRepository.create(createCategoryDto);
+    const savedCategory = await this.categoryRepository.save(category);
     return this.transformToResponseDto(savedCategory);
   }
 
@@ -37,18 +33,18 @@ export class ProductCategoryService {
     id: string,
     updateCategoryDto: UpdateCategoryDto,
   ): Promise<ProductCategoryResponseDto> {
-    const updateData = updateCategoryDto;
-    const category = await this.categoryModel.findByIdAndUpdate(
-      id,
-      { ...updateData, updateTime: new Date() },
-      { new: true, runValidators: true },
-    );
+    const category = await this.categoryRepository.findOne({ where: { id } });
 
     if (!category) {
       throw new NotFoundException('分类不存在');
     }
 
-    return this.transformToResponseDto(category);
+    const updatedCategory = this.categoryRepository.merge(category, {
+      ...updateCategoryDto,
+      updatedAt: new Date(),
+    });
+    const savedCategory = await this.categoryRepository.save(updatedCategory);
+    return this.transformToResponseDto(savedCategory);
   }
 
   /**
@@ -56,9 +52,9 @@ export class ProductCategoryService {
    */
   async delete(deleteCategoryDto: DeleteCategoryDto): Promise<void> {
     const { id } = deleteCategoryDto;
-    const result = await this.categoryModel.findByIdAndDelete(id);
+    const result = await this.categoryRepository.delete(id);
 
-    if (!result) {
+    if (result.affected === 0) {
       throw new NotFoundException('分类不存在');
     }
   }
@@ -67,22 +63,19 @@ export class ProductCategoryService {
    * 获取分类列表（树形结构）
    */
   async findAll(): Promise<ProductCategoryResponseDto[]> {
-    const categories = await this.categoryModel
-      .find({ enabled: true })
-      .sort({ sort: 1, createTime: -1 })
-      .lean()
-      .exec();
+    const categories = await this.categoryRepository.find({
+      where: { enabled: true },
+      order: { sort: 'ASC', createdAt: 'DESC' },
+    });
 
-    return categories.map((category) =>
-      this.transformLeanToResponseDto(category),
-    );
+    return categories.map((category) => this.transformToResponseDto(category));
   }
 
   /**
    * 获取分类详情
    */
   async findOne(id: string): Promise<ProductCategoryResponseDto> {
-    const category = await this.categoryModel.findById(id);
+    const category = await this.categoryRepository.findOne({ where: { id } });
 
     if (!category) {
       throw new NotFoundException('分类不存在');
@@ -94,18 +87,22 @@ export class ProductCategoryService {
   /**
    * 构建分类树形结构
    */
-  private buildCategoryTree(
-    categories: ProductCategoryLeanDocument[],
-  ): CategoryTreeNode[] {
+  async buildCategoryTree(): Promise<CategoryTreeNode[]> {
+    const categories = await this.categoryRepository.find({
+      where: { enabled: true },
+      order: { sort: 'ASC' },
+      relations: ['parent'],
+    });
+
     const categoryMap = new Map<string, CategoryTreeNode>();
     const rootCategories: CategoryTreeNode[] = [];
 
     // 创建映射
     categories.forEach((category) => {
-      const categoryId = category._id.toString();
+      const categoryId = category.id;
       categoryMap.set(categoryId, {
         id: categoryId,
-        parentId: category.parentId ? category.parentId.toString() : null,
+        parentId: category.parent?.id || null,
         name: category.name,
         code: category.code,
         level: category.level,
@@ -121,13 +118,12 @@ export class ProductCategoryService {
 
     // 构建树形结构
     categories.forEach((category) => {
-      const categoryId = category._id.toString();
+      const categoryId = category.id;
       const mappedCategory = categoryMap.get(categoryId);
 
       if (mappedCategory) {
-        if (category.parentId) {
-          const parentId = category.parentId.toString();
-          const parent = categoryMap.get(parentId);
+        if (category.parent) {
+          const parent = categoryMap.get(category.parent.id);
           if (parent) {
             parent.children.push(mappedCategory);
           }
@@ -144,7 +140,9 @@ export class ProductCategoryService {
    * 检查分类是否存在子分类
    */
   async hasChildren(id: string): Promise<boolean> {
-    const count = await this.categoryModel.countDocuments({ parentId: id });
+    const count = await this.categoryRepository.count({
+      where: { parent: { id } },
+    });
     return count > 0;
   }
 
@@ -157,13 +155,13 @@ export class ProductCategoryService {
 
     while (queue.length > 0) {
       const currentId = queue.shift()!;
-      const children = await this.categoryModel.find(
-        { parentId: currentId },
-        { _id: 1 },
-      );
+      const children = await this.categoryRepository.find({
+        where: { parent: { id: currentId } },
+        select: ['id'],
+      });
 
       children.forEach((child) => {
-        const childId = child._id.toString();
+        const childId = child.id;
         descendantIds.push(childId);
         queue.push(childId);
       });
@@ -173,16 +171,16 @@ export class ProductCategoryService {
   }
 
   /**
-   * 转换Lean文档为响应DTO
+   * 转换分类实体为响应DTO
    */
-  private transformLeanToResponseDto(
-    category: ProductCategoryLeanDocument,
+  private transformToResponseDto(
+    category: ProductCategory,
   ): ProductCategoryResponseDto {
     return {
-      id: category._id.toString(),
+      id: category.id,
       name: category.name,
       code: category.code,
-      parentId: category.parentId ? category.parentId.toString() : undefined,
+      parentId: category.parent?.id || undefined,
       level: category.level,
       sort: category.sort,
       enabled: category.enabled,
@@ -190,45 +188,6 @@ export class ProductCategoryService {
       description: category.description,
       createdAt: category.createdAt,
       updatedAt: category.updatedAt,
-    };
-  }
-
-  /**
-   * 转换分类文档为响应DTO
-   */
-  private transformToResponseDto(
-    category: ProductCategoryDocument,
-  ): ProductCategoryResponseDto {
-    // 确保我们处理的是Mongoose文档
-    // 显式类型转换以满足TypeScript类型检查
-    const categoryObj = category.toObject() as unknown as {
-      _id: { toString: () => string };
-      name: string;
-      code: string;
-      parentId?: { toString: () => string };
-      level: number;
-      sort: number;
-      enabled: boolean;
-      icon?: string;
-      description?: string;
-      createdAt: Date;
-      updatedAt: Date;
-    };
-
-    return {
-      id: categoryObj._id.toString(),
-      name: categoryObj.name,
-      code: categoryObj.code,
-      parentId: categoryObj.parentId
-        ? categoryObj.parentId.toString()
-        : undefined,
-      level: categoryObj.level,
-      sort: categoryObj.sort,
-      enabled: categoryObj.enabled,
-      icon: categoryObj.icon,
-      description: categoryObj.description,
-      createdAt: categoryObj.createdAt,
-      updatedAt: categoryObj.updatedAt,
     };
   }
 }

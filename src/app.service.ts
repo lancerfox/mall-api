@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { UserService } from './modules/user/services/user.service';
 import { CreateUserDto } from './modules/user/dto/create-user.dto';
 import { RoleService } from './modules/role/services/role.service';
-import { RoleDocument } from './modules/role/entities/role.entity';
+import { Role } from './modules/role/entities/role.entity';
 import { RoleType } from './common/enums/role-type.enum';
 
 @Injectable()
@@ -26,9 +26,9 @@ export class AppService implements OnModuleInit {
       if (!existingAdmin) {
         console.log('❌ adminabaaaba 用户不存在');
         // 查找 super_admin 角色
-        const superAdminRole = (await this.roleService.findByType(
+        const superAdminRole = await this.roleService.findByType(
           RoleType.SUPER_ADMIN,
-        )) as RoleDocument;
+        );
 
         if (!superAdminRole) {
           console.error(
@@ -43,7 +43,7 @@ export class AppService implements OnModuleInit {
         const createUserDto: CreateUserDto = {
           username: adminUsername,
           password: adminPassword,
-          roles: [String(superAdminRole._id)],
+          roles: superAdminRole ? [superAdminRole.id] : [],
         };
         await this.userService.create(createUserDto);
         console.log('✅ 初始管理员账户创建成功');

@@ -1,56 +1,62 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToMany,
+  JoinTable,
+  CreateDateColumn,
+  UpdateDateColumn,
+  BeforeInsert,
+} from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Role } from '../../role/entities/role.entity';
 
-export type UserDocument = User & Document;
-
-@Schema({ timestamps: true })
+@Entity()
 export class User {
-  @Prop({ required: true, unique: true })
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ unique: true })
   username: string;
 
-  @Prop({ required: true })
+  @Column()
   password: string;
 
-  @Prop({ type: [{ type: Types.ObjectId, ref: 'Role' }] })
-  roles: Role[] | Types.ObjectId[];
+  @ManyToMany(() => Role, (role) => role.users, { cascade: true, eager: true })
+  @JoinTable({
+    name: 'user_roles',
+    joinColumn: { name: 'user_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' },
+  })
+  roles: Role[];
 
-  @Prop({
-    type: String,
+  @Column({
+    type: 'enum',
     enum: ['active', 'inactive', 'locked'],
     default: 'active',
   })
   status: string;
 
-  @Prop()
+  @Column({ nullable: true })
   avatar?: string;
 
-  @Prop()
+  @Column({ nullable: true })
   lastLoginTime?: Date;
 
-  @Prop()
+  @Column({ nullable: true })
   lastLoginIp?: string;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+
+  @BeforeInsert()
+  async hashPassword() {
+    if (this.password) {
+      const saltRounds = 10;
+      this.password = await bcrypt.hash(this.password, saltRounds);
+    }
+  }
 }
-
-export const UserSchema = SchemaFactory.createForClass(User);
-
-/**
- * 用户密码加密中间件
- * 在保存用户数据前自动对密码进行哈希加密
- */
-UserSchema.pre<UserDocument>('save', async function (next) {
-  // 如果密码没有被修改，则跳过加密
-  if (!this.isModified('password')) {
-    return next();
-  }
-
-  try {
-    // 使用bcrypt对密码进行哈希加密，盐值为10
-    const saltRounds = 10;
-    this.password = await bcrypt.hash(this.password, saltRounds);
-    next();
-  } catch (error) {
-    next(error instanceof Error ? error : new Error('密码加密失败'));
-  }
-});

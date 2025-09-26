@@ -1,16 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types, UpdateQuery } from 'mongoose';
-import { ProductSPU, ProductSPUDocument } from '../entities/product-spu.entity';
-import {
-  ProductSKU,
-  ProductSKUDocument,
-  Specification,
-} from '../entities/product-sku.entity';
-import {
-  ProductCategory,
-  ProductCategoryDocument,
-} from '../entities/product-category.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, In, ILike, Not, IsNull } from 'typeorm';
+import { ProductSPU } from '../entities/product-spu.entity';
+import { ProductSKU, Specification } from '../entities/product-sku.entity';
+import { ProductCategory } from '../entities/product-category.entity';
 import { SaveProductDto } from '../dto/save-product.dto';
 import { ProductListDto } from '../dto/product-list.dto';
 import { UpdateStatusDto } from '../dto/update-status.dto';
@@ -35,8 +28,8 @@ interface SPUData {
   video?: string;
   detail?: string;
   status?: string;
-  createTime?: Date;
-  updateTime?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
   shelfTime?: Date;
   offShelfTime?: Date;
   deleteTime?: Date;
@@ -48,35 +41,35 @@ interface SKUData {
   skuCode?: string;
   price?: number;
   stock?: number;
-  specifications?: Record<string, any>;
-  createTime?: Date;
-  updateTime?: Date;
+  specifications?: Specification[];
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 @Injectable()
 export class ProductService {
   constructor(
-    @InjectModel(ProductSPU.name)
-    private readonly spuModel: Model<ProductSPUDocument>,
-    @InjectModel(ProductSKU.name)
-    private readonly skuModel: Model<ProductSKUDocument>,
-    @InjectModel(ProductCategory.name)
-    private readonly categoryModel: Model<ProductCategoryDocument>,
+    @InjectRepository(ProductSPU)
+    private readonly spuRepository: Repository<ProductSPU>,
+    @InjectRepository(ProductSKU)
+    private readonly skuRepository: Repository<ProductSKU>,
+    @InjectRepository(ProductCategory)
+    private readonly categoryRepository: Repository<ProductCategory>,
   ) {}
 
   /**
-   * 类型守卫函数，用于安全地检查分类文档对象
+   * 类型守卫函数，用于安全地检查分类对象
    * @param category 分类对象
-   * @returns 如果是有效的分类文档则返回true
+   * @returns 如果是有效的分类对象则返回true
    */
-  private isCategoryDocument(
+  private isCategoryObject(
     category: unknown,
-  ): category is ProductCategoryDocument & { _id: Types.ObjectId } {
+  ): category is ProductCategory & { id: string } {
     return (
       category !== null &&
       typeof category === 'object' &&
-      '_id' in category &&
-      category._id instanceof Types.ObjectId &&
+      'id' in category &&
+      typeof (category as any).id === 'string' &&
       'name' in category &&
       'code' in category
     );
@@ -91,40 +84,43 @@ export class ProductService {
     const { spu, skus, action } = saveProductDto;
     const now = new Date();
 
-    let spuData: SPUData = {
-      ...spu,
-      updateTime: now,
-      status: action === 'publish' ? 'On-shelf' : 'Draft',
-    };
+    let savedSpu: ProductSPU;
 
     if (spu.id) {
       // 更新现有SPU
-      const existingSpu = await this.spuModel.findById(spu.id);
+      const existingSpu = await this.spuRepository.findOne({
+        where: { id: spu.id },
+      });
       if (!existingSpu) {
         throw new NotFoundException('商品不存在');
       }
 
-      spuData = { ...existingSpu.toObject(), ...spuData } as SPUData;
+      // 更新SPU
+      Object.assign(existingSpu, {
+        ...spu,
+        updatedAt: now,
+        status: action === 'publish' ? 'On-shelf' : 'Draft',
+      });
+
+      savedSpu = await this.spuRepository.save(existingSpu);
     } else {
       // 创建新SPU
-      spuData.createTime = now;
-    }
+      const newSpu = this.spuRepository.create({
+        ...spu,
+        createdAt: now,
+        updatedAt: now,
+        status: action === 'publish' ? 'On-shelf' : 'Draft',
+      });
 
-    // 保存SPU
-    const savedSpu = spu.id
-      ? await this.spuModel.findByIdAndUpdate(
-          spu.id,
-          spuData as UpdateQuery<ProductSPU>,
-          { new: true },
-        )
-      : await this.spuModel.create(spuData);
+      savedSpu = await this.spuRepository.save(newSpu);
+    }
 
     if (!savedSpu) {
       throw new NotFoundException('保存商品失败');
     }
 
     // 保存SKUs
-    await this.saveSKUs(String(savedSpu._id), skus);
+    await this.saveSKUs(savedSpu.id, skus);
 
     return await this.transformToResponseDto(savedSpu);
   }
@@ -136,8 +132,8 @@ export class ProductService {
     const now = new Date();
 
     // 获取当前数据库中该SPU的所有SKU
-    const existingSkus = await this.skuModel.find({ spuId });
-    const existingSkuIds = existingSkus.map((sku) => String(sku._id));
+    const existingSkus = await this.skuRepository.find({ where: { spuId } });
+    const existingSkuIds = existingSkus.map((sku) => sku.id);
 
     // 分类处理提交的SKU数据
     const skusToUpdate: SKUData[] = [];
@@ -162,7 +158,7 @@ export class ProductService {
 
     // 1. 删除不再需要的SKU
     if (skuIdsToDelete.length > 0) {
-      await this.skuModel.deleteMany({ _id: { $in: skuIdsToDelete } });
+      await this.skuRepository.delete({ id: In(skuIdsToDelete) });
     }
 
     // 2. 更新现有的SKU
@@ -171,12 +167,13 @@ export class ProductService {
 
       // 如果skuCode发生了变化，需要检查新的skuCode是否与其他SKU冲突
       if (sku.skuCode) {
-        const existingSku = await this.skuModel.findById(sku.id);
+        const existingSku = await this.skuRepository.findOne({
+          where: { id: sku.id },
+        });
         if (existingSku && existingSku.skuCode !== sku.skuCode) {
           // skuCode发生了变化，检查新的skuCode是否与其他SKU冲突
-          const conflictingSku = await this.skuModel.findOne({
-            skuCode: sku.skuCode,
-            _id: { $ne: sku.id }, // 排除自己
+          const conflictingSku = await this.skuRepository.findOne({
+            where: { skuCode: sku.skuCode, id: Not(sku.id) }, // 排除自己
           });
           if (conflictingSku) {
             throw new Error(
@@ -186,11 +183,17 @@ export class ProductService {
         }
       }
 
-      await this.skuModel.findByIdAndUpdate(sku.id, {
-        ...sku,
-        spuId,
-        updateTime: now,
+      const existingSku = await this.skuRepository.findOne({
+        where: { id: sku.id },
       });
+      if (existingSku) {
+        Object.assign(existingSku, {
+          ...sku,
+          spuId,
+          updatedAt: now,
+        });
+        await this.skuRepository.save(existingSku);
+      }
     }
 
     // 3. 创建新的SKU
@@ -198,8 +201,8 @@ export class ProductService {
       // 检查新SKU的skuCode唯一性
       for (const sku of skusToCreate) {
         if (sku.skuCode) {
-          const existingSku = await this.skuModel.findOne({
-            skuCode: sku.skuCode,
+          const existingSku = await this.skuRepository.findOne({
+            where: { skuCode: sku.skuCode },
           });
           if (existingSku) {
             throw new Error(
@@ -209,14 +212,16 @@ export class ProductService {
         }
       }
 
-      const skuDocuments = skusToCreate.map((sku: SKUData) => ({
-        ...sku,
-        spuId,
-        createTime: now,
-        updateTime: now,
-      }));
+      const newSkus = skusToCreate.map((sku: SKUData) =>
+        this.skuRepository.create({
+          ...sku,
+          spuId,
+          createdAt: now,
+          updatedAt: now,
+        }),
+      );
 
-      await this.skuModel.insertMany(skuDocuments);
+      await this.skuRepository.save(newSkus);
     }
   }
 
@@ -234,31 +239,32 @@ export class ProductService {
     const skip = (page - 1) * pageSize;
 
     // 构建查询条件
-    const query: Record<string, any> = {};
+    const where: any = {};
     if (filters) {
       if (filters.name) {
-        query.name = { $regex: filters.name, $options: 'i' };
+        where.name = ILike(`%${filters.name}%`);
       }
       if (filters.id) {
-        query._id = filters.id;
-      }
-      if (filters.categoryId) {
-        query.categoryId = filters.categoryId;
+        where.id = filters.id;
       }
       if (filters.status) {
-        query.status = filters.status;
+        where.status = filters.status;
+      }
+      if (filters.categoryId) {
+        where.categoryId = filters.categoryId;
+      }
+      if (filters.status) {
+        where.status = filters.status;
       }
     }
 
-    const [items, total] = await Promise.all([
-      this.spuModel
-        .find(query)
-        .sort({ updateTime: -1 })
-        .skip(skip)
-        .limit(pageSize)
-        .exec(),
-      this.spuModel.countDocuments(query),
-    ]);
+    const [items, total] = await this.spuRepository.findAndCount({
+      where,
+      order: { updatedAt: 'DESC' },
+      skip,
+      take: pageSize,
+      relations: ['category'],
+    });
 
     const responseItems = await Promise.all(
       items.map((item) => this.transformToResponseDto(item)),
@@ -281,7 +287,7 @@ export class ProductService {
   ): Promise<ProductEditResponseDto> {
     const { id } = productDetailDto;
 
-    const spu = await this.spuModel.findById(id);
+    const spu = await this.spuRepository.findOne({ where: { id } });
     if (!spu) {
       throw new NotFoundException('商品不存在');
     }
@@ -295,9 +301,9 @@ export class ProductService {
   async updateProductStatus(updateStatusDto: UpdateStatusDto): Promise<void> {
     const { ids, status } = updateStatusDto;
 
-    const updateData: UpdateQuery<ProductSPU> = {
+    const updateData: any = {
       status,
-      updateTime: new Date(),
+      updatedAt: new Date(),
     };
 
     if (status === 'On-shelf') {
@@ -306,12 +312,9 @@ export class ProductService {
       updateData.offShelfTime = new Date();
     }
 
-    const result = await this.spuModel.updateMany(
-      { _id: { $in: ids } },
-      updateData,
-    );
+    const result = await this.spuRepository.update({ id: In(ids) }, updateData);
 
-    if (result.modifiedCount === 0) {
+    if (result.affected === 0) {
       throw new NotFoundException('未找到符合条件的商品');
     }
   }
@@ -320,16 +323,15 @@ export class ProductService {
    * 删除商品
    */
   async deleteProducts(ids: string[]): Promise<void> {
-    const result = await this.spuModel.updateMany(
-      { _id: { $in: ids } },
+    const result = await this.spuRepository.update(
+      { id: In(ids) },
       {
         status: 'Deleted',
-        updateTime: new Date(),
-        deleteTime: new Date(),
+        updatedAt: new Date(),
       },
     );
 
-    if (result.modifiedCount === 0) {
+    if (result.affected === 0) {
       throw new NotFoundException('未找到符合条件的商品');
     }
   }
@@ -338,76 +340,39 @@ export class ProductService {
    * 根据分类ID获取商品数量
    */
   async getProductCountByCategory(categoryId: string): Promise<number> {
-    return await this.spuModel.countDocuments({
-      categoryId,
-      status: { $ne: 'Deleted' },
+    return await this.spuRepository.count({
+      where: {
+        categoryId,
+        status: Not('Deleted'),
+      },
     });
-  }
-
-  /**
-   * 检查SKU库存
-   */
-  async checkStock(skuId: string, quantity: number): Promise<boolean> {
-    const sku = await this.skuModel.findById(skuId);
-    return sku ? sku.stock >= quantity : false;
-  }
-
-  /**
-   * 扣减SKU库存
-   */
-  async deductStock(skuId: string, quantity: number): Promise<void> {
-    const result = await this.skuModel.findByIdAndUpdate(skuId, {
-      $inc: { stock: -quantity },
-      updateTime: new Date(),
-    });
-
-    if (!result) {
-      throw new NotFoundException('SKU不存在');
-    }
-  }
-
-  /**
-   * 恢复SKU库存
-   */
-  async restoreStock(skuId: string, quantity: number): Promise<void> {
-    const result = await this.skuModel.findByIdAndUpdate(skuId, {
-      $inc: { stock: quantity },
-      updateTime: new Date(),
-    });
-
-    if (!result) {
-      throw new NotFoundException('SKU不存在');
-    }
   }
 
   /**
    * 根据ID查找商品
    */
-  async findById(id: string): Promise<ProductSPUDocument | null> {
-    return this.spuModel.findById(id).exec();
+  async findById(id: string): Promise<ProductSPU | null> {
+    return this.spuRepository.findOne({ where: { id } });
   }
 
   /**
-   * 转换SPU文档为响应DTO
+   * 转换SPU为响应DTO
    */
   private async transformToResponseDto(
-    spu: ProductSPUDocument,
+    spu: ProductSPU,
   ): Promise<ProductResponseDto> {
-    const data = spu.toObject() as ProductSPU & {
-      _id: Types.ObjectId;
-    };
-
-    // 1. 获取SKUs - 直接查询而不是使用虚拟字段
-    const skus = await this.skuModel.find({ spuId: data._id.toString() });
+    // 1. 获取SKUs
+    const skus = await this.skuRepository.find({ where: { spuId: spu.id } });
     const skusData = skus.map((sku) => this.transformSkuToResponseDto(sku));
 
     // 2. 获取分类信息
-    const populatedSpu = await spu.populate<{
-      categoryId: ProductCategoryDocument;
-    }>('categoryId');
-    const category = populatedSpu.categoryId;
+    const category = spu.categoryId
+      ? await this.categoryRepository.findOne({
+          where: { id: spu.categoryId },
+        })
+      : null;
 
-    // 2. 计算总库存和价格范围
+    // 3. 计算总库存和价格范围
     let totalStock = 0;
     const prices: number[] = [];
     skusData.forEach((sku) => {
@@ -419,81 +384,78 @@ export class ProductService {
     const priceRange: [number, number] =
       prices.length > 0 ? [Math.min(...prices), Math.max(...prices)] : [0, 0];
 
-    // 3. 获取分类
-    const categoryDto =
-      category && this.isCategoryDocument(category)
-        ? {
-            id: category._id.toString(),
-            name: category.name,
-            code: category.code,
-            level: category.level,
-            sort: category.sort,
-            enabled: category.enabled,
-            createdAt: category.createdAt,
-            updatedAt: category.updatedAt,
-          }
-        : {
-            id: '',
-            name: '',
-            code: '',
-            level: 1,
-            sort: 0,
-            enabled: true,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          };
+    // 4. 构建分类DTO
+    const categoryDto = category
+      ? {
+          id: category.id,
+          name: category.name,
+          code: category.code,
+          level: category.level,
+          sort: category.sort,
+          enabled: category.enabled,
+          createdAt: category.createdAt,
+          updatedAt: category.updatedAt,
+        }
+      : {
+          id: '',
+          name: '',
+          code: '',
+          level: 1,
+          sort: 0,
+          enabled: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
 
     return {
-      id: data._id?.toString() || '',
+      id: spu.id || '',
       spuCode: '', // SPU实体中没有spuCode字段，使用空字符串
-      name: data.name || '',
+      name: spu.name || '',
       category: categoryDto,
       categoryName: category ? category.name : '',
-      description: data.description || '',
-      mainImage: data.mainImage || '',
+      description: spu.description || '',
+      mainImage: spu.mainImage || '',
       imageGallery: [], // SPU实体中没有images字段，使用空数组
       specifications: [], // SPU实体中没有specifications字段，使用空数组
       skus: skusData,
-      status: data.status,
+      status: spu.status,
       totalStock,
       priceRange,
-      material: data.material || '',
-      createdAt: data.createdAt,
-      updatedAt: data.updatedAt,
+      material: spu.material || '',
+      createdAt: spu.createdAt || new Date(),
+      updatedAt: spu.updatedAt || new Date(),
     };
   }
 
   /**
-   * 转换SKU文档为响应DTO
+   * 转换SKU为响应DTO
    */
-  private transformSkuToResponseDto(sku: ProductSKUDocument): SkuResponseDto {
-    const data = sku.toObject() as ProductSKU & { _id: Types.ObjectId };
+  private transformSkuToResponseDto(sku: ProductSKU): SkuResponseDto {
+    const specs: Record<string, string> = {};
+    if (sku.specifications) {
+      sku.specifications.forEach((spec) => {
+        specs[spec.key] = spec.value;
+      });
+    }
 
     return {
-      id: data._id?.toString() || '',
-      skuCode: data.skuCode || '',
-      price: data.price || 0,
-      originalPrice: data.marketPrice || 0,
-      stock: data.stock || 0,
-      specs:
-        data.specifications?.reduce(
-          (acc: Record<string, string>, spec: Specification) => {
-            acc[spec.key] = spec.value;
-            return acc;
-          },
-          {},
-        ) || {},
-      enabled: data.status === 1,
-      createdAt: data.createdAt,
-      updatedAt: data.updatedAt,
+      id: sku.id || '',
+      skuCode: sku.skuCode || '',
+      price: sku.price || 0,
+      originalPrice: sku.marketPrice || 0,
+      stock: sku.stock || 0,
+      specs,
+      enabled: sku.status === 1,
+      createdAt: sku.createdAt || new Date(),
+      updatedAt: sku.updatedAt || new Date(),
     };
   }
 
   /**
-   * 转换SPU文档为详情响应DTO
+   * 转换SPU为详情响应DTO
    */
   private async transformToDetailResponseDto(
-    spu: ProductSPUDocument,
+    spu: ProductSPU,
   ): Promise<ProductDetailResponseDto> {
     const baseDto = await this.transformToResponseDto(spu);
 
@@ -507,58 +469,54 @@ export class ProductService {
   }
 
   /**
-   * 转换SPU文档为编辑响应DTO（与保存接口兼容）
+   * 转换SPU为编辑响应DTO（与保存接口兼容）
    */
   private async transformToEditResponseDto(
-    spu: ProductSPUDocument,
+    spu: ProductSPU,
   ): Promise<ProductEditResponseDto> {
-    const spuData = spu.toObject() as ProductSPU & { _id: Types.ObjectId };
-
-    // 获取SKUs - 使用字符串类型的spuId进行查询
-    const skus = await this.skuModel.find({ spuId: spuData._id.toString() });
+    // 获取SKUs
+    const skus = await this.skuRepository.find({ where: { spuId: spu.id } });
 
     // 转换SPU数据
     const spuDto: SpuDto = {
-      id: spuData._id?.toString(),
-      name: spuData.name || '',
-      subtitle: spuData.subtitle,
-      categoryId: spuData.categoryId?.toString() || '',
-      mainImage: spuData.mainImage,
-      video: spuData.video,
-      material: spuData.material || '',
-      origin: spuData.origin,
-      grade: spuData.grade,
-      description: spuData.description,
-      freight: spuData.freight,
-      sort: spuData.sort,
+      id: spu.id || '',
+      name: spu.name || '',
+      subtitle: spu.subtitle || '',
+      categoryId: spu.categoryId || '',
+      mainImage: spu.mainImage || '',
+      video: spu.video || '',
+      material: spu.material || '',
+      origin: spu.origin || '',
+      grade: spu.grade || '',
+      description: spu.description || '',
+      freight: spu.freight || 0,
+      sort: spu.sort || 0,
     };
 
     // 转换SKU数据
     const skuDtos: SkuDto[] = skus.map((sku) => {
-      const skuData = sku.toObject() as ProductSKU & { _id: Types.ObjectId };
-
       // 转换规格数据
-      const specifications: SpecificationDto[] = (
-        skuData.specifications || []
-      ).map((spec) => ({
-        key: spec.key,
-        value: spec.value,
-      }));
+      const specifications: SpecificationDto[] = (sku.specifications || []).map(
+        (spec) => ({
+          key: spec.key,
+          value: spec.value,
+        }),
+      );
 
       return {
-        id: skuData._id?.toString(),
+        id: sku.id || '',
         specifications,
-        image: skuData.image,
-        price: skuData.price || 0,
-        marketPrice: skuData.marketPrice,
-        stock: skuData.stock || 0,
-        skuCode: skuData.skuCode,
-        status: skuData.status,
+        image: sku.image || '',
+        price: sku.price || 0,
+        marketPrice: sku.marketPrice || 0,
+        stock: sku.stock || 0,
+        skuCode: sku.skuCode || '',
+        status: sku.status || 1,
       };
     });
 
     // 根据当前状态确定action
-    const action = spuData.status === 'On-shelf' ? 'publish' : 'saveToDraft';
+    const action = spu.status === 'On-shelf' ? 'publish' : 'saveToDraft';
 
     return {
       spu: spuDto,

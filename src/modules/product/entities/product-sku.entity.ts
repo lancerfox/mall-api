@@ -1,44 +1,65 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { ApiProperty } from '@nestjs/swagger';
+import { ProductSPU } from './product-spu.entity';
 
 export interface Specification {
   key: string;
   value: string;
 }
 
-export type ProductSKUDocument = ProductSKU & Document;
-
-@Schema({ timestamps: true })
+@Entity()
 export class ProductSKU {
-  @Prop({ type: Types.ObjectId, ref: 'ProductSPU', required: true })
-  spuId: Types.ObjectId;
+  @ApiProperty({ description: 'SKU ID' })
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-  @Prop({ type: [{ key: String, value: String }], required: true })
+  @ApiProperty({ description: '关联的SPU ID' })
+  @Column()
+  spuId: string;
+
+  @ApiProperty({ description: '规格属性' })
+  @Column('jsonb')
   specifications: Specification[];
 
-  @Prop()
-  image: string;
+  @ApiProperty({ description: 'SKU图片', required: false })
+  @Column({ nullable: true })
+  image?: string;
 
-  @Prop({ required: true, min: 0 })
+  @ApiProperty({ description: '价格' })
+  @Column('decimal', { precision: 10, scale: 2 })
   price: number;
 
-  @Prop({ min: 0 })
-  marketPrice: number;
+  @ApiProperty({ description: '市场价', required: false })
+  @Column('decimal', { precision: 10, scale: 2, nullable: true })
+  marketPrice?: number;
 
-  @Prop({ required: true, min: 0, default: 0 })
+  @ApiProperty({ description: '库存数量' })
+  @Column({ default: 0 })
   stock: number;
 
-  @Prop({ unique: true, sparse: true })
+  @ApiProperty({ description: 'SKU编码' })
+  @Column({ unique: true })
   skuCode: string;
 
-  @Prop({ default: 1, enum: [0, 1] })
+  @ApiProperty({ description: '状态', enum: [0, 1] })
+  @Column({ default: 1 })
   status: number;
 
-  @Prop({ default: Date.now })
+  @ManyToOne(() => ProductSPU, (spu) => spu.skus)
+  @JoinColumn({ name: 'spuId' })
+  spu: ProductSPU;
+
+  @CreateDateColumn()
   createdAt: Date;
 
-  @Prop({ default: Date.now })
+  @UpdateDateColumn()
   updatedAt: Date;
 }
-
-export const ProductSKUSchema = SchemaFactory.createForClass(ProductSKU);

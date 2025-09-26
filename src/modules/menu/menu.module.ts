@@ -1,17 +1,13 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { MenuController } from './controllers/menu.controller';
 import { MenuService } from './services/menu.service';
-import { Menu, MenuSchema } from './entities/menu.entity';
+import { Menu } from './entities/menu.entity';
 import { PermissionModule } from '../permission/permission.module';
 import { RoleModule } from '../role/role.module';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: Menu.name, schema: MenuSchema }]),
-    PermissionModule,
-    RoleModule,
-  ],
+  imports: [TypeOrmModule.forFeature([Menu]), PermissionModule, RoleModule],
   controllers: [MenuController],
   providers: [MenuService],
   exports: [MenuService],

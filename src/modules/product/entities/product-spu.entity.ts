@@ -1,64 +1,77 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToMany,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { ApiProperty } from '@nestjs/swagger';
 import { ProductSKU } from './product-sku.entity';
 
-export type ProductSPUDocument = ProductSPU & Document;
-
-@Schema({
-  timestamps: true,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true },
-})
+@Entity()
 export class ProductSPU {
-  skus: ProductSKU[];
+  @ApiProperty({ description: 'SPU ID' })
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-  @Prop({ required: true, maxlength: 200 })
+  @ApiProperty({ description: '商品名称' })
+  @Column({ length: 200 })
   name: string;
 
-  @Prop({ maxlength: 500 })
-  subtitle: string;
+  @ApiProperty({ description: '副标题', required: false })
+  @Column({ length: 500, nullable: true })
+  subtitle?: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'ProductCategory', required: true })
-  categoryId: Types.ObjectId;
+  @ApiProperty({ description: '分类ID' })
+  @Column()
+  categoryId: string;
 
-  @Prop()
-  mainImage: string;
+  @ApiProperty({ description: '主图', required: false })
+  @Column({ nullable: true })
+  mainImage?: string;
 
-  @Prop()
-  video: string;
+  @ApiProperty({ description: '视频', required: false })
+  @Column({ nullable: true })
+  video?: string;
 
-  @Prop({ required: true, maxlength: 50 })
+  @ApiProperty({ description: '材质' })
+  @Column({ length: 50 })
   material: string;
 
-  @Prop({ maxlength: 50 })
-  origin: string;
+  @ApiProperty({ description: '产地', required: false })
+  @Column({ length: 50, nullable: true })
+  origin?: string;
 
-  @Prop({ maxlength: 50 })
-  grade: string;
+  @ApiProperty({ description: '等级', required: false })
+  @Column({ length: 50, nullable: true })
+  grade?: string;
 
-  @Prop({ maxlength: 2000 })
-  description: string;
+  @ApiProperty({ description: '描述', required: false })
+  @Column({ length: 2000, nullable: true })
+  description?: string;
 
-  @Prop({ default: 0, min: 0 })
+  @ApiProperty({ description: '运费' })
+  @Column('decimal', { precision: 10, scale: 2, default: 0 })
   freight: number;
 
-  @Prop({ default: 0, min: 0, max: 9999 })
+  @ApiProperty({ description: '排序' })
+  @Column({ default: 0 })
   sort: number;
 
-  @Prop({ default: 'Draft', enum: ['Draft', 'On-shelf', 'Off-shelf'] })
+  @ApiProperty({
+    description: '状态',
+    enum: ['Draft', 'On-shelf', 'Off-shelf'],
+  })
+  @Column({ default: 'Draft' })
   status: string;
 
-  @Prop({ default: Date.now })
+  @OneToMany(() => ProductSKU, (sku) => sku.spu)
+  skus: ProductSKU[];
+
+  @CreateDateColumn()
   createdAt: Date;
 
-  @Prop({ default: Date.now })
+  @UpdateDateColumn()
   updatedAt: Date;
 }
-
-export const ProductSPUSchema = SchemaFactory.createForClass(ProductSPU);
-
-ProductSPUSchema.virtual('skus', {
-  ref: 'ProductSKU',
-  localField: '_id',
-  foreignField: 'spuId',
-});

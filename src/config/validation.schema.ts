@@ -17,8 +17,20 @@ export const validationSchema = Joi.object({
   // 应用程序端口
   PORT: Joi.number().default(3000),
 
-  // 数据库连接字符串
-  DATABASE_URL: Joi.string().required(),
+  // 数据库类型
+  DB_TYPE: Joi.string().required(),
+  // 数据库主机
+  DB_HOST: Joi.string().required(),
+  // 数据库端口
+  DB_PORT: Joi.number().required(),
+  // 数据库用户名
+  DB_USERNAME: Joi.string().required(),
+  // 数据库密码
+  DB_PASSWORD: Joi.string().required(),
+  // 数据库名称
+  DB_DATABASE: Joi.string().required(),
+  // 是否同步
+  DB_SYNCHRONIZE: Joi.boolean().default(true),
 
   // JWT密钥
   JWT_SECRET: Joi.string().required(),

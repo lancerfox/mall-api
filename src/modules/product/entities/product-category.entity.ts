@@ -1,40 +1,54 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  OneToMany,
+  Tree,
+  TreeChildren,
+  TreeParent,
+} from 'typeorm';
 
-export type ProductCategoryDocument = ProductCategory & Document;
-
-@Schema({ timestamps: true })
+@Entity('product_categories')
+@Tree('nested-set')
 export class ProductCategory {
-  @Prop({ type: Types.ObjectId, ref: 'ProductCategory', default: null })
-  parentId: Types.ObjectId;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-  @Prop({ required: true, maxlength: 50 })
+  @TreeParent()
+  parent: ProductCategory;
+
+  @TreeChildren()
+  children: ProductCategory[];
+
+  @Column({ type: 'varchar', length: 50 })
   name: string;
 
-  @Prop({ required: true, maxlength: 20 })
+  @Column({ type: 'varchar', length: 20 })
   code: string;
 
-  @Prop({ required: true, default: 1, min: 1, max: 4 })
+  @Column({ type: 'int', default: 1 })
   level: number;
 
-  @Prop({ maxlength: 255 })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   icon: string;
 
-  @Prop({ maxlength: 500 })
+  @Column({ type: 'varchar', length: 500, nullable: true })
   description: string;
 
-  @Prop({ default: 0, min: 0, max: 9999 })
+  @Column({ type: 'int', default: 0 })
   sort: number;
 
-  @Prop({ default: true })
+  @Column({ type: 'boolean', default: true })
   enabled: boolean;
 
-  @Prop({ default: Date.now })
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
-  @Prop({ default: Date.now })
+  @Column({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+    onUpdate: 'CURRENT_TIMESTAMP',
+  })
   updatedAt: Date;
 }
-
-export const ProductCategorySchema =
-  SchemaFactory.createForClass(ProductCategory);
