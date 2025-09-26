@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In, ILike, Not, IsNull } from 'typeorm';
+import { Repository, In, ILike, Not } from 'typeorm';
 import { ProductSPU } from '../entities/product-spu.entity';
 import { ProductSKU, Specification } from '../entities/product-sku.entity';
 import { ProductCategory } from '../entities/product-category.entity';
@@ -17,23 +17,6 @@ import { ProductEditResponseDto } from '../dto/product-edit-response.dto';
 import { SpuDto } from '../dto/spu.dto';
 import { SkuDto } from '../dto/sku.dto';
 import { SpecificationDto } from '../dto/specification.dto';
-
-interface SPUData {
-  id?: string;
-  name?: string;
-  categoryId?: string;
-  description?: string;
-  mainImage?: string;
-  images?: string[];
-  video?: string;
-  detail?: string;
-  status?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
-  shelfTime?: Date;
-  offShelfTime?: Date;
-  deleteTime?: Date;
-}
 
 interface SKUData {
   id?: string;
@@ -69,7 +52,7 @@ export class ProductService {
       category !== null &&
       typeof category === 'object' &&
       'id' in category &&
-      typeof (category as any).id === 'string' &&
+      typeof (category as Record<string, unknown>).id === 'string' &&
       'name' in category &&
       'code' in category
     );
@@ -239,7 +222,12 @@ export class ProductService {
     const skip = (page - 1) * pageSize;
 
     // 构建查询条件
-    const where: any = {};
+    const where: {
+      name?: any;
+      id?: string;
+      status?: string;
+      categoryId?: string;
+    } = {};
     if (filters) {
       if (filters.name) {
         where.name = ILike(`%${filters.name}%`);
@@ -252,9 +240,6 @@ export class ProductService {
       }
       if (filters.categoryId) {
         where.categoryId = filters.categoryId;
-      }
-      if (filters.status) {
-        where.status = filters.status;
       }
     }
 
@@ -301,7 +286,11 @@ export class ProductService {
   async updateProductStatus(updateStatusDto: UpdateStatusDto): Promise<void> {
     const { ids, status } = updateStatusDto;
 
-    const updateData: any = {
+    // 定义更新数据的类型
+    const updateData: Partial<ProductSPU> & {
+      shelfTime?: Date;
+      offShelfTime?: Date;
+    } = {
       status,
       updatedAt: new Date(),
     };
