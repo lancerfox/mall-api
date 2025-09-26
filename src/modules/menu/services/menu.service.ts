@@ -1,4 +1,4 @@
-import { Injectable, HttpException, Inject } from '@nestjs/common';
+import { Injectable, HttpException } from '@nestjs/common';
 import { ERROR_CODES } from '../../../common/constants/error-codes';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere } from 'typeorm';
@@ -55,12 +55,8 @@ export class MenuService {
     // 获取角色拥有的权限ID列表
     const permissionIds = (role.permissions || [])
       .map((permission) => {
-        if (
-          typeof permission === 'object' &&
-          permission !== null &&
-          'id' in permission
-        ) {
-          return (permission as any).id;
+        if (this.isPermissionObject(permission)) {
+          return permission.id;
         }
         return '';
       })
@@ -316,7 +312,7 @@ export class MenuService {
       permission !== null &&
       typeof permission === 'object' &&
       'id' in permission &&
-      typeof (permission as any).id === 'string'
+      typeof (permission as { id: unknown }).id === 'string'
     );
   }
 }
