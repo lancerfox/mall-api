@@ -1,7 +1,7 @@
 import { Injectable, HttpException } from '@nestjs/common';
 import { ERROR_CODES } from '../../../common/constants/error-codes';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindManyOptions, Like } from 'typeorm';
+import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
@@ -9,7 +9,6 @@ import { QueryUserDto } from '../dto/query-user.dto';
 import { UserResponseDto } from '../dto/user-response.dto';
 import { UserListResponseDto } from '../dto/user-list-response.dto';
 import { RoleService } from '../../role/services/role.service';
-import { Role } from '../../role/entities/role.entity';
 import { RoleType } from '../../../common/enums/role-type.enum';
 
 @Injectable()

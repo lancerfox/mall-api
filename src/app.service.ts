@@ -2,7 +2,6 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { UserService } from './modules/user/services/user.service';
 import { CreateUserDto } from './modules/user/dto/create-user.dto';
 import { RoleService } from './modules/role/services/role.service';
-import { Role } from './modules/role/entities/role.entity';
 import { RoleType } from './common/enums/role-type.enum';
 
 @Injectable()

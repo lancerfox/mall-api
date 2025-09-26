@@ -34,7 +34,7 @@ export class RoleService {
     }
 
     // 验证角色类型是否合法
-    const validRoleTypes = Object.values(RoleType);
+    const validRoleTypes = Object.values(RoleType) as RoleType[];
     if (!validRoleTypes.includes(createRoleDto.type)) {
       throw new HttpException('无效的角色类型', ERROR_CODES.VALIDATION_FAILED);
     }
@@ -275,7 +275,7 @@ export class RoleService {
     let permissions = role.permissions || [];
 
     if (type) {
-      permissions = permissions.filter((p) => p.type === type);
+      permissions = permissions.filter((p) => p.type === (type as any));
     }
 
     return permissions.map((p) => ({
