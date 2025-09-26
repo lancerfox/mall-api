@@ -1,22 +1,22 @@
 #!/usr/bin/env node
 
 /**
- * 开发环境RBAC系统初始化脚本
+ * 开发环境RBAC系统初始化脚本 (PostgreSQL版本)
  *
  * 使用方法：
- * node scripts/init-dev-rbac.js
+ * node scripts/init-dev-rbac-postgres.js
  *
  * 或者：
- * npm run init:dev-rbac
+ * npm run init:dev-rbac-postgres
  */
 
 // 加载.env文件
 require('dotenv').config();
 
 // 引入RBAC初始化函数
-const { initRBACSystem } = require('./init-rbac-system');
+const { initRBACSystem } = require('./init-rbac-system-postgres');
 
-console.log('🚀 开始初始化开发环境RBAC系统...');
+console.log('🚀 开始初始化开发环境RBAC系统 (PostgreSQL)...');
 console.log('🔧 环境变量: NODE_ENV =', process.env.NODE_ENV);
 console.log('📡 数据库连接:', process.env.DATABASE_URL);
 

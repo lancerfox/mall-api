@@ -1,34 +1,57 @@
-const { MongoClient } = require('mongodb');
+const { DataSource } = require('typeorm');
 const path = require('path');
+
+// 注册TypeScript支持
+require('ts-node').register({
+  transpileOnly: true,
+  compilerOptions: {
+    module: 'NodeNext',
+    moduleResolution: 'NodeNext',
+    target: 'ES2020',
+    esModuleInterop: true,
+    allowSyntheticDefaultImports: true,
+    skipLibCheck: true
+  }
+});
 
 // 检测运行环境并加载对应的环境变量
 function loadEnvironmentConfig() {
   // 检查是否是测试环境
-  const isTest =
-    process.env.NODE_ENV === 'test' ||
-    process.argv.includes('--test') ||
-    process.env.npm_lifecycle_event === 'test' ||
-    process.env.npm_lifecycle_event === 'test:cov';
+  // const isTest =
+  //   process.env.NODE_ENV === 'test' ||
+  //   process.argv.includes('--test') ||
+  //   process.env.npm_lifecycle_event === 'test' ||
+  //   process.env.npm_lifecycle_event === 'test:cov';
 
-  if (isTest) {
-    // 测试环境：优先加载测试环境变量，覆盖默认配置
-    const testEnvPath = path.join(__dirname, '..', '.env.test');
-    require('dotenv').config({ path: testEnvPath, override: true });
-    console.log('🧪 检测到测试环境，使用测试数据库配置');
-    return {
-      DATABASE_URL:
-        process.env.DATABASE_URL || 'mongodb://localhost:27017/mall-api-test',
-      environment: 'test',
-    };
-  } else {
-    // 生产环境：加载默认环境变量
+  // if (isTest) {
+  //   // 测试环境：优先加载测试环境变量，覆盖默认配置
+  //   const testEnvPath = path.join(__dirname, '..', '.env.test');
+  //   require('dotenv').config({ path: testEnvPath, override: true });
+  //   console.log('🧪 检测到测试环境，使用测试数据库配置');
+  //   return {
+  //     DATABASE_URL: process.env.DATABASE_URL || process.env.SUPABASE_DB_URL,
+  //     environment: 'test',
+  //   };
+  // } else {
+    // 开发/生产环境：加载默认环境变量
     require('dotenv').config();
-    console.log('🚀 检测到生产环境，使用生产数据库配置');
+    console.log('🚀 检测到开发/生产环境，使用默认数据库配置');
+    
+    // 构建数据库连接URL
+    let databaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_DB_URL;
+    
+    if (!databaseUrl && process.env.DB_HOST) {
+      // 使用传统连接参数构建URL
+      const password = process.env.DB_PASSWORD ? process.env.DB_PASSWORD.replace(/"/g, '') : '';
+      databaseUrl = `postgresql://${process.env.DB_USERNAME}:${password}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_DATABASE}`;
+      console.log('🔧 使用传统连接参数构建数据库URL');
+    }
+    
     return {
-      DATABASE_URL: process.env.DATABASE_URL,
-      environment: 'production',
+      DATABASE_URL: databaseUrl,
+      environment: process.env.NODE_ENV || 'development',
     };
-  }
+  // }
 }
 
 const config = loadEnvironmentConfig();
@@ -195,12 +218,6 @@ const DEFAULT_PERMISSIONS = [
     type: 'page',
     module: 'menu',
   },
-  // 操作权限
-  // { name: 'operation:user:export', description: '用户导出', type: 'operation', module: 'user' },
-  // { name: 'operation:user:import', description: '用户导入', type: 'operation', module: 'user' },
-  // { name: 'operation:user:batch-delete', description: '用户批量删除', type: 'operation', module: 'user' },
-  // { name: 'operation:permission:assign', description: '权限分配', type: 'operation', module: 'permission' },
-  // { name: 'operation:permission:batch-update', description: '权限批量更新', type: 'operation', module: 'permission' }
 ];
 
 // 默认角色配置 - 修复超级管理员权限问题
@@ -230,84 +247,110 @@ const DEFAULT_ROLES = [
 ];
 
 async function initRBACSystem() {
-  let client;
+  let dataSource;
 
   try {
     console.log(`🚀 开始初始化 RBAC 权限系统... (环境: ${ENVIRONMENT})`);
 
     if (!DATABASE_URL) {
-      throw new Error('数据库连接URL未配置，请检查环境变量');
+      console.error('❌ 数据库连接URL未配置，请检查环境变量');
+      console.error('   当前环境变量:', {
+        DATABASE_URL: process.env.DATABASE_URL,
+        SUPABASE_DB_URL: process.env.SUPABASE_DB_URL,
+        DB_HOST: process.env.DB_HOST,
+        DB_PORT: process.env.DB_PORT,
+        DB_USERNAME: process.env.DB_USERNAME,
+        DB_DATABASE: process.env.DB_DATABASE,
+        NODE_ENV: process.env.NODE_ENV
+      });
+      throw new Error('数据库连接URL未配置，请检查环境变量 DATABASE_URL、SUPABASE_DB_URL 或传统DB_*参数');
     }
 
     console.log(`📡 连接数据库: ${DATABASE_URL}`);
 
-    // 连接数据库
-    client = new MongoClient(DATABASE_URL);
-    await client.connect();
+    // 创建数据源连接
+    dataSource = new DataSource({
+      type: 'postgres',
+      url: DATABASE_URL,
+      entities: [
+        path.join(__dirname, '../src/**/*.entity{.ts,.js}'),
+      ],
+      synchronize: false, // 禁用自动同步，使用手动初始化
+      logging: true,
+      extra: {
+        // 设置连接池选项
+        max: 10,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 20000,
+      }
+    });
+
+    await dataSource.initialize();
     console.log('✅ 数据库连接成功');
 
-    const db = client.db();
+    // 获取Repository
+    const permissionRepository = dataSource.getRepository('Permission');
+    const roleRepository = dataSource.getRepository('Role');
+    const userRepository = dataSource.getRepository('User');
 
     // 1. 初始化权限
     console.log('📝 初始化权限数据...');
-    const permissionsCollection = db.collection('permissions');
 
     // 根据环境决定是否清空现有权限
     if (ENVIRONMENT === 'test') {
       // 测试环境：清空现有权限以确保数据一致性
-      await permissionsCollection.deleteMany({});
+      await permissionRepository.clear();
       console.log('🧹 测试环境：已清空现有权限数据');
     } else {
       // 生产环境：保留现有权限，只添加新的
       console.log('🔒 生产环境：保留现有权限数据');
     }
 
-    const permissionDocs = [];
+    let createdPermissions = 0;
     for (const permission of DEFAULT_PERMISSIONS) {
-      const existingPermission = await permissionsCollection.findOne({
-        name: permission.name,
+      const existingPermission = await permissionRepository.findOne({
+        where: { name: permission.name },
       });
+      
       if (!existingPermission) {
-        permissionDocs.push({
+        await permissionRepository.save({
           ...permission,
           status: 'active',
           createdAt: new Date(),
           updatedAt: new Date(),
         });
+        createdPermissions++;
       }
     }
 
-    if (permissionDocs.length > 0) {
-      await permissionsCollection.insertMany(permissionDocs);
-      console.log(`✅ 成功创建 ${permissionDocs.length} 个权限`);
+    if (createdPermissions > 0) {
+      console.log(`✅ 成功创建 ${createdPermissions} 个权限`);
     } else {
       console.log('ℹ️  权限数据已存在，跳过创建');
     }
 
     // 2. 初始化角色
     console.log('👥 初始化角色数据...');
-    const rolesCollection = db.collection('roles');
+
+    // 获取所有权限用于角色关联
+    const allPermissions = await permissionRepository.find();
 
     for (const roleConfig of DEFAULT_ROLES) {
-      const existingRole = await rolesCollection.findOne({
-        name: roleConfig.name,
+      const existingRole = await roleRepository.findOne({
+        where: { name: roleConfig.name },
       });
 
       // 获取权限ID
-      const permissions = await permissionsCollection
-        .find({
-          name: { $in: roleConfig.permissions },
-        })
-        .toArray();
-
-      const permissionIds = permissions.map((p) => p._id);
+      const permissions = allPermissions.filter(p => 
+        roleConfig.permissions.includes(p.name)
+      );
 
       if (!existingRole) {
-        await rolesCollection.insertOne({
+        await roleRepository.save({
           name: roleConfig.name,
           type: roleConfig.type,
           description: roleConfig.description,
-          permissions: permissionIds,
+          permissions: permissions,
           status: 'active',
           isSystem: roleConfig.isSystem,
           createdAt: new Date(),
@@ -315,70 +358,54 @@ async function initRBACSystem() {
         });
 
         console.log(
-          `✅ 成功创建角色: ${roleConfig.name} (${permissionIds.length} 个权限)`,
+          `✅ 成功创建角色: ${roleConfig.name} (${permissions.length} 个权限)`,
         );
       } else {
-        // 修复现有角色的权限和类型
-        await rolesCollection.updateOne(
-          { name: roleConfig.name },
-          {
-            $set: {
-              type: roleConfig.type,
-              permissions: permissionIds,
-              updatedAt: new Date(),
-            },
-          },
-        );
+        // 更新现有角色的权限和类型
+        existingRole.type = roleConfig.type;
+        existingRole.permissions = permissions;
+        existingRole.updatedAt = new Date();
+        
+        await roleRepository.save(existingRole);
 
         console.log(
-          `✅ 已修复角色权限和类型: ${roleConfig.name} (${permissionIds.length} 个权限)`,
+          `✅ 已修复角色权限和类型: ${roleConfig.name} (${permissions.length} 个权限)`,
         );
       }
     }
 
     // 3. 修复现有超级管理员用户角色
     console.log('👤 查找并修复超级管理员用户角色...');
-    const usersCollection = db.collection('users');
-    const superAdminRole = await rolesCollection.findOne({
-      type: 'super_admin',
+    const superAdminRole = await roleRepository.findOne({
+      where: { type: 'super_admin' },
+      relations: ['users'],
     });
 
     if (superAdminRole) {
       // 查找所有用户
-      const allUsers = await usersCollection.find({}).toArray();
+      const allUsers = await userRepository.find({
+        relations: ['roles'],
+      });
 
       // 查找超级管理员用户
-      const superAdminUsers = allUsers.filter(
-        (user) =>
-          user.roles &&
-          user.roles.length > 0 &&
-          user.roles.some((roleId) => roleId.equals(superAdminRole._id)),
+      const superAdminUsers = allUsers.filter(user => 
+        user.roles && user.roles.some(role => role.id === superAdminRole.id)
       );
 
       if (superAdminUsers.length > 0) {
         console.log('🔍 找到超级管理员用户:');
-        superAdminUsers.forEach((user) => {
+        superAdminUsers.forEach(user => {
           console.log(`   - ${user.username} (${user.email || '无邮箱'})`);
         });
 
         // 修复超级管理员用户的权限
-        const result = await usersCollection.updateMany(
-          {
-            _id: { $in: superAdminUsers.map((user) => user._id) },
-          },
-          {
-            $set: {
-              roles: [superAdminRole._id],
-              updatedAt: new Date(),
-            },
-          },
-        );
-
-        if (result.modifiedCount > 0) {
-          console.log(`✅ 已修复 ${result.modifiedCount} 个超级管理员用户角色`);
-        } else {
-          console.log('ℹ️  超级管理员用户角色已正确配置，无需修改');
+        for (const user of superAdminUsers) {
+          user.roles = [superAdminRole];
+          user.updatedAt = new Date();
+          await userRepository.save(user);
         }
+
+        console.log(`✅ 已修复 ${superAdminUsers.length} 个超级管理员用户角色`);
       } else {
         console.log('ℹ️  未找到超级管理员用户，跳过用户角色修复');
       }
@@ -391,8 +418,8 @@ async function initRBACSystem() {
     console.error('❌ 初始化失败:', error);
     process.exit(1);
   } finally {
-    if (client) {
-      await client.close();
+    if (dataSource && dataSource.isInitialized) {
+      await dataSource.destroy();
       console.log('🔌 数据库连接已关闭');
     }
   }
