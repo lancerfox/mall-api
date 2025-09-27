@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
 import { AppModule } from './app.module';
 import { AppService } from './app.service';
 import { UserService } from './modules/user/services/user.service';
@@ -84,11 +83,7 @@ describe('应用启动和数据库连接测试', () => {
 
       try {
         const moduleFixture: TestingModule = await Test.createTestingModule({
-          imports: [
-            MongooseModule.forRoot('mongodb://localhost:27017/mall-api-test', {
-              dbName: 'mall-api-test',
-            }),
-          ],
+          imports: [],
           providers: [
             AppService,
             {
@@ -140,15 +135,7 @@ describe('应用启动和数据库连接测试', () => {
     it('数据库连接成功时应该能够执行基本操作', async () => {
       // 安排
       const moduleFixture: TestingModule = await Test.createTestingModule({
-        imports: [
-          MongooseModule.forRoot(
-            process.env.DATABASE_URL ||
-              'mongodb://localhost:27017/mall-api-test',
-            {
-              dbName: process.env.DATABASE_NAME || 'mall-api-test',
-            },
-          ),
-        ],
+        imports: [],
       }).compile();
 
       app = moduleFixture.createNestApplication();

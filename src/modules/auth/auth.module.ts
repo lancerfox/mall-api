@@ -1,14 +1,12 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
-import { MongooseModule } from '@nestjs/mongoose';
 import { AuthService } from './services/auth.service';
 import { SecurityService } from './services/security.service';
 import { AuthController } from './controllers/auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { UserModule } from '../user/user.module';
 import { RolesGuard } from '../../common/guards/roles.guard';
-import { User } from '../user/entities/user.entity';
 
 @Module({
   imports: [

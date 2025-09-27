@@ -1,5 +1,3 @@
-import { Document } from 'mongoose';
-
 /**
  * 用户实体接口（不包含密码）
  * 用于认证服务中返回的用户信息
@@ -39,26 +37,10 @@ export interface ILoginResponse {
 }
 
 /**
- * 用户文档接口
- * 扩展Mongoose Document，包含用户实体的所有字段
- */
-export interface IUserDocument extends Document {
-  id: string;
-  username: string;
-  password: string;
-  email?: string;
-  role: string;
-  createdAt: Date;
-  updatedAt: Date;
-  toObject(): IUserWithoutPassword;
-}
-
-/**
  * 认证服务相关类型导出
  */
 export type AuthServiceTypes = {
   UserWithoutPassword: IUserWithoutPassword;
   JwtPayload: IJwtPayload;
   LoginResponse: ILoginResponse;
-  UserDocument: IUserDocument;
 };
