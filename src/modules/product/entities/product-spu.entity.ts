@@ -11,6 +11,7 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 import { ProductSKU } from './product-sku.entity';
 import { ProductCategory } from './product-category.entity';
+import { ProductImage } from './product-image.entity';
 
 @Entity()
 export class ProductSPU {
@@ -75,6 +76,9 @@ export class ProductSPU {
 
   @OneToMany(() => ProductSKU, (sku) => sku.spu)
   skus: ProductSKU[];
+
+  @OneToMany(() => ProductImage, (productImage) => productImage.product)
+  productImages: ProductImage[];
 
   @CreateDateColumn()
   createdAt: Date;

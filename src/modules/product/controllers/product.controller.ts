@@ -1,6 +1,8 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ProductService } from '../services/product.service';
+import { ProductImageService } from '../services/product-image.service';
+import { UpdateProductImagesDto } from '../dto/update-product-images.dto';
 import { SaveProductDto } from '../dto/save-product.dto';
 import { ProductListDto } from '../dto/product-list.dto';
 import { UpdateStatusDto } from '../dto/update-status.dto';
@@ -12,7 +14,10 @@ import { ProductEditResponseDto } from '../dto/product-edit-response.dto';
 @ApiTags('商品管理')
 @Controller('product')
 export class ProductController {
-  constructor(private readonly productService: ProductService) {}
+  constructor(
+    private readonly productService: ProductService,
+    private readonly productImageService: ProductImageService,
+  ) {}
 
   @Post('save')
   @ApiOperation({ summary: '保存商品（保存草稿或发布）' })
@@ -105,5 +110,17 @@ export class ProductController {
   async delete(@Body() body: { ids: string[] }): Promise<{ message: string }> {
     await this.productService.deleteProducts(body.ids);
     return { message: '删除成功' };
+  }
+
+  @Post('updateImages')
+  @ApiOperation({ summary: '更新商品图片关联' })
+  @ApiResponse({
+    status: 200,
+    description: '商品图片更新成功',
+  })
+  async updateProductImages(
+    @Body() updateProductImagesDto: UpdateProductImagesDto,
+  ) {
+    return this.productImageService.updateProductImages(updateProductImagesDto);
   }
 }
