@@ -1,18 +1,16 @@
 import { Controller, Post, Body } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { ImageService } from '../services/image.service';
 import { CreateImageDto } from '../dto/create-image.dto';
 import { ImageListDto } from '../dto/image-list.dto';
 import { UploadTokenDto } from '../dto/upload-token.dto';
+import { DeleteImageDto } from '../dto/delete-image.dto';
 import {
-  ImageResponseDto,
   UploadTokenResponseDto,
   CreateImageResponseDto,
 } from '../dto/image-response.dto';
-import {
-  IApiResponse,
-  IPaginatedResponse,
-} from '../../../common/types/api-response.interface';
+import { ImageListResponseDto } from '../dto/image-list-response.dto';
+import { IApiResponse } from '../../../common/types/api-response.interface';
 
 @ApiTags('图片管理')
 @Controller('image')
@@ -50,24 +48,57 @@ export class ImageController {
   @ApiResponse({
     status: 200,
     description: '查询成功',
-    type: [ImageResponseDto],
+    type: ImageListResponseDto,
   })
   async getImageList(
     @Body() imageListDto: ImageListDto,
-  ): Promise<IApiResponse<IPaginatedResponse<ImageResponseDto>>> {
+  ): Promise<ImageListResponseDto> {
     return this.imageService.getImageList(imageListDto);
   }
 
   @Post('delete')
   @ApiOperation({ summary: '删除图片' })
+  @ApiBody({ type: DeleteImageDto })
   @ApiResponse({
     status: 200,
     description: '删除成功',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: '操作成功' },
+        data: { type: 'null', example: null },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: '请求参数错误',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 9007 },
+        message: { type: 'string', example: '数据验证失败' },
+        data: { type: 'null', example: null },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: '图片不存在',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 7000 },
+        message: { type: 'string', example: '图片不存在' },
+        data: { type: 'null', example: null },
+      },
+    },
   })
   async deleteImage(
-    @Body() body: { imageId: number },
+    @Body() deleteImageDto: DeleteImageDto,
   ): Promise<IApiResponse<null>> {
-    return this.imageService.deleteImage(body.imageId);
+    return this.imageService.deleteImage(deleteImageDto.imageId);
   }
 
   @Post('health')

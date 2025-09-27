@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, HttpException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Image } from '../entities/image.entity';
@@ -10,10 +10,8 @@ import {
   ERROR_CODES,
   ERROR_MESSAGES,
 } from '../../../common/constants/error-codes';
-import {
-  IApiResponse,
-  IPaginatedResponse,
-} from '../../../common/types/api-response.interface';
+import { IApiResponse } from '../../../common/types/api-response.interface';
+import { ImageListResponseDto } from '../dto/image-list-response.dto';
 import {
   ImageResponseDto,
   UploadTokenResponseDto,
@@ -56,17 +54,19 @@ export class ImageService {
 
       // 设置默认业务模块
       const moduleName = businessModule || 'default';
-      
+
       // 生成日期格式的文件夹
       const now = new Date();
-      const dateFolder = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-      
+      const dateFolder = `${now.getFullYear()}-${String(
+        now.getMonth() + 1,
+      ).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
       // 生成唯一文件名
       const timestamp = Date.now();
       const randomStr = Math.random().toString(36).substring(2, 15);
       const fileExtension = fileType.split('/')[1] || 'jpg';
       const uniqueFileName = `${timestamp}_${randomStr}.${fileExtension}`;
-      
+
       // 构建文件路径：业务模块/日期/文件名
       const filePath = `${moduleName}/${dateFolder}/${uniqueFileName}`;
 
@@ -158,7 +158,7 @@ export class ImageService {
    */
   async getImageList(
     imageListDto: ImageListDto,
-  ): Promise<IApiResponse<IPaginatedResponse<ImageResponseDto>>> {
+  ): Promise<ImageListResponseDto> {
     try {
       const { page, pageSize } = imageListDto;
       const skip = (page - 1) * pageSize;
@@ -169,7 +169,7 @@ export class ImageService {
         take: pageSize,
       });
 
-      const items = images.map((image) => ({
+      const data = images.map((image) => ({
         id: image.id,
         url: image.url,
         name: image.name,
@@ -180,23 +180,18 @@ export class ImageService {
       const totalPages = Math.ceil(total / pageSize);
 
       return {
-        code: ERROR_CODES.SUCCESS,
-        message: ERROR_MESSAGES[ERROR_CODES.SUCCESS],
-        data: {
-          items,
-          total,
-          page,
-          limit: pageSize,
-          totalPages,
-        },
+        data,
+        total,
+        page,
+        pageSize,
+        totalPages,
       };
     } catch (error) {
       this.logger.error('获取图片列表失败', error);
-      return {
-        code: ERROR_CODES.VALIDATION_FAILED,
-        message: ERROR_MESSAGES[ERROR_CODES.VALIDATION_FAILED],
-        data: null,
-      };
+      throw new HttpException(
+        ERROR_MESSAGES[ERROR_CODES.VALIDATION_FAILED],
+        ERROR_CODES.VALIDATION_FAILED,
+      );
     }
   }
 
