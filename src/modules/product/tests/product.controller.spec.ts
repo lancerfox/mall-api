@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProductController } from '../controllers/product.controller';
 import { ProductService } from '../services/product.service';
+import { ProductImageService } from '../services/product-image.service';
 import { SaveProductDto } from '../dto/save-product.dto';
 import { ProductListDto } from '../dto/product-list.dto';
 import { UpdateStatusDto } from '../dto/update-status.dto';
@@ -14,6 +15,7 @@ import { ProductEditResponseDto } from '../dto/product-edit-response.dto';
 describe('ProductController', () => {
   let productController: ProductController;
   let productService: jest.Mocked<ProductService>;
+  let productImageService: jest.Mocked<ProductImageService>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -29,11 +31,18 @@ describe('ProductController', () => {
             deleteProducts: jest.fn(),
           },
         },
+        {
+          provide: ProductImageService,
+          useValue: {
+            updateProductImages: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     productController = module.get<ProductController>(ProductController);
     productService = module.get(ProductService);
+    productImageService = module.get(ProductImageService);
   });
 
   describe('save', () => {
