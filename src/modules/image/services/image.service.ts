@@ -13,7 +13,6 @@ import {
 import { IApiResponse } from '../../../common/types/api-response.interface';
 import { ImageListResponseDto } from '../dto/image-list-response.dto';
 import {
-  ImageResponseDto,
   UploadTokenResponseDto,
   CreateImageResponseDto,
 } from '../dto/image-response.dto';
@@ -88,11 +87,15 @@ export class ImageService {
 
       this.logger.log(`预签名URL生成成功: ${filePath}`);
 
+      // 从signedUrl中提取token部分
+      const url = new URL(result.signedUrl);
+      const token = url.searchParams.get('token') || result.signedUrl;
+
       return {
         code: ERROR_CODES.SUCCESS,
         message: ERROR_MESSAGES[ERROR_CODES.SUCCESS],
         data: {
-          signedUrl: result.signedUrl,
+          token,
           path: result.path,
         },
       };

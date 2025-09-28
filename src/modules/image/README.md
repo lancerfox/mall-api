@@ -119,7 +119,7 @@ interface UploadResponse {
   code: number;
   message: string;
   data: {
-    signedUrl: string;
+    token: string;
     path: string;
   } | null;
 }
@@ -151,8 +151,8 @@ class ImageUploadService {
   }
 
   // 2. 直传到Supabase
-  async uploadToSupabase(file: File, signedUrl: string): Promise<boolean> {
-    const response = await fetch(signedUrl, {
+  async uploadToSupabase(file: File, token: string): Promise<boolean> {
+    const response = await fetch(token, {
       method: 'PUT',
       body: file,
       headers: {
@@ -192,7 +192,7 @@ class ImageUploadService {
       }
 
       // 直传到Supabase
-      const uploadSuccess = await this.uploadToSupabase(file, tokenResult.data.signedUrl);
+      const uploadSuccess = await this.uploadToSupabase(file, tokenResult.data.token);
       if (!uploadSuccess) {
         throw new Error('文件上传失败');
       }

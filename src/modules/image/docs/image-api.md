@@ -32,7 +32,7 @@
   "code": 200,
   "message": "获取上传凭证成功",
   "data": {
-    "signedUrl": "https://example.supabase.co/storage/v1/object/upload/bucket/product/2025-09-27/1698393600_abc123.png?token=...",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...xyz",
     "path": "product/2025-09-27/1698393600_abc123.png"
   }
 }
@@ -232,13 +232,13 @@
        fileType: 'image/png'
      })
    });
-   const { signedUrl, path } = tokenResponse.data;
+   const { token, path } = tokenResponse.data;
    ```
 
 2. **直传到Supabase**
    ```javascript
-   // 2. 使用预签名URL直传文件
-   const uploadResponse = await fetch(signedUrl, {
+   // 2. 使用token直传文件
+   const uploadResponse = await fetch(token, {
      method: 'PUT',
      body: fileBlob
    });

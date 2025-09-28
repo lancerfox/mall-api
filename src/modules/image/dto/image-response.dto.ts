@@ -36,11 +36,10 @@ export class ImageResponseDto {
 
 export class UploadTokenResponseDto {
   @ApiProperty({
-    description: '预签名上传URL',
-    example:
-      'https://example.supabase.co/storage/v1/object/upload/bucket/images/product-image-01.png?token=...',
+    description: '上传凭证token',
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...xyz',
   })
-  signedUrl: string;
+  token: string;
 
   @ApiProperty({
     description: '图片在Supabase中的路径',
