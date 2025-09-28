@@ -116,25 +116,18 @@ export class ImageService {
     createImageDto: CreateImageDto,
   ): Promise<IApiResponse<CreateImageResponseDto>> {
     try {
-      // 如果没有提供URL，则根据path生成公网URL
-      let finalUrl = createImageDto.url;
-      if (!finalUrl && createImageDto.path) {
-        finalUrl = this.supabaseService.getPublicUrl(createImageDto.path);
-        this.logger.log(
-          `根据路径生成公网URL: ${createImageDto.path} -> ${finalUrl}`,
-        );
-      }
-
       const imageData = {
-        ...createImageDto,
-        url: finalUrl,
+        path: createImageDto.path,
+        name: createImageDto.name,
+        size: createImageDto.size,
+        mimeType: createImageDto.mimeType,
       };
 
       const image = this.imageRepository.create(imageData);
       const savedImage = await this.imageRepository.save(image);
 
       this.logger.log(
-        `图片记录创建成功: ID=${savedImage.id}, URL=${savedImage.url}`,
+        `图片记录创建成功: ID=${savedImage.id}, Path=${savedImage.path}`,
       );
 
       return {
@@ -142,7 +135,6 @@ export class ImageService {
         message: ERROR_MESSAGES[ERROR_CODES.SUCCESS],
         data: {
           id: savedImage.id,
-          url: savedImage.url,
           createdAt: savedImage.createdAt,
         },
       };
@@ -174,7 +166,6 @@ export class ImageService {
 
       const data = images.map((image) => ({
         id: image.id,
-        url: image.url,
         name: image.name,
         size: image.size,
         createdAt: image.createdAt,

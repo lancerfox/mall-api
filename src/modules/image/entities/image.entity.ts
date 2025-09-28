@@ -16,9 +16,6 @@ export class Image {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'varchar', length: 500, comment: '图片公网URL (Supabase)' })
-  url: string;
-
   @Column({ type: 'varchar', length: 255, comment: '图片在Supabase中的路径' })
   path: string;
 

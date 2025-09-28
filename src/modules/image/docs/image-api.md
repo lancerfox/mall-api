@@ -13,7 +13,7 @@
 **功能描述**: 前端在上传图片前，调用此接口获取一个有时效性的、预签名的 Supabase 上传 URL。
 
 **请求参数**:
-```json
+``json
 {
   "businessModule": "product",
   "fileType": "image/png"
@@ -27,7 +27,7 @@
 | fileType | string | 是 | 图片MIME类型，支持 image/jpeg, image/png, image/gif |
 
 **响应示例**:
-```json
+``json
 {
   "code": 200,
   "message": "获取上传凭证成功",
@@ -51,9 +51,8 @@
 **功能描述**: 前端成功将图片直传到 Supabase 后，调用此接口将图片信息保存到数据库。
 
 **请求参数**:
-```json
+``json
 {
-  "url": "https://example.supabase.co/storage/v1/object/public/bucket/images/product-image-01.png",
   "path": "images/product-image-01.png",
   "name": "product-image-01.png",
   "size": 102400,
@@ -64,20 +63,19 @@
 **参数说明**:
 | 参数名 | 类型 | 必填 | 说明 |
 |--------|------|------|------|
-| url | string | 是 | 图片公网URL |
+| url | string | 否 | 图片公网URL |
 | path | string | 是 | 图片在Supabase中的路径 |
 | name | string | 是 | 图片文件名 |
 | size | number | 否 | 图片大小（字节） |
 | mimeType | string | 否 | 图片MIME类型 |
 
 **响应示例**:
-```json
+``json
 {
   "code": 200,
   "message": "操作成功",
   "data": {
     "id": 1,
-    "url": "https://example.supabase.co/storage/v1/object/public/bucket/images/product-image-01.png",
     "createdAt": "2023-10-27T10:00:00Z"
   }
 }
@@ -109,7 +107,7 @@
 | pageSize | number | 是 | 每页数量，建议范围10-50 |
 
 **响应示例**:
-```json
+``json
 {
   "code": 200,
   "message": "查询成功",
@@ -117,14 +115,12 @@
     "items": [
       {
         "id": 2,
-        "url": "https://example.supabase.co/storage/v1/object/public/bucket/images/image-02.png",
         "name": "image-02.png",
         "size": 204800,
         "createdAt": "2023-10-27T11:00:00Z"
       },
       {
         "id": 1,
-        "url": "https://example.supabase.co/storage/v1/object/public/bucket/images/image-01.png",
         "name": "image-01.png",
         "size": 102400,
         "createdAt": "2023-10-27T10:00:00Z"
@@ -159,7 +155,7 @@
 | imageId | number | 是 | 图片ID |
 
 **响应示例**:
-```json
+``json
 {
   "code": 200,
   "message": "操作成功",
@@ -199,7 +195,7 @@
 | images[].isMain | boolean | 是 | 是否为主图，整个数组中最多只能有一个为true |
 
 **响应示例**:
-```json
+``json
 {
   "code": 200,
   "message": "操作成功",
@@ -247,11 +243,9 @@
 3. **保存图片记录**
    ```javascript
    // 3. 上传成功后，保存图片信息到数据库
-   const publicUrl = `https://example.supabase.co/storage/v1/object/public/bucket/${path}`;
    const createResponse = await fetch('/image/create', {
      method: 'POST',
      body: JSON.stringify({
-       url: publicUrl,
        path: path,
        name: 'product-image.png',
        size: fileBlob.size,

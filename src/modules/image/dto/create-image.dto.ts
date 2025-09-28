@@ -13,10 +13,11 @@ export class CreateImageDto {
     description: '图片公网URL (Supabase)',
     example:
       'https://example.supabase.co/storage/v1/object/public/bucket/images/product-image-01.png',
+    required: false,
   })
-  @IsNotEmpty()
+  @IsOptional()
   @IsUrl()
-  url: string;
+  url?: string;
 
   @ApiProperty({
     description: '图片在Supabase中的路径',
