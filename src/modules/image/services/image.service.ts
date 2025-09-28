@@ -166,6 +166,7 @@ export class ImageService {
 
       const data = images.map((image) => ({
         id: image.id,
+        url: this.supabaseService.getPublicUrl(image.path),
         name: image.name,
         size: image.size,
         createdAt: image.createdAt,

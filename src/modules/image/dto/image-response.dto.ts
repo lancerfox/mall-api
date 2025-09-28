@@ -8,6 +8,13 @@ export class ImageResponseDto {
   id: number;
 
   @ApiProperty({
+    description: '图片公网URL',
+    example:
+      'https://example.supabase.co/storage/v1/object/public/bucket/images/product-image-01.png',
+  })
+  url: string;
+
+  @ApiProperty({
     description: '图片文件名',
     example: 'product-image-01.png',
   })
