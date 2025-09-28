@@ -5,6 +5,7 @@ import { CreateImageDto } from '../dto/create-image.dto';
 import { ImageListDto } from '../dto/image-list.dto';
 import { UploadTokenDto } from '../dto/upload-token.dto';
 import { DeleteImageDto } from '../dto/delete-image.dto';
+import { BatchDeleteImageDto } from '../dto/batch-delete-image.dto';
 import {
   UploadTokenResponseDto,
   CreateImageResponseDto,
@@ -57,8 +58,31 @@ export class ImageController {
   }
 
   @Post('delete')
-  @ApiOperation({ summary: '删除图片' })
-  @ApiBody({ type: DeleteImageDto })
+  @ApiOperation({
+    summary: '删除图片',
+    description:
+      '根据图片ID删除图片记录和Supabase中的文件。支持单个删除和批量删除两种模式。',
+  })
+  @ApiBody({
+    type: DeleteImageDto,
+    description: '单个图片删除请求体',
+    examples: {
+      single: {
+        summary: '单个删除示例',
+        value: { imageId: 1 },
+      },
+    },
+  })
+  @ApiBody({
+    type: BatchDeleteImageDto,
+    description: '批量图片删除请求体',
+    examples: {
+      batch: {
+        summary: '批量删除示例',
+        value: { imageIds: [1, 2, 3] },
+      },
+    },
+  })
   @ApiResponse({
     status: 200,
     description: '删除成功',
@@ -96,9 +120,22 @@ export class ImageController {
     },
   })
   async deleteImage(
-    @Body() deleteImageDto: DeleteImageDto,
+    @Body() deleteImageDto: DeleteImageDto | BatchDeleteImageDto,
   ): Promise<IApiResponse<null>> {
-    return this.imageService.deleteImage(deleteImageDto.imageId);
+    // 检查是否是批量删除请求（通过imageIds字段判断）
+    if (
+      (deleteImageDto as BatchDeleteImageDto).imageIds &&
+      Array.isArray((deleteImageDto as BatchDeleteImageDto).imageIds)
+    ) {
+      return this.imageService.batchDeleteImages(
+        (deleteImageDto as BatchDeleteImageDto).imageIds,
+      );
+    }
+
+    // 单张图片删除
+    return this.imageService.deleteImage(
+      (deleteImageDto as DeleteImageDto).imageId,
+    );
   }
 
   @Post('health')

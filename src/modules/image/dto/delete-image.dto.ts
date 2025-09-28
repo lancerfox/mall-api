@@ -1,13 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber } from 'class-validator';
+import { IsNumber } from 'class-validator';
 
 export class DeleteImageDto {
   @ApiProperty({
-    description: '图片ID',
+    description: '图片ID（用于单张图片删除）',
     example: 1,
-    required: true,
+    required: false,
   })
-  @IsNotEmpty({ message: '图片ID不能为空' })
   @IsNumber({}, { message: '图片ID必须是数字' })
   imageId: number;
 }

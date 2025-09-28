@@ -1,6 +1,6 @@
 import { Injectable, Logger, HttpException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { Image } from '../entities/image.entity';
 import { CreateImageDto } from '../dto/create-image.dto';
 import { ImageListDto } from '../dto/image-list.dto';
@@ -191,7 +191,7 @@ export class ImageService {
   }
 
   /**
-   * 删除图片
+   * 删除单张图片
    */
   async deleteImage(imageId: number): Promise<IApiResponse<null>> {
     try {
@@ -227,6 +227,58 @@ export class ImageService {
       };
     } catch (error) {
       this.logger.error('删除图片失败', error);
+      return {
+        code: ERROR_CODES.VALIDATION_FAILED,
+        message: ERROR_MESSAGES[ERROR_CODES.VALIDATION_FAILED],
+        data: null,
+      };
+    }
+  }
+
+  /**
+   * 批量删除图片
+   */
+  async batchDeleteImages(imageIds: number[]): Promise<IApiResponse<null>> {
+    try {
+      // 查找所有要删除的图片记录
+      const images = await this.imageRepository.find({
+        where: { id: In(imageIds) },
+      });
+
+      // 检查是否存在未找到的图片
+      const foundIds = images.map((img) => img.id);
+      const notFoundIds = imageIds.filter((id) => !foundIds.includes(id));
+
+      if (notFoundIds.length > 0) {
+        return {
+          code: ERROR_CODES.IMAGE_NOT_FOUND,
+          message: `以下图片不存在: ${notFoundIds.join(', ')}`,
+          data: null,
+        };
+      }
+
+      // 从Supabase删除文件
+      for (const image of images) {
+        const deleteResult = await this.supabaseService.deleteFile(image.path);
+        if (!deleteResult.success) {
+          this.logger.warn(
+            `Supabase文件删除失败: ${deleteResult.error}, 但继续删除数据库记录`,
+          );
+        }
+      }
+
+      // 从数据库删除记录
+      await this.imageRepository.remove(images);
+
+      this.logger.log(`批量图片删除成功: IDs=${imageIds.join(', ')}`);
+
+      return {
+        code: ERROR_CODES.SUCCESS,
+        message: ERROR_MESSAGES[ERROR_CODES.SUCCESS],
+        data: null,
+      };
+    } catch (error) {
+      this.logger.error('批量删除图片失败', error);
       return {
         code: ERROR_CODES.VALIDATION_FAILED,
         message: ERROR_MESSAGES[ERROR_CODES.VALIDATION_FAILED],
