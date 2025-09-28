@@ -19,7 +19,7 @@ export class ProductImage {
   productId: string;
 
   @PrimaryColumn({ comment: '图片ID' })
-  imageId: number;
+  imageId: string;
 
   @Column({ type: 'int', default: 0, comment: '显示顺序' })
   sortOrder: number;

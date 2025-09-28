@@ -75,7 +75,7 @@
   "code": 200,
   "message": "操作成功",
   "data": {
-    "id": 1,
+    "id": "1",
     "createdAt": "2023-10-27T10:00:00Z"
   }
 }
@@ -114,14 +114,14 @@
   "data": {
     "items": [
       {
-        "id": 2,
+        "id": "2",
         "url": "https://example.supabase.co/storage/v1/object/public/bucket/images/image-02.png",
         "name": "image-02.png",
         "size": 204800,
         "createdAt": "2023-10-27T11:00:00Z"
       },
       {
-        "id": 1,
+        "id": "1",
         "url": "https://example.supabase.co/storage/v1/object/public/bucket/images/image-01.png",
         "name": "image-01.png",
         "size": 102400,

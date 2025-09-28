@@ -134,7 +134,7 @@ export class ImageService {
         code: ERROR_CODES.SUCCESS,
         message: ERROR_MESSAGES[ERROR_CODES.SUCCESS],
         data: {
-          id: savedImage.id,
+          id: savedImage.id.toString(),
           createdAt: savedImage.createdAt,
         },
       };
@@ -165,7 +165,7 @@ export class ImageService {
       });
 
       const data = images.map((image) => ({
-        id: image.id,
+        id: image.id.toString(),
         url: this.supabaseService.getPublicUrl(image.path),
         name: image.name,
         size: image.size,

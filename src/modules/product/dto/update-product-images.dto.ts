@@ -5,18 +5,17 @@ import {
   IsArray,
   ValidateNested,
   IsBoolean,
-  IsNumber,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class ProductImageDto {
   @ApiProperty({
     description: '图片ID',
-    example: 3,
+    example: '3',
   })
   @IsNotEmpty()
-  @IsNumber()
-  imageId: number;
+  @IsString()
+  imageId: string;
 
   @ApiProperty({
     description: '是否为主图',

@@ -49,7 +49,7 @@ export class ProductImageService {
       const productImages = images.map((imageDto, index) => {
         const productImage = new ProductImage();
         productImage.productId = productId;
-        productImage.imageId = imageDto.imageId;
+        productImage.imageId = imageDto.imageId; // 直接赋值字符串类型的imageId
         productImage.sortOrder = index; // 使用数组索引作为排序
         productImage.isMain = imageDto.isMain;
         return productImage;
