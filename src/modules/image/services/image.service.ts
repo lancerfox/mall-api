@@ -134,7 +134,7 @@ export class ImageService {
         code: ERROR_CODES.SUCCESS,
         message: ERROR_MESSAGES[ERROR_CODES.SUCCESS],
         data: {
-          id: savedImage.id.toString(),
+          id: savedImage.id, // UUID 已经是字符串类型，无需转换
           createdAt: savedImage.createdAt,
         },
       };
@@ -193,7 +193,7 @@ export class ImageService {
   /**
    * 删除单张图片
    */
-  async deleteImage(imageId: number): Promise<IApiResponse<null>> {
+  async deleteImage(imageId: string): Promise<IApiResponse<null>> {
     try {
       // 查找图片记录
       const image = await this.imageRepository.findOne({
@@ -238,7 +238,7 @@ export class ImageService {
   /**
    * 批量删除图片
    */
-  async batchDeleteImages(imageIds: number[]): Promise<IApiResponse<null>> {
+  async batchDeleteImages(imageIds: string[]): Promise<IApiResponse<null>> {
     try {
       // 查找所有要删除的图片记录
       const images = await this.imageRepository.find({

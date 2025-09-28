@@ -69,7 +69,7 @@ export class ImageController {
     examples: {
       single: {
         summary: '单个删除示例',
-        value: { imageId: 1 },
+        value: { imageId: '550e8400-e29b-41d4-a716-446655440000' },
       },
     },
   })
@@ -79,7 +79,12 @@ export class ImageController {
     examples: {
       batch: {
         summary: '批量删除示例',
-        value: { imageIds: [1, 2, 3] },
+        value: {
+          imageIds: [
+            '550e8400-e29b-41d4-a716-446655440000',
+            '550e8400-e29b-41d4-a716-446655440001',
+          ],
+        },
       },
     },
   })

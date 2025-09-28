@@ -13,7 +13,7 @@
 **功能描述**: 前端在上传图片前，调用此接口获取一个有时效性的、预签名的 Supabase 上传 URL。
 
 **请求参数**:
-``json
+```json
 {
   "businessModule": "product",
   "fileType": "image/png"
@@ -27,7 +27,7 @@
 | fileType | string | 是 | 图片MIME类型，支持 image/jpeg, image/png, image/gif |
 
 **响应示例**:
-``json
+```json
 {
   "code": 200,
   "message": "获取上传凭证成功",
@@ -51,7 +51,7 @@
 **功能描述**: 前端成功将图片直传到 Supabase 后，调用此接口将图片信息保存到数据库。
 
 **请求参数**:
-``json
+```json
 {
   "path": "images/product-image-01.png",
   "name": "product-image-01.png",
@@ -70,12 +70,12 @@
 | mimeType | string | 否 | 图片MIME类型 |
 
 **响应示例**:
-``json
+```json
 {
   "code": 200,
   "message": "操作成功",
   "data": {
-    "id": "1",
+    "id": "550e8400-e29b-41d4-a716-446655440000",
     "createdAt": "2023-10-27T10:00:00Z"
   }
 }
@@ -107,21 +107,21 @@
 | pageSize | number | 是 | 每页数量，建议范围10-50 |
 
 **响应示例**:
-``json
+```json
 {
   "code": 200,
   "message": "查询成功",
   "data": {
     "items": [
       {
-        "id": "2",
+        "id": "550e8400-e29b-41d4-a716-446655440001",
         "url": "https://example.supabase.co/storage/v1/object/public/bucket/images/image-02.png",
         "name": "image-02.png",
         "size": 204800,
         "createdAt": "2023-10-27T11:00:00Z"
       },
       {
-        "id": "1",
+        "id": "550e8400-e29b-41d4-a716-446655440000",
         "url": "https://example.supabase.co/storage/v1/object/public/bucket/images/image-01.png",
         "name": "image-01.png",
         "size": 102400,
@@ -147,29 +147,33 @@
 **请求参数（单个删除）**:
 ```json
 {
-  "imageId": 1
+  "imageId": "550e8400-e29b-41d4-a716-446655440000"
 }
 ```
 
 **请求参数（批量删除）**:
 ```json
 {
-  "imageIds": [1, 2, 3]
+  "imageIds": [
+    "550e8400-e29b-41d4-a716-446655440000",
+    "550e8400-e29b-41d4-a716-446655440001"
+  ]
 }
 ```
 
 **参数说明**:
 | 参数名 | 类型 | 必填 | 说明 |
 |--------|------|------|------|
-| imageId | number | 否* | 单张图片ID（单个删除时必填） |
-| imageIds | array[number] | 否* | 图片ID数组（批量删除时必填） |
+| imageId | string | 否* | 单张图片ID（单个删除时必填） |
+| imageIds | array[string] | 否* | 图片ID数组（批量删除时必填） |
 
 **响应示例**:
-``json
+```json
 {
   "code": 200,
   "message": "操作成功",
   "data": null
+}
 ```
 
 **错误码**:
@@ -189,9 +193,9 @@
 {
   "productId": "101",
   "images": [
-    { "imageId": 3, "isMain": true },
-    { "imageId": 5, "isMain": false },
-    { "imageId": 2, "isMain": false }
+    { "imageId": "550e8400-e29b-41d4-a716-446655440003", "isMain": true },
+    { "imageId": "550e8400-e29b-41d4-a716-446655440005", "isMain": false },
+    { "imageId": "550e8400-e29b-41d4-a716-446655440002", "isMain": false }
   ]
 }
 ```
@@ -201,11 +205,11 @@
 |--------|------|------|------|
 | productId | string | 是 | 商品ID |
 | images | array | 是 | 图片对象数组，数组顺序即为显示顺序 |
-| images[].imageId | number | 是 | 图片ID |
+| images[].imageId | string | 是 | 图片ID |
 | images[].isMain | boolean | 是 | 是否为主图，整个数组中最多只能有一个为true |
 
 **响应示例**:
-``json
+```json
 {
   "code": 200,
   "message": "操作成功",

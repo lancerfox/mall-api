@@ -13,8 +13,8 @@ import { ProductImage } from '../../product/entities/product-image.entity';
  */
 @Entity('images')
 export class Image {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ type: 'varchar', length: 255, comment: '图片在Supabase中的路径' })
   path: string;

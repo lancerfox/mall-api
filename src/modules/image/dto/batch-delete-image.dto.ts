@@ -1,15 +1,17 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsArray, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsArray, ArrayNotEmpty, IsString } from 'class-validator';
 
 export class BatchDeleteImageDto {
   @ApiProperty({
-    description: '图片ID数组（用于批量删除）',
-    example: [1, 2, 3],
-    required: true,
-    type: [Number],
+    description: '图片ID数组',
+    example: [
+      '550e8400-e29b-41d4-a716-446655440000',
+      '550e8400-e29b-41d4-a716-446655440001',
+    ],
   })
-  @IsNotEmpty({ message: '图片ID数组不能为空' })
-  @IsArray({ message: '图片ID必须是数组' })
-  @IsNumber({}, { each: true, message: '图片ID必须是数字' })
-  imageIds: number[];
+  @IsNotEmpty()
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsString({ each: true })
+  imageIds: string[];
 }

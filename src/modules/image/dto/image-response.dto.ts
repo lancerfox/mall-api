@@ -3,7 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 export class ImageResponseDto {
   @ApiProperty({
     description: '图片ID',
-    example: '1',
+    example: '550e8400-e29b-41d4-a716-446655440000',
   })
   id: string;
 
@@ -51,7 +51,7 @@ export class UploadTokenResponseDto {
 export class CreateImageResponseDto {
   @ApiProperty({
     description: '图片ID',
-    example: '1',
+    example: '550e8400-e29b-41d4-a716-446655440000',
   })
   id: string;
 
