@@ -46,6 +46,9 @@ export const ERROR_CODES = {
   // 菜单相关错误 (6000-6999)
   MENU_NOT_FOUND: 6000,
 
+  // 操作日志相关错误 (8000-8999)
+  OPERATION_LOG_NOT_FOUND: 8000,
+
   // 图片相关错误 (7000-7999)
   IMAGE_NOT_FOUND: 7000,
   IMAGE_UPLOAD_FAILED: 7001,
@@ -94,6 +97,9 @@ export const ERROR_MESSAGES = {
 
   // 菜单相关
   [ERROR_CODES.MENU_NOT_FOUND]: '菜单不存在',
+
+  // 操作日志相关
+  [ERROR_CODES.OPERATION_LOG_NOT_FOUND]: '操作日志不存在',
 
   // 图片相关
   [ERROR_CODES.IMAGE_NOT_FOUND]: '图片不存在',
