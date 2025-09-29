@@ -7,6 +7,8 @@ import { ProductCategory } from './entities/product-category.entity';
 import { ProductSPU } from './entities/product-spu.entity';
 import { ProductSKU } from './entities/product-sku.entity';
 import { ProductImage } from './entities/product-image.entity';
+import { SupabaseService } from '../image/services/supabase.service';
+import { ImageModule } from '../image/image.module';
 
 @Module({
   imports: [
@@ -16,9 +18,15 @@ import { ProductImage } from './entities/product-image.entity';
       ProductSKU,
       ProductImage,
     ]),
+    ImageModule,
   ],
   controllers: [ProductCategoryController, ProductController],
-  providers: [ProductCategoryService, ProductService, ProductImageService],
+  providers: [
+    ProductCategoryService,
+    ProductService,
+    ProductImageService,
+    SupabaseService,
+  ],
   exports: [ProductCategoryService, ProductService, ProductImageService],
 })
 export class ProductModule {}

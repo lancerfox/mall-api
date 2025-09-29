@@ -17,6 +17,7 @@ import { ProductEditResponseDto } from '../dto/product-edit-response.dto';
 import { SpuDto } from '../dto/spu.dto';
 import { SkuDto } from '../dto/sku.dto';
 import { SpecificationDto } from '../dto/specification.dto';
+import { SupabaseService } from '../../image/services/supabase.service';
 
 interface SKUData {
   id?: string;
@@ -38,6 +39,7 @@ export class ProductService {
     private readonly skuRepository: Repository<ProductSKU>,
     @InjectRepository(ProductCategory)
     private readonly categoryRepository: Repository<ProductCategory>,
+    private readonly supabaseService: SupabaseService,
   ) {}
 
   /**
@@ -66,6 +68,11 @@ export class ProductService {
   ): Promise<ProductResponseDto> {
     const { spu, skus, action } = saveProductDto;
     const now = new Date();
+
+    // 处理主图URL，只保留path部分
+    if (spu.mainImage) {
+      spu.mainImage = this.extractImagePath(spu.mainImage);
+    }
 
     let savedSpu: ProductSPU;
 
@@ -397,6 +404,18 @@ export class ProductService {
           updatedAt: new Date(),
         };
 
+    // 5. 处理主图URL，将路径拼接成完整URL
+    let mainImageUrl = '';
+    if (spu.mainImage) {
+      try {
+        // 尝试将路径转换为完整URL
+        mainImageUrl = this.supabaseService.getPublicUrl(spu.mainImage);
+      } catch {
+        // 如果转换失败，使用原始值
+        mainImageUrl = spu.mainImage;
+      }
+    }
+
     return {
       id: spu.id || '',
       spuCode: '', // SPU实体中没有spuCode字段，使用空字符串
@@ -404,7 +423,7 @@ export class ProductService {
       category: categoryDto,
       categoryName: category ? category.name : '',
       description: spu.description || '',
-      mainImage: spu.mainImage || '',
+      mainImage: mainImageUrl,
       imageGallery: [], // SPU实体中没有images字段，使用空数组
       specifications: [], // SPU实体中没有specifications字段，使用空数组
       skus: skusData,
@@ -467,13 +486,25 @@ export class ProductService {
     // 获取SKUs
     const skus = await this.skuRepository.find({ where: { spuId: spu.id } });
 
+    // 处理主图URL，将路径拼接成完整URL
+    let mainImageUrl = '';
+    if (spu.mainImage) {
+      try {
+        // 尝试将路径转换为完整URL
+        mainImageUrl = this.supabaseService.getPublicUrl(spu.mainImage);
+      } catch {
+        // 如果转换失败，使用原始值
+        mainImageUrl = spu.mainImage;
+      }
+    }
+
     // 转换SPU数据
     const spuDto: SpuDto = {
       id: spu.id || '',
       name: spu.name || '',
       subtitle: spu.subtitle || '',
       categoryId: spu.categoryId || '',
-      mainImage: spu.mainImage || '',
+      mainImage: mainImageUrl,
       video: spu.video || '',
       material: spu.material || '',
       origin: spu.origin || '',
@@ -513,5 +544,33 @@ export class ProductService {
       skus: skuDtos,
       action,
     };
+  }
+
+  /**
+   * 从完整URL中提取图片路径
+   * @param imageUrl 完整的图片URL
+   * @returns 图片路径
+   */
+  private extractImagePath(imageUrl: string): string {
+    try {
+      // 如果是完整的URL，提取路径部分
+      const url = new URL(imageUrl);
+      // Supabase公共URL格式: /storage/v1/object/public/{bucket}/{path}
+      const pathSegments = url.pathname.split('/');
+      const publicIndex = pathSegments.indexOf('public');
+
+      // 如果找到了public段，提取其后的路径
+      if (publicIndex !== -1 && publicIndex < pathSegments.length - 2) {
+        // 跳过 'public' 和 bucket name，获取实际的文件路径
+        const pathAfterPublic = pathSegments.slice(publicIndex + 2);
+        return pathAfterPublic.join('/');
+      }
+
+      // 如果没有找到预期的格式，返回原URL（可能是相对路径）
+      return imageUrl;
+    } catch {
+      // 如果不是有效的URL格式，直接返回
+      return imageUrl;
+    }
   }
 }
