@@ -505,7 +505,7 @@ export class ProductService {
       origin: spu.origin || '',
       grade: spu.grade || '',
       description: spu.description || '',
-      freight: spu.freight || 0,
+      freight: spu.freight ? Number(spu.freight) : 0,
       sort: spu.sort || 0,
     };
 
