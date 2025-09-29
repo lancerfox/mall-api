@@ -16,6 +16,7 @@ import {
   UploadTokenResponseDto,
   CreateImageResponseDto,
 } from '../dto/image-response.dto';
+import { ImagePathUtil } from '../../../common/utils/image-path.util';
 
 @Injectable()
 export class ImageService {
@@ -166,7 +167,7 @@ export class ImageService {
 
       const data = images.map((image) => ({
         id: image.id.toString(),
-        url: this.supabaseService.getPublicUrl(image.path),
+        url: ImagePathUtil.buildImageUrl(image.path, this.supabaseService),
         name: image.name,
         size: image.size,
         createdAt: image.createdAt,
