@@ -3,7 +3,7 @@ import {
   IsOptional,
   IsBoolean,
   IsNumber,
-  IsMongoId,
+  IsUUID,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -11,10 +11,10 @@ export class CreateMenuDto {
   @ApiProperty({
     description: '父级菜单ID',
     required: false,
-    example: '60f1b2b3b3b3b3b3b3b3b3b3',
+    example: '507f1f77-bc11-1cd7-9943-9011bcf86cd7',
   })
   @IsOptional()
-  @IsMongoId()
+  @IsUUID('4', { message: '父级菜单ID格式不正确' })
   parentId?: string;
 
   @ApiProperty({ description: '菜单路径', example: '/system' })

@@ -5,7 +5,7 @@ import {
   IsOptional,
   IsNumber,
   IsBoolean,
-  IsMongoId,
+  IsUUID,
 } from 'class-validator';
 
 export class CreateCategoryDto {
@@ -15,7 +15,7 @@ export class CreateCategoryDto {
     required: false,
   })
   @IsOptional()
-  @IsMongoId()
+  @IsUUID('4', { message: '上级分类ID格式不正确' })
   parentId?: string;
 
   @ApiProperty({ description: '分类名称', example: '沉香手串', required: true })

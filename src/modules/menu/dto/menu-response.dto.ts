@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsMongoId } from 'class-validator';
+import { IsUUID } from 'class-validator';
 
 export class MenuResponseDto {
   @ApiProperty({ description: '菜单ID' })
@@ -60,13 +60,13 @@ export class MenuDetailResponseDto {
 
 export class DeleteMenuRequestDto {
   @ApiProperty({ description: '菜单ID' })
-  @IsMongoId()
+  @IsUUID('4', { message: '菜单ID格式不正确' })
   id: string;
 }
 
 export class MenuDetailRequestDto {
   @ApiProperty({ description: '菜单ID' })
-  @IsMongoId()
+  @IsUUID('4', { message: '菜单ID格式不正确' })
   id: string;
 }
 
