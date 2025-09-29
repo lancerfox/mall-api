@@ -295,19 +295,10 @@ export class ProductService {
     const { ids, status } = updateStatusDto;
 
     // 定义更新数据的类型
-    const updateData: Partial<ProductSPU> & {
-      shelfTime?: Date;
-      offShelfTime?: Date;
-    } = {
+    const updateData: Partial<ProductSPU> = {
       status,
       updatedAt: new Date(),
     };
-
-    if (status === 'On-shelf') {
-      updateData.shelfTime = new Date();
-    } else if (status === 'Off-shelf') {
-      updateData.offShelfTime = new Date();
-    }
 
     const result = await this.spuRepository.update({ id: In(ids) }, updateData);
 
