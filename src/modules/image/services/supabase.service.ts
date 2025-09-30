@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { BusinessException } from 'src/common/exceptions/business.exception';
-import { ERROR_CODES } from 'src/common/constants/error-codes';
+import { BusinessException } from '../../../common/exceptions/business.exception';
+import { ERROR_CODES } from '../../../common/constants/error-codes';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 @Injectable()

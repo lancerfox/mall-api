@@ -1,7 +1,7 @@
 import { Injectable, Logger, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { BusinessException } from 'src/common/exceptions/business.exception';
-import { ERROR_CODES } from 'src/common/constants/error-codes';
+import { BusinessException } from '../../../common/exceptions/business.exception';
+import { ERROR_CODES } from '../../../common/constants/error-codes';
 import { Repository, In } from 'typeorm';
 import { Image } from '../entities/image.entity';
 import { CreateImageDto } from '../dto/create-image.dto';

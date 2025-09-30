@@ -44,4 +44,9 @@ export const validationSchema = Joi.object({
   NODE_ENV: Joi.string()
     .valid(...Object.values(NodeEnv))
     .default(NodeEnv.DEVELOPMENT),
+
+  // Supabase 配置
+  SUPABASE_URL: Joi.string().required(),
+  SUPABASE_SERVICE_KEY: Joi.string().required(),
+  SUPABASE_BUCKET_NAME: Joi.string().default('mall-dev'),
 });
