@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ImageController } from '../controllers/image.controller';
 import { ImageService } from '../services/image.service';
 import { DeleteImageDto } from '../dto/delete-image.dto';
-import { BatchDeleteImageDto } from '../dto/batch-delete-image.dto';
 import { IApiResponse } from '../../../common/types/api-response.interface';
 
 describe('ImageController', () => {

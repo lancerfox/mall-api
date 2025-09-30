@@ -10,10 +10,38 @@ import { IApiResponse } from '../types/api-response.interface';
 import { formatDate } from '../utils/date-format';
 
 /**
+ * 类型守卫：检查值是否为日期字符串
+ * @param value 要检查的值
+ * @returns 如果是日期字符串则返回true
+ */
+function isDateString(value: unknown): value is string {
+  if (typeof value !== 'string') {
+    return false;
+  }
+  // 检查是否为有效的日期字符串
+  const date = new Date(value);
+  return !isNaN(date.getTime());
+}
+
+/**
+ * 类型守卫：检查值是否为普通对象（非数组、非null）
+ * @param value 要检查的值
+ * @returns 如果是普通对象则返回true
+ */
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value) &&
+    !(value instanceof Date)
+  );
+}
+
+/**
  * 递归格式化响应数据中的日期字段
  * @param data 响应数据
  */
-function formatResponseData(data: any): any {
+function formatResponseData(data: unknown): unknown {
   if (data === null || data === undefined) {
     return data;
   }
@@ -23,17 +51,25 @@ function formatResponseData(data: any): any {
   }
 
   if (Array.isArray(data)) {
-    return data.map(formatResponseData);
+    return data.map((item) => formatResponseData(item));
   }
 
-  if (typeof data === 'object') {
-    const newData: { [key: string]: any } = {};
+  if (isPlainObject(data)) {
+    const newData: Record<string, unknown> = {};
     for (const key in data) {
       if (Object.prototype.hasOwnProperty.call(data, key)) {
-        if ((key === 'createdAt' || key === 'updatedAt') && data[key]) {
-          newData[key] = formatDate(new Date(data[key]));
+        const value = data[key];
+        if ((key === 'createdAt' || key === 'updatedAt') && value) {
+          // 安全地处理日期字段
+          if (value instanceof Date) {
+            newData[key] = formatDate(value);
+          } else if (isDateString(value)) {
+            newData[key] = formatDate(new Date(value));
+          } else {
+            newData[key] = formatResponseData(value);
+          }
         } else {
-          newData[key] = formatResponseData(data[key]);
+          newData[key] = formatResponseData(value);
         }
       }
     }
@@ -65,7 +101,7 @@ export class TransformInterceptor<T>
       map((data: T) => ({
         code: ERROR_CODES.SUCCESS,
         message: ERROR_MESSAGES[ERROR_CODES.SUCCESS],
-        data: formatResponseData(data),
+        data: formatResponseData(data) as T,
       })),
     );
   }
