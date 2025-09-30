@@ -37,7 +37,7 @@ export interface IPaginatedResponse<T> {
   /**
    * 数据列表
    */
-  items: T[];
+  list: T[];
 
   /**
    * 总数量
@@ -52,7 +52,7 @@ export interface IPaginatedResponse<T> {
   /**
    * 每页数量
    */
-  limit: number;
+  pageSize: number;
 
   /**
    * 总页数

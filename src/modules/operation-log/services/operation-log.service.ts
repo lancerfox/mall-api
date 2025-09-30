@@ -48,7 +48,7 @@ export class OperationLogService {
    */
   async getList(
     operationLogListDto: OperationLogListDto,
-  ): Promise<IApiResponse<{ items: OperationLog[]; total: number }>> {
+  ): Promise<IApiResponse<{ list: OperationLog[]; total: number }>> {
     try {
       const {
         page,
@@ -93,7 +93,7 @@ export class OperationLogService {
       }
 
       // 查询数据
-      const [items, total] = await this.operationLogRepository.findAndCount({
+      const [list, total] = await this.operationLogRepository.findAndCount({
         where,
         order: { createdAt: 'DESC' },
         skip: (page - 1) * pageSize,
@@ -104,7 +104,7 @@ export class OperationLogService {
         code: ERROR_CODES.SUCCESS,
         message: ERROR_MESSAGES[ERROR_CODES.SUCCESS],
         data: {
-          items,
+          list,
           total,
         },
       };

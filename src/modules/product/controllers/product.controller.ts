@@ -51,7 +51,7 @@ export class ProductController {
   ): Promise<ProductListResponseDto> {
     const result = await this.productService.getProductList(productListDto);
     return {
-      data: result.items,
+      data: result.list,
       total: result.total,
       page: result.page,
       pageSize: result.pageSize,

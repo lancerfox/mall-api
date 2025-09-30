@@ -220,7 +220,7 @@ export class ProductService {
    * 获取商品列表（分页）
    */
   async getProductList(productListDto: ProductListDto): Promise<{
-    items: ProductResponseDto[];
+    list: ProductResponseDto[];
     total: number;
     page: number;
     pageSize: number;
@@ -251,7 +251,7 @@ export class ProductService {
       }
     }
 
-    const [items, total] = await this.spuRepository.findAndCount({
+    const [list, total] = await this.spuRepository.findAndCount({
       where,
       order: { updatedAt: 'DESC' },
       skip,
@@ -260,11 +260,11 @@ export class ProductService {
     });
 
     const responseItems = await Promise.all(
-      items.map((item) => this.transformToResponseDto(item)),
+      list.map((item) => this.transformToResponseDto(item)),
     );
 
     return {
-      items: responseItems,
+      list: responseItems,
       total,
       page,
       pageSize,

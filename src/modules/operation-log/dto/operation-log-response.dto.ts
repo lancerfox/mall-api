@@ -94,7 +94,7 @@ export class OperationLogResponseDto implements IApiResponse<OperationLogData> {
 }
 
 export class OperationLogListResponseDto
-  implements IApiResponse<{ items: OperationLogData[]; total: number }>
+  implements IApiResponse<{ list: OperationLogData[]; total: number }>
 {
   @ApiProperty({
     description: '响应状态码',
@@ -112,7 +112,7 @@ export class OperationLogListResponseDto
     description: '响应数据',
     type: 'object',
     properties: {
-      items: {
+      list: {
         type: 'array',
         items: {
           $ref: '#/components/schemas/OperationLogData',
@@ -125,7 +125,7 @@ export class OperationLogListResponseDto
     },
   })
   data: {
-    items: OperationLogData[];
+    list: OperationLogData[];
     total: number;
   };
 }

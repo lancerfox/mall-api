@@ -39,10 +39,10 @@ export class OperationLogController {
       message: result.message,
       data: result.data
         ? {
-            items: result.data.items as OperationLogData[],
+            list: result.data.list as OperationLogData[],
             total: result.data.total,
           }
-        : { items: [], total: 0 },
+        : { list: [], total: 0 },
     };
   }
 
