@@ -5,9 +5,9 @@ import {
   Body,
   Query,
   UseGuards,
-  HttpException,
   UsePipes,
   ValidationPipe,
+  BadRequestException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -48,11 +48,18 @@ export class UserController {
   @ApiResponse({
     status: 200,
     description: '获取用户列表成功',
-    type: UserListResponseDto,
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: '获取成功' },
+        data: { $ref: '#/components/schemas/UserListResponseDto' },
+      },
+    },
   })
   @Permissions(PERMISSIONS.USER_READ)
   async findAll(@Query() query: QueryUserDto): Promise<UserListResponseDto> {
-    return await this.userService.findAll(query);
+    return this.userService.findAll(query);
   }
 
   @Post('create')
@@ -60,11 +67,18 @@ export class UserController {
   @ApiResponse({
     status: 201,
     description: '创建用户成功',
-    type: UserResponseDto,
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 201 },
+        message: { type: 'string', example: '创建成功' },
+        data: { $ref: '#/components/schemas/UserResponseDto' },
+      },
+    },
   })
   @Permissions(PERMISSIONS.USER_CREATE)
   async create(@Body() createUserDto: CreateUserDto): Promise<UserResponseDto> {
-    return await this.userService.create(createUserDto);
+    return this.userService.create(createUserDto);
   }
 
   @Post('update')
@@ -72,7 +86,14 @@ export class UserController {
   @ApiResponse({
     status: 200,
     description: '更新用户信息成功',
-    type: UserResponseDto,
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: '更新成功' },
+        data: { $ref: '#/components/schemas/UserResponseDto' },
+      },
+    },
   })
   @Permissions(PERMISSIONS.USER_UPDATE)
   async update(
@@ -87,7 +108,7 @@ export class UserController {
       delete (updateUserDto as Partial<UpdateUserDto>).status;
     }
 
-    return await this.userService.update(id, updateUserDto);
+    return this.userService.update(id, updateUserDto);
   }
 
   @Post('delete')
@@ -95,21 +116,25 @@ export class UserController {
   @ApiResponse({
     status: 200,
     description: '删除用户成功',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: '删除成功' },
+        data: { type: 'null' },
+      },
+    },
   })
   @Permissions(PERMISSIONS.USER_DELETE)
   async remove(
     @Body() userIdDto: UserIdBodyDto,
     @CurrentUser('id') currentUserId: string,
-  ): Promise<{ message: string }> {
+  ): Promise<void> {
     // 防止用户删除自己
     if (currentUserId === userIdDto.id) {
-      throw new HttpException(
-        '不能删除自己的账户',
-        ERROR_CODES.PERMISSION_INSUFFICIENT,
-      );
+      throw new BadRequestException('不能删除自己的账户');
     }
 
     await this.userService.remove(userIdDto.id);
-    return { message: '删除用户成功' };
   }
 }

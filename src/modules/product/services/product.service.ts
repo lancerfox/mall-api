@@ -13,6 +13,7 @@ import {
   ProductDetailResponseDto,
   SkuResponseDto,
 } from '../dto/product-response.dto';
+import { ProductListPaginatedDto } from '../dto/product-list-response.dto';
 import { ProductEditResponseDto } from '../dto/product-edit-response.dto';
 import { SpuDto } from '../dto/spu.dto';
 import { SkuDto } from '../dto/sku.dto';
@@ -219,13 +220,9 @@ export class ProductService {
   /**
    * 获取商品列表（分页）
    */
-  async getProductList(productListDto: ProductListDto): Promise<{
-    list: ProductResponseDto[];
-    total: number;
-    page: number;
-    pageSize: number;
-    totalPages: number;
-  }> {
+  async getProductList(
+    productListDto: ProductListDto,
+  ): Promise<ProductListPaginatedDto> {
     const { page, pageSize, filters } = productListDto;
     const skip = (page - 1) * pageSize;
 

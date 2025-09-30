@@ -1,5 +1,8 @@
-import { Injectable, HttpException } from '@nestjs/common';
-import { ERROR_CODES } from '../../../common/constants/error-codes';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
@@ -90,7 +93,7 @@ export class UserService {
     });
 
     if (!updatedUser) {
-      throw new HttpException('用户不存在', ERROR_CODES.USER_NOT_FOUND);
+      throw new NotFoundException('用户不存在');
     }
 
     return this.transformUserToResponse(updatedUser);
@@ -104,7 +107,7 @@ export class UserService {
   async updatePassword(id: string, newPassword: string): Promise<void> {
     const user = await this.userRepository.findOneBy({ id });
     if (!user) {
-      throw new HttpException('用户不存在', ERROR_CODES.USER_NOT_FOUND);
+      throw new NotFoundException('用户不存在');
     }
 
     user.password = newPassword;
@@ -143,11 +146,11 @@ export class UserService {
 
     const [users, total] = await qb.getManyAndCount();
 
-    const data = users.map((user) => this.transformUserToResponse(user));
+    const list = users.map((user) => this.transformUserToResponse(user));
     const totalPages = Math.ceil(total / pageSize);
 
     return {
-      data,
+      list,
       total,
       page,
       pageSize,
@@ -166,7 +169,7 @@ export class UserService {
       username: createUserDto.username,
     });
     if (existingUser) {
-      throw new HttpException('用户名已存在', ERROR_CODES.USER_ALREADY_EXISTS);
+      throw new BadRequestException('用户名已存在');
     }
 
     const newUser = this.userRepository.create({
@@ -180,7 +183,7 @@ export class UserService {
     if (createUserDto.roles && createUserDto.roles.length > 0) {
       const roles = await this.roleService.findByIds(createUserDto.roles);
       if (roles.length !== createUserDto.roles.length) {
-        throw new HttpException('部分角色不存在', ERROR_CODES.ROLE_NOT_FOUND);
+        throw new BadRequestException('部分角色不存在');
       }
       newUser.roles = roles;
     }
@@ -215,7 +218,7 @@ export class UserService {
     });
 
     if (!userToUpdate) {
-      throw new HttpException('用户不存在', ERROR_CODES.USER_NOT_FOUND);
+      throw new NotFoundException('用户不存在');
     }
 
     // 验证并更新角色
@@ -223,7 +226,7 @@ export class UserService {
       if (updateUserDto.roles.length > 0) {
         const roles = await this.roleService.findByIds(updateUserDto.roles);
         if (roles.length !== updateUserDto.roles.length) {
-          throw new HttpException('部分角色不存在', ERROR_CODES.ROLE_NOT_FOUND);
+          throw new BadRequestException('部分角色不存在');
         }
         userToUpdate.roles = roles;
       } else {
@@ -242,7 +245,7 @@ export class UserService {
     });
 
     if (!userWithRelations) {
-      throw new HttpException('更新用户失败', ERROR_CODES.VALIDATION_FAILED);
+      throw new NotFoundException('更新用户失败');
     }
 
     return this.transformUserToResponse(userWithRelations);
@@ -255,7 +258,7 @@ export class UserService {
   async remove(id: string): Promise<void> {
     const result = await this.userRepository.delete(id);
     if (result.affected === 0) {
-      throw new HttpException('用户不存在', ERROR_CODES.USER_NOT_FOUND);
+      throw new NotFoundException('用户不存在');
     }
   }
 
@@ -348,7 +351,7 @@ export class UserService {
     });
 
     if (!user) {
-      throw new HttpException('用户不存在', ERROR_CODES.USER_NOT_FOUND);
+      throw new NotFoundException('用户不存在');
     }
 
     // 获取用户所有权限

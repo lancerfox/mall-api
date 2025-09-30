@@ -8,7 +8,7 @@ import { ProductListDto } from '../dto/product-list.dto';
 import { UpdateStatusDto } from '../dto/update-status.dto';
 import { ProductDetailDto } from '../dto/product-detail.dto';
 import { ProductResponseDto } from '../dto/product-response.dto';
-import { ProductListResponseDto } from '../dto/product-response.dto';
+import { ProductListPaginatedDto } from '../dto/product-list-response.dto';
 import { ProductEditResponseDto } from '../dto/product-edit-response.dto';
 
 @ApiTags('商品管理')
@@ -29,7 +29,7 @@ export class ProductController {
       properties: {
         code: { type: 'number', example: 200 },
         message: { type: 'string', example: '保存成功' },
-        data: { $ref: '#/components/schemas/ProductSPU' },
+        data: { $ref: '#/components/schemas/ProductResponseDto' },
       },
     },
   })
@@ -44,19 +44,19 @@ export class ProductController {
   @ApiResponse({
     status: 200,
     description: '获取成功',
-    type: ProductListResponseDto,
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: '获取成功' },
+        data: { $ref: '#/components/schemas/ProductListPaginatedDto' },
+      },
+    },
   })
   async list(
     @Body() productListDto: ProductListDto,
-  ): Promise<ProductListResponseDto> {
-    const result = await this.productService.getProductList(productListDto);
-    return {
-      data: result.list,
-      total: result.total,
-      page: result.page,
-      pageSize: result.pageSize,
-      totalPages: result.totalPages,
-    };
+  ): Promise<ProductListPaginatedDto> {
+    return this.productService.getProductList(productListDto);
   }
 
   @Post('detail')
@@ -64,7 +64,14 @@ export class ProductController {
   @ApiResponse({
     status: 200,
     description: '获取成功',
-    type: ProductEditResponseDto,
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: '获取成功' },
+        data: { $ref: '#/components/schemas/ProductEditResponseDto' },
+      },
+    },
   })
   async detail(
     @Body() productDetailDto: ProductDetailDto,
@@ -88,9 +95,8 @@ export class ProductController {
   })
   async updateStatus(
     @Body() updateStatusDto: UpdateStatusDto,
-  ): Promise<{ message: string }> {
+  ): Promise<void> {
     await this.productService.updateProductStatus(updateStatusDto);
-    return { message: '更新成功' };
   }
 
   @Post('delete')
@@ -107,9 +113,8 @@ export class ProductController {
       },
     },
   })
-  async delete(@Body() body: { ids: string[] }): Promise<{ message: string }> {
+  async delete(@Body() body: { ids: string[] }): Promise<void> {
     await this.productService.deleteProducts(body.ids);
-    return { message: '删除成功' };
   }
 
   @Post('updateImages')
@@ -120,7 +125,7 @@ export class ProductController {
   })
   async updateProductImages(
     @Body() updateProductImagesDto: UpdateProductImagesDto,
-  ) {
-    return this.productImageService.updateProductImages(updateProductImagesDto);
+  ): Promise<void> {
+    await this.productImageService.updateProductImages(updateProductImagesDto);
   }
 }

@@ -16,7 +16,7 @@ describe('OrderController', () => {
   let orderService: jest.Mocked<OrderService>;
 
   const mockOrderListResponse = {
-    data: [
+    list: [
       {
         id: '1',
         order_number: 'ORD202509290001',

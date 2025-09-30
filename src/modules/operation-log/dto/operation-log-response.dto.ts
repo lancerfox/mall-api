@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IApiResponse } from '../../../common/types/api-response.interface';
 import { OperationType } from '../entities/operation-log.entity';
 
 export class OperationLogData {
@@ -73,59 +72,16 @@ export class OperationLogData {
   createdAt: Date;
 }
 
-export class OperationLogResponseDto implements IApiResponse<OperationLogData> {
+export class OperationLogListResponseDto {
   @ApiProperty({
-    description: '响应状态码',
-    example: 200,
+    description: '日志列表',
+    type: [OperationLogData],
   })
-  code: number;
+  list: OperationLogData[];
 
   @ApiProperty({
-    description: '响应消息',
-    example: '操作成功',
+    description: '总数',
+    example: 100,
   })
-  message: string;
-
-  @ApiProperty({
-    description: '响应数据',
-    type: OperationLogData,
-  })
-  data: OperationLogData;
-}
-
-export class OperationLogListResponseDto
-  implements IApiResponse<{ list: OperationLogData[]; total: number }>
-{
-  @ApiProperty({
-    description: '响应状态码',
-    example: 200,
-  })
-  code: number;
-
-  @ApiProperty({
-    description: '响应消息',
-    example: '操作成功',
-  })
-  message: string;
-
-  @ApiProperty({
-    description: '响应数据',
-    type: 'object',
-    properties: {
-      list: {
-        type: 'array',
-        items: {
-          $ref: '#/components/schemas/OperationLogData',
-        },
-      },
-      total: {
-        type: 'number',
-        example: 100,
-      },
-    },
-  })
-  data: {
-    list: OperationLogData[];
-    total: number;
-  };
+  total: number;
 }

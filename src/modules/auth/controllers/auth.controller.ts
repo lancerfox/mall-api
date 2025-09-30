@@ -5,7 +5,6 @@ import {
   Body,
   UseGuards,
   Ip,
-  UnauthorizedException,
   BadRequestException,
 } from '@nestjs/common';
 import {
@@ -25,7 +24,6 @@ import { ResetPasswordDto } from '../dto/reset-password.dto';
 import { AuthResponseDto, UserInfoDto } from '../dto/auth-response.dto';
 import { ILoginResponse } from '../types';
 import type { JwtUser } from '../../../common/decorators/user.decorator';
-import { ERROR_CODES } from '../../../common/constants/error-codes';
 import {
   Permissions,
   PERMISSIONS,
@@ -59,31 +57,12 @@ export class AuthController {
     @Body() loginDto: LoginDto,
     @Ip() ip: string,
   ): Promise<ILoginResponse> {
-    try {
-      const user = await this.authService.validateUser(
-        loginDto.username,
-        loginDto.password,
-        ip,
-      );
-
-      if (!user) {
-        throw new UnauthorizedException({
-          message: '用户名或密码错误',
-          errorCode: ERROR_CODES.AUTH_INVALID_CREDENTIALS,
-        });
-      }
-
-      return await this.authService.login(user, ip);
-    } catch (error: unknown) {
-      if (error instanceof UnauthorizedException) {
-        throw error;
-      }
-
-      throw new UnauthorizedException({
-        message: '登录失败，请稍后重试',
-        errorCode: ERROR_CODES.AUTH_LOGIN_FAILED,
-      });
-    }
+    const user = await this.authService.validateUser(
+      loginDto.username,
+      loginDto.password,
+      ip,
+    );
+    return this.authService.login(user, ip);
   }
 
   /**
@@ -123,10 +102,9 @@ export class AuthController {
     schema: {
       type: 'object',
       properties: {
-        message: {
-          type: 'string',
-          example: '密码修改成功',
-        },
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: '密码修改成功' },
+        data: { type: 'null' },
       },
     },
   })
@@ -143,13 +121,10 @@ export class AuthController {
   async changePassword(
     @Body() changePasswordDto: ChangePasswordDto,
     @CurrentUser('sub') userId: string,
-  ): Promise<{ message: string }> {
+  ): Promise<void> {
     // 验证新密码和确认密码是否一致
     if (changePasswordDto.newPassword !== changePasswordDto.confirmPassword) {
-      throw new BadRequestException({
-        message: '新密码和确认密码不一致',
-        errorCode: ERROR_CODES.AUTH_PASSWORD_MISMATCH,
-      });
+      throw new BadRequestException('新密码和确认密码不一致');
     }
 
     await this.authService.changePassword(
@@ -157,8 +132,6 @@ export class AuthController {
       changePasswordDto.currentPassword,
       changePasswordDto.newPassword,
     );
-
-    return { message: '密码修改成功' };
   }
 
   /**
@@ -212,14 +185,9 @@ export class AuthController {
     schema: {
       type: 'object',
       properties: {
-        message: {
-          type: 'string',
-          example: '密码重置成功',
-        },
-        newPassword: {
-          type: 'string',
-          description: '新生成的密码',
-        },
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: '密码重置成功' },
+        data: { type: 'string', description: '新生成的密码' },
       },
     },
   })
@@ -236,14 +204,7 @@ export class AuthController {
   @Post('reset-password')
   async resetPassword(
     @Body() resetPasswordDto: ResetPasswordDto,
-  ): Promise<{ message: string; newPassword: string }> {
-    const newPassword = await this.authService.resetPassword(
-      resetPasswordDto.id,
-    );
-
-    return {
-      message: '密码重置成功',
-      newPassword,
-    };
+  ): Promise<string> {
+    return this.authService.resetPassword(resetPasswordDto.id);
   }
 }

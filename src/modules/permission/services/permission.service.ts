@@ -1,5 +1,8 @@
-import { Injectable, HttpException } from '@nestjs/common';
-import { ERROR_CODES } from '../../../common/constants/error-codes';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In, Not } from 'typeorm';
 import { Permission } from '../entities/permission.entity';
@@ -20,10 +23,7 @@ export class PermissionService {
     });
 
     if (existingPermission) {
-      throw new HttpException(
-        '权限名称已存在',
-        ERROR_CODES.PERMISSION_ALREADY_EXISTS,
-      );
+      throw new ConflictException('权限名称已存在');
     }
 
     const permission = this.permissionRepository.create(createPermissionDto);
@@ -37,7 +37,7 @@ export class PermissionService {
   async findOne(id: string): Promise<Permission> {
     const permission = await this.permissionRepository.findOneBy({ id });
     if (!permission) {
-      throw new HttpException('权限不存在', ERROR_CODES.PERMISSION_NOT_FOUND);
+      throw new NotFoundException('权限不存在');
     }
     return permission;
   }
@@ -71,10 +71,7 @@ export class PermissionService {
       });
 
       if (existingPermission) {
-        throw new HttpException(
-          '权限名称已存在',
-          ERROR_CODES.PERMISSION_ALREADY_EXISTS,
-        );
+        throw new ConflictException('权限名称已存在');
       }
     }
 
@@ -84,7 +81,7 @@ export class PermissionService {
     });
 
     if (!permission) {
-      throw new HttpException('权限不存在', ERROR_CODES.PERMISSION_NOT_FOUND);
+      throw new NotFoundException('权限不存在');
     }
 
     return this.permissionRepository.save(permission);
@@ -93,7 +90,7 @@ export class PermissionService {
   async remove(id: string): Promise<void> {
     const result = await this.permissionRepository.delete(id);
     if (result.affected === 0) {
-      throw new HttpException('权限不存在', ERROR_CODES.PERMISSION_NOT_FOUND);
+      throw new NotFoundException('权限不存在');
     }
   }
 
@@ -115,10 +112,7 @@ export class PermissionService {
       name,
     });
     if (!permissionToUpdate) {
-      throw new HttpException(
-        `权限 ${name} 不存在`,
-        ERROR_CODES.PERMISSION_NOT_FOUND,
-      );
+      throw new NotFoundException(`权限 ${name} 不存在`);
     }
 
     // 如果更新数据中包含权限名称，检查新名称是否已存在（排除当前权限）
@@ -131,10 +125,7 @@ export class PermissionService {
       });
 
       if (existingPermission) {
-        throw new HttpException(
-          '权限名称已存在',
-          ERROR_CODES.PERMISSION_ALREADY_EXISTS,
-        );
+        throw new ConflictException('权限名称已存在');
       }
     }
 
@@ -145,10 +136,7 @@ export class PermissionService {
   async removeByName(name: string): Promise<void> {
     const result = await this.permissionRepository.delete({ name });
     if (result.affected === 0) {
-      throw new HttpException(
-        `权限 ${name} 不存在`,
-        ERROR_CODES.PERMISSION_NOT_FOUND,
-      );
+      throw new NotFoundException(`权限 ${name} 不存在`);
     }
   }
 }

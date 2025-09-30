@@ -1,5 +1,4 @@
-import { Injectable, HttpException } from '@nestjs/common';
-import { ERROR_CODES } from '../../../common/constants/error-codes';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere } from 'typeorm';
 import { Menu } from '../entities/menu.entity';
@@ -32,7 +31,7 @@ export class MenuService {
   async findOne(id: string): Promise<Menu> {
     const menu = await this.menuRepository.findOne({ where: { id } });
     if (!menu) {
-      throw new HttpException(`菜单 ${id} 不存在`, ERROR_CODES.MENU_NOT_FOUND);
+      throw new NotFoundException(`菜单 ${id} 不存在`);
     }
     return menu;
   }
@@ -124,7 +123,7 @@ export class MenuService {
 
     const menu = await this.menuRepository.findOne({ where: { id } });
     if (!menu) {
-      throw new HttpException(`菜单 ${id} 不存在`, ERROR_CODES.MENU_NOT_FOUND);
+      throw new NotFoundException(`菜单 ${id} 不存在`);
     }
 
     let permissionNameToSet: string | undefined;
@@ -215,10 +214,7 @@ export class MenuService {
     const updatedMenu = await this.menuRepository.save(menu);
 
     if (!updatedMenu) {
-      throw new HttpException(
-        `菜单 ${id} 更新失败`,
-        ERROR_CODES.MENU_NOT_FOUND,
-      );
+      throw new NotFoundException(`菜单 ${id} 更新失败`);
     }
     return updatedMenu;
   }
@@ -226,7 +222,7 @@ export class MenuService {
   async delete(id: string): Promise<void> {
     const menu = await this.menuRepository.findOne({ where: { id } });
     if (!menu) {
-      throw new HttpException(`菜单 ${id} 不存在`, ERROR_CODES.MENU_NOT_FOUND);
+      throw new NotFoundException(`菜单 ${id} 不存在`);
     }
 
     // 删除关联的权限

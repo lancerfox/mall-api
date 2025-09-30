@@ -1,20 +1,34 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  HttpCode,
+  HttpStatus,
+  NotFoundException,
+} from '@nestjs/common';
+import {
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { MenuService } from '../services/menu.service';
 import { RoleService } from '../../role/services/role.service';
 import { CreateMenuDto } from '../dto/create-menu.dto';
 import { UpdateMenuDto } from '../dto/update-menu.dto';
 import {
-  MenuListResponseDto,
-  MenuDetailResponseDto,
+  MenuResponseDto,
   DeleteMenuRequestDto,
   MenuDetailRequestDto,
   MenuByRoleRequestDto,
 } from '../dto/menu-response.dto';
 import { CurrentUser } from '../../../common/decorators/user.decorator';
+import { Menu } from '../entities/menu.entity';
 
 @ApiTags('菜单管理')
 @Controller('menus')
+@ApiBearerAuth()
 export class MenuController {
   constructor(
     private readonly menuService: MenuService,
@@ -22,62 +36,126 @@ export class MenuController {
   ) {}
 
   @Get()
-  @ApiOperation({ summary: '获取菜单列表' })
-  @ApiResponse({ status: 200, type: MenuListResponseDto })
+  @ApiOperation({ summary: '获取当前用户菜单列表' })
+  @ApiResponse({
+    status: 200,
+    description: '成功获取菜单列表',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: '获取成功' },
+        data: {
+          type: 'array',
+          items: { $ref: '#/components/schemas/MenuResponseDto' },
+        },
+      },
+    },
+  })
   async getMenus(
     @CurrentUser('role') roleName: string,
-  ): Promise<MenuListResponseDto> {
-    // 根据角色名称获取角色信息
+  ): Promise<MenuResponseDto[]> {
     const role = await this.roleService.findByName(roleName);
     if (!role) {
-      // 如果角色不存在，返回空菜单
-      return { data: [] };
+      throw new NotFoundException('当前用户角色不存在');
     }
-
-    // 根据角色ID获取对应的菜单
-    const data = await this.menuService.findByRole(role.id);
-    return { data };
+    return this.menuService.findByRole(role.id);
   }
 
   @Post('by-role')
   @ApiOperation({ summary: '根据角色获取菜单' })
-  @ApiResponse({ status: 200, type: MenuListResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: '成功获取菜单列表',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: '获取成功' },
+        data: {
+          type: 'array',
+          items: { $ref: '#/components/schemas/MenuResponseDto' },
+        },
+      },
+    },
+  })
   async getMenusByRole(
     @Body() body: MenuByRoleRequestDto,
-  ): Promise<MenuListResponseDto> {
-    const data = await this.menuService.findByRole(body.roleId);
-    return { data };
+  ): Promise<MenuResponseDto[]> {
+    return this.menuService.findByRole(body.roleId);
   }
 
   @Post('detail')
   @ApiOperation({ summary: '获取菜单详情' })
-  @ApiResponse({ status: 200, type: MenuDetailResponseDto })
-  async getMenuDetail(@Body() body: MenuDetailRequestDto) {
-    const data = await this.menuService.findOne(body.id);
-    return { data };
+  @ApiResponse({
+    status: 200,
+    description: '成功获取菜单详情',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: '获取成功' },
+        data: { $ref: '#/components/schemas/Menu' },
+      },
+    },
+  })
+  async getMenuDetail(@Body() body: MenuDetailRequestDto): Promise<Menu> {
+    return this.menuService.findOne(body.id);
   }
 
   @Post('create')
+  @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: '创建菜单' })
-  @ApiResponse({ status: 201, type: MenuDetailResponseDto })
-  async createMenu(@Body() createMenuDto: CreateMenuDto) {
-    const data = await this.menuService.create(createMenuDto);
-    return { data };
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: '菜单创建成功',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 201 },
+        message: { type: 'string', example: '创建成功' },
+        data: { $ref: '#/components/schemas/Menu' },
+      },
+    },
+  })
+  async createMenu(@Body() createMenuDto: CreateMenuDto): Promise<Menu> {
+    return this.menuService.create(createMenuDto);
   }
 
   @Post('update')
   @ApiOperation({ summary: '更新菜单' })
-  @ApiResponse({ status: 200, type: MenuDetailResponseDto })
-  async updateMenu(@Body() updateMenuDto: UpdateMenuDto) {
-    const data = await this.menuService.update(updateMenuDto);
-    return { data };
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: '菜单更新成功',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: '更新成功' },
+        data: { $ref: '#/components/schemas/Menu' },
+      },
+    },
+  })
+  async updateMenu(@Body() updateMenuDto: UpdateMenuDto): Promise<Menu> {
+    return this.menuService.update(updateMenuDto);
   }
 
   @Post('delete')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: '删除菜单' })
-  @ApiResponse({ status: 200, description: '删除成功' })
-  async deleteMenu(@Body() body: DeleteMenuRequestDto) {
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: '删除成功',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: '删除成功' },
+        data: { type: 'null' },
+      },
+    },
+  })
+  async deleteMenu(@Body() body: DeleteMenuRequestDto): Promise<void> {
     await this.menuService.delete(body.id);
-    return { message: '删除成功' };
   }
 }

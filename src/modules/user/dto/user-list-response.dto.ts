@@ -9,7 +9,7 @@ export class UserListResponseDto {
     description: '用户列表',
     type: [UserResponseDto],
   })
-  data: UserResponseDto[];
+  list: UserResponseDto[];
 
   @ApiProperty({
     description: '总数量',

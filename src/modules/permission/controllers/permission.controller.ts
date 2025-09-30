@@ -7,6 +7,8 @@ import {
   UsePipes,
   ValidationPipe,
   Query,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -28,25 +30,31 @@ import { Permission } from '../entities/permission.entity';
 
 @ApiTags('权限管理')
 @Controller('permissions')
-@UseGuards(
-  JwtAuthGuard,
-  // RolesGuard
-)
+@UseGuards(JwtAuthGuard)
 @UsePipes(new ValidationPipe({ transform: true }))
 @ApiBearerAuth()
 export class PermissionController {
   constructor(private readonly permissionService: PermissionService) {}
 
   @Post('create')
+  @HttpCode(HttpStatus.CREATED)
   @Permissions(PERMISSIONS.PERMISSION_CREATE)
   @ApiOperation({ summary: '创建新权限' })
-  @ApiBody({ type: CreatePermissionDto })
   @ApiResponse({
-    status: 201,
-    description: 'The permission has been successfully created.',
-    type: Permission,
+    status: HttpStatus.CREATED,
+    description: '权限创建成功',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 201 },
+        message: { type: 'string', example: '创建成功' },
+        data: { $ref: '#/components/schemas/Permission' },
+      },
+    },
   })
-  create(@Body() createPermissionDto: CreatePermissionDto) {
+  create(
+    @Body() createPermissionDto: CreatePermissionDto,
+  ): Promise<Permission> {
     return this.permissionService.create(createPermissionDto);
   }
 
@@ -54,12 +62,21 @@ export class PermissionController {
   @Permissions(PERMISSIONS.PERMISSION_READ)
   @ApiOperation({ summary: '获取权限列表' })
   @ApiResponse({
-    status: 200,
-    description: 'A list of permissions.',
-    type: [Permission],
+    status: HttpStatus.OK,
+    description: '成功获取权限列表',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: '获取成功' },
+        data: {
+          type: 'array',
+          items: { $ref: '#/components/schemas/Permission' },
+        },
+      },
+    },
   })
-  findAll(@Query('type') type?: string) {
-    // 如果提供了type参数，则按类型过滤权限
+  findAll(@Query('type') type?: string): Promise<Permission[]> {
     if (type) {
       return this.permissionService.findByType(type);
     }
@@ -67,6 +84,7 @@ export class PermissionController {
   }
 
   @Post('delete')
+  @HttpCode(HttpStatus.OK)
   @Permissions(PERMISSIONS.PERMISSION_DELETE)
   @ApiOperation({ summary: '删除权限' })
   @ApiBody({
@@ -78,23 +96,39 @@ export class PermissionController {
     },
   })
   @ApiResponse({
-    status: 200,
-    description: 'The permission has been successfully deleted.',
+    status: HttpStatus.OK,
+    description: '权限删除成功',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: '删除成功' },
+        data: { type: 'null' },
+      },
+    },
   })
-  remove(@Body('id') id: string) {
+  remove(@Body('id') id: string): Promise<void> {
     return this.permissionService.remove(id);
   }
 
   @Post('update')
   @Permissions(PERMISSIONS.PERMISSION_UPDATE)
   @ApiOperation({ summary: '更新权限信息' })
-  @ApiBody({ type: UpdatePermissionWithIdDto })
   @ApiResponse({
-    status: 200,
-    description: 'The permission has been successfully updated.',
-    type: Permission,
+    status: HttpStatus.OK,
+    description: '权限更新成功',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: '更新成功' },
+        data: { $ref: '#/components/schemas/Permission' },
+      },
+    },
   })
-  update(@Body() updatePermissionDto: UpdatePermissionWithIdDto) {
+  update(
+    @Body() updatePermissionDto: UpdatePermissionWithIdDto,
+  ): Promise<Permission> {
     const { id, ...updateData } = updatePermissionDto;
     return this.permissionService.update(id, updateData);
   }

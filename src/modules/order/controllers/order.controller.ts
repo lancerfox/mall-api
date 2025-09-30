@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Query, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Query,
+  Body,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -8,11 +17,6 @@ import {
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../../common/decorators/user.decorator';
 import type { JwtUser } from '../../../common/decorators/user.decorator';
-import { IApiResponse } from '../../../common/types/api-response.interface';
-import {
-  ERROR_CODES,
-  ERROR_MESSAGES,
-} from '../../../common/constants/error-codes';
 import { OrderService } from '../services/order.service';
 import {
   OrderListQueryDto,
@@ -25,7 +29,7 @@ import {
   OrderShipResponseDto,
   OrderCloseResponseDto,
   OrderModifyAddressResponseDto,
-  OrderStatusDictionaryResponseDto,
+  OrderStatusDictionaryItemDto,
 } from '../dto';
 
 @ApiTags('订单管理')
@@ -38,217 +42,85 @@ export class OrderController {
   @Get('list')
   @ApiOperation({ summary: '获取订单列表' })
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.OK,
     description: '获取订单列表成功',
     type: OrderListResponseDto,
   })
   async getOrderList(
     @Query() query: OrderListQueryDto,
-  ): Promise<IApiResponse<any>> {
-    try {
-      const result = await this.orderService.getOrderList(query);
-      return {
-        code: ERROR_CODES.SUCCESS,
-        message: ERROR_MESSAGES[ERROR_CODES.SUCCESS],
-        data: result,
-      };
-    } catch (error) {
-      return {
-        code: ERROR_CODES.VALIDATION_FAILED,
-        message:
-          error instanceof Error
-            ? error.message
-            : ERROR_MESSAGES[ERROR_CODES.VALIDATION_FAILED],
-        data: null,
-      };
-    }
+  ): Promise<OrderListResponseDto> {
+    return this.orderService.getOrderList(query);
   }
 
   @Get('detail')
   @ApiOperation({ summary: '获取订单详情' })
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.OK,
     description: '获取订单详情成功',
     type: OrderDetailResponseDto,
   })
   async getOrderDetail(
     @Query() query: OrderDetailQueryDto,
-  ): Promise<IApiResponse<OrderDetailResponseDto>> {
-    try {
-      const result = await this.orderService.getOrderDetail(query);
-      return {
-        code: ERROR_CODES.SUCCESS,
-        message: ERROR_MESSAGES[ERROR_CODES.SUCCESS],
-        data: result,
-      };
-    } catch (error) {
-      const isNotFoundError =
-        error instanceof Error &&
-        'status' in error &&
-        (error as Error & { status?: number }).status === 404;
-      const code = (
-        isNotFoundError
-          ? ERROR_CODES.ORDER_NOT_FOUND
-          : ERROR_CODES.VALIDATION_FAILED
-      ) as number;
-      return {
-        code,
-        message:
-          error instanceof Error
-            ? error.message
-            : ERROR_MESSAGES[ERROR_CODES.VALIDATION_FAILED],
-        data: null,
-      };
-    }
+  ): Promise<OrderDetailResponseDto> {
+    return this.orderService.getOrderDetail(query);
   }
 
   @Post('ship')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: '订单发货' })
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.OK,
     description: '订单发货成功',
     type: OrderShipResponseDto,
   })
   async shipOrder(
     @Body() dto: OrderShipDto,
     @CurrentUser() user: JwtUser,
-  ): Promise<IApiResponse<OrderShipResponseDto>> {
-    try {
-      const operatorName = user?.username || '系统';
-      const result = await this.orderService.shipOrder(dto, operatorName);
-      return {
-        code: ERROR_CODES.SUCCESS,
-        message: ERROR_MESSAGES[ERROR_CODES.SUCCESS],
-        data: result,
-      };
-    } catch (error) {
-      const isNotFoundError =
-        error instanceof Error &&
-        'status' in error &&
-        (error as Error & { status?: number }).status === 404;
-      const code = (
-        isNotFoundError
-          ? ERROR_CODES.ORDER_NOT_FOUND
-          : ERROR_CODES.VALIDATION_FAILED
-      ) as number;
-      return {
-        code,
-        message:
-          error instanceof Error
-            ? error.message
-            : ERROR_MESSAGES[ERROR_CODES.VALIDATION_FAILED],
-        data: null,
-      };
-    }
+  ): Promise<OrderShipResponseDto> {
+    const operatorName = user?.username || '系统';
+    return this.orderService.shipOrder(dto, operatorName);
   }
 
   @Post('close')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: '关闭订单' })
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.OK,
     description: '关闭订单成功',
     type: OrderCloseResponseDto,
   })
   async closeOrder(
     @Body() dto: OrderCloseDto,
     @CurrentUser() user: JwtUser,
-  ): Promise<IApiResponse<OrderCloseResponseDto>> {
-    try {
-      const operatorName = user?.username || '系统';
-      const result = await this.orderService.closeOrder(dto, operatorName);
-      return {
-        code: ERROR_CODES.SUCCESS,
-        message: ERROR_MESSAGES[ERROR_CODES.SUCCESS],
-        data: result,
-      };
-    } catch (error) {
-      const isNotFoundError =
-        error instanceof Error &&
-        'status' in error &&
-        (error as Error & { status?: number }).status === 404;
-      const code = (
-        isNotFoundError
-          ? ERROR_CODES.ORDER_NOT_FOUND
-          : ERROR_CODES.VALIDATION_FAILED
-      ) as number;
-      return {
-        code,
-        message:
-          error instanceof Error
-            ? error.message
-            : ERROR_MESSAGES[ERROR_CODES.VALIDATION_FAILED],
-        data: null,
-      };
-    }
+  ): Promise<OrderCloseResponseDto> {
+    const operatorName = user?.username || '系统';
+    return this.orderService.closeOrder(dto, operatorName);
   }
 
   @Post('modify_address')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: '修改订单地址' })
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.OK,
     description: '修改订单地址成功',
     type: OrderModifyAddressResponseDto,
   })
   async modifyOrderAddress(
     @Body() dto: OrderModifyAddressDto,
     @CurrentUser() user: JwtUser,
-  ): Promise<IApiResponse<OrderModifyAddressResponseDto>> {
-    try {
-      const operatorName = user?.username || '系统';
-      const result = await this.orderService.modifyOrderAddress(
-        dto,
-        operatorName,
-      );
-      return {
-        code: ERROR_CODES.SUCCESS,
-        message: ERROR_MESSAGES[ERROR_CODES.SUCCESS],
-        data: result,
-      };
-    } catch (error) {
-      const isNotFoundError =
-        error instanceof Error &&
-        'status' in error &&
-        (error as Error & { status?: number }).status === 404;
-      const code = (
-        isNotFoundError
-          ? ERROR_CODES.ORDER_NOT_FOUND
-          : ERROR_CODES.VALIDATION_FAILED
-      ) as number;
-      return {
-        code,
-        message:
-          error instanceof Error
-            ? error.message
-            : ERROR_MESSAGES[ERROR_CODES.VALIDATION_FAILED],
-        data: null,
-      };
-    }
+  ): Promise<OrderModifyAddressResponseDto> {
+    const operatorName = user?.username || '系统';
+    return this.orderService.modifyOrderAddress(dto, operatorName);
   }
 
   @Get('status-dictionary')
   @ApiOperation({ summary: '获取订单状态字典' })
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.OK,
     description: '获取订单状态字典成功',
-    type: OrderStatusDictionaryResponseDto,
+    type: [OrderStatusDictionaryItemDto],
   })
-  getOrderStatusDictionary(): Promise<IApiResponse<any>> {
-    try {
-      const result = this.orderService.getOrderStatusDictionary();
-      return Promise.resolve({
-        code: ERROR_CODES.SUCCESS,
-        message: ERROR_MESSAGES[ERROR_CODES.SUCCESS],
-        data: result.data,
-      });
-    } catch (error) {
-      return Promise.resolve({
-        code: ERROR_CODES.VALIDATION_FAILED,
-        message:
-          error instanceof Error
-            ? error.message
-            : ERROR_MESSAGES[ERROR_CODES.VALIDATION_FAILED],
-        data: null,
-      });
-    }
+  getOrderStatusDictionary(): OrderStatusDictionaryItemDto[] {
+    return this.orderService.getOrderStatusDictionary();
   }
 }

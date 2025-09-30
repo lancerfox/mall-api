@@ -50,7 +50,7 @@ export class MenuResponseDto {
 
 export class MenuListResponseDto {
   @ApiProperty({ description: '菜单列表', type: [MenuResponseDto] })
-  data: MenuResponseDto[];
+  list: MenuResponseDto[];
 }
 
 export class MenuDetailResponseDto {

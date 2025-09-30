@@ -28,7 +28,7 @@ import {
   OrderShipResponseDto,
   OrderCloseResponseDto,
   OrderModifyAddressResponseDto,
-  OrderStatusDictionaryResponseDto,
+  OrderStatusDictionaryItemDto,
 } from '../dto';
 
 @Injectable()
@@ -127,7 +127,7 @@ export class OrderService {
     }));
 
     return {
-      data: items,
+      list: items,
       total,
       page,
       pageSize,
@@ -386,8 +386,8 @@ export class OrderService {
   /**
    * 获取订单状态字典
    */
-  getOrderStatusDictionary(): OrderStatusDictionaryResponseDto {
-    const statusDictionary = [
+  getOrderStatusDictionary(): OrderStatusDictionaryItemDto[] {
+    return [
       {
         value: OrderStatus.PENDING_PAYMENT,
         label: '待付款',
@@ -419,8 +419,6 @@ export class OrderService {
         description: '用户申请退/换货，等待商家处理',
       },
     ];
-
-    return { data: statusDictionary };
   }
 
   /**

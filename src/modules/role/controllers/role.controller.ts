@@ -1,10 +1,20 @@
-import { Controller, Get, Post, Body, UseGuards, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  UseGuards,
+  Query,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiBody,
   ApiResponse,
   ApiQuery,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 // import { RolesGuard } from '../../../common/guards/roles.guard';
@@ -19,27 +29,33 @@ import { Role } from '../entities/role.entity';
 import { RoleListResponseDto } from '../dto/role-list-response.dto';
 
 @ApiTags('角色管理')
+@ApiTags('角色管理')
 @Controller('roles')
-@UseGuards(
-  JwtAuthGuard,
-  // RolesGuard
-)
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 export class RoleController {
   constructor(private readonly roleService: RoleService) {}
 
   @Post('create')
+  @HttpCode(HttpStatus.CREATED)
   @Permissions(PERMISSIONS.ROLE_CREATE)
   @ApiOperation({
     summary: '创建新角色',
     description: '创建新角色，角色类型一旦创建后不可修改',
   })
-  @ApiBody({ type: CreateRoleDto })
   @ApiResponse({
-    status: 201,
-    description: 'The role has been successfully created.',
-    type: Role,
+    status: HttpStatus.CREATED,
+    description: '角色创建成功',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 201 },
+        message: { type: 'string', example: '创建成功' },
+        data: { $ref: '#/components/schemas/Role' },
+      },
+    },
   })
-  create(@Body() createRoleDto: CreateRoleDto) {
+  create(@Body() createRoleDto: CreateRoleDto): Promise<Role> {
     return this.roleService.create(createRoleDto);
   }
 
@@ -47,15 +63,26 @@ export class RoleController {
   @Permissions(PERMISSIONS.ROLE_READ)
   @ApiOperation({ summary: '获取所有角色列表' })
   @ApiResponse({
-    status: 200,
-    description: 'A list of roles.',
-    type: [RoleListResponseDto],
+    status: HttpStatus.OK,
+    description: '成功获取角色列表',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: '获取成功' },
+        data: {
+          type: 'array',
+          items: { $ref: '#/components/schemas/RoleListResponseDto' },
+        },
+      },
+    },
   })
-  findAll() {
+  findAll(): Promise<RoleListResponseDto[]> {
     return this.roleService.findAll();
   }
 
   @Post('delete')
+  @HttpCode(HttpStatus.OK)
   @Permissions(PERMISSIONS.ROLE_DELETE)
   @ApiOperation({ summary: '删除角色' })
   @ApiBody({
@@ -67,10 +94,18 @@ export class RoleController {
     },
   })
   @ApiResponse({
-    status: 200,
-    description: 'The role has been successfully deleted.',
+    status: HttpStatus.OK,
+    description: '角色删除成功',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: '删除成功' },
+        data: { type: 'null' },
+      },
+    },
   })
-  remove(@Body('id') id: string) {
+  remove(@Body('id') id: string): Promise<void> {
     return this.roleService.remove(id);
   }
 
@@ -87,14 +122,21 @@ export class RoleController {
     },
   })
   @ApiResponse({
-    status: 200,
-    description: 'Permissions have been successfully updated for the role.',
-    type: Role,
+    status: HttpStatus.OK,
+    description: '角色权限更新成功',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: '更新成功' },
+        data: { $ref: '#/components/schemas/Role' },
+      },
+    },
   })
   updatePermissions(
     @Body('id') id: string,
     @Body('permissionIds') permissionIds: string[],
-  ) {
+  ): Promise<Role> {
     return this.roleService.updatePermissions(id, permissionIds);
   }
 
@@ -106,11 +148,18 @@ export class RoleController {
   })
   @ApiBody({ type: UpdateRoleWithIdDto })
   @ApiResponse({
-    status: 200,
-    description: 'The role has been successfully updated.',
-    type: Role,
+    status: HttpStatus.OK,
+    description: '角色更新成功',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: '更新成功' },
+        data: { $ref: '#/components/schemas/Role' },
+      },
+    },
   })
-  update(@Body() updateRoleDto: UpdateRoleWithIdDto) {
+  update(@Body() updateRoleDto: UpdateRoleWithIdDto): Promise<Role> {
     return this.roleService.update(updateRoleDto.id, updateRoleDto);
   }
 
@@ -125,18 +174,25 @@ export class RoleController {
     enum: ['API', 'PAGE', 'OPERATION', 'DATA'],
   })
   @ApiResponse({
-    status: 200,
-    description: 'The permissions of the role.',
+    status: HttpStatus.OK,
+    description: '成功获取角色权限',
     schema: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          id: { type: 'string' },
-          name: { type: 'string' },
-          description: { type: 'string' },
-          code: { type: 'string' },
-          type: { type: 'string' },
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: '获取成功' },
+        data: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              name: { type: 'string' },
+              description: { type: 'string' },
+              code: { type: 'string' },
+              type: { type: 'string' },
+            },
+          },
         },
       },
     },
@@ -152,15 +208,22 @@ export class RoleController {
     description: '获取系统中定义的所有角色类型枚举值，用于前端下拉选择',
   })
   @ApiResponse({
-    status: 200,
-    description: '角色类型列表',
+    status: HttpStatus.OK,
+    description: '成功获取角色类型列表',
     schema: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          value: { type: 'string', description: '角色类型值' },
-          label: { type: 'string', description: '角色类型中文描述' },
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: '获取成功' },
+        data: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              value: { type: 'string', description: '角色类型值' },
+              label: { type: 'string', description: '角色类型中文描述' },
+            },
+          },
         },
       },
     },

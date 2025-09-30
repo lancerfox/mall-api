@@ -9,7 +9,7 @@ export class ImageListResponseDto {
     description: '图片列表',
     type: [ImageResponseDto],
   })
-  data: ImageResponseDto[];
+  list: ImageResponseDto[];
 
   @ApiProperty({
     description: '总数量',

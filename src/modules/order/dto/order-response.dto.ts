@@ -66,7 +66,7 @@ export class OrderListItemResponseDto {
 
 export class OrderListResponseDto {
   @ApiProperty({ description: '订单列表', type: [OrderListItemResponseDto] })
-  data: OrderListItemResponseDto[];
+  list: OrderListItemResponseDto[];
 
   @ApiProperty({ description: '总数量' })
   total: number;

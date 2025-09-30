@@ -1,4 +1,11 @@
-import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -10,7 +17,6 @@ import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { OperationLogService } from '../services/operation-log.service';
 import { OperationLogListDto } from '../dto/operation-log-list.dto';
 import {
-  OperationLogResponseDto,
   OperationLogListResponseDto,
   OperationLogData,
 } from '../dto/operation-log-response.dto';
@@ -23,30 +29,28 @@ export class OperationLogController {
   constructor(private readonly operationLogService: OperationLogService) {}
 
   @Post('list')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: '获取操作日志列表' })
-  @ApiBody({ type: OperationLogListDto })
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.OK,
     description: '获取操作日志列表成功',
-    type: OperationLogListResponseDto,
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: '获取成功' },
+        data: { $ref: '#/components/schemas/OperationLogListResponseDto' },
+      },
+    },
   })
   async getList(
     @Body() operationLogListDto: OperationLogListDto,
   ): Promise<OperationLogListResponseDto> {
-    const result = await this.operationLogService.getList(operationLogListDto);
-    return {
-      code: result.code,
-      message: result.message,
-      data: result.data
-        ? {
-            list: result.data.list as OperationLogData[],
-            total: result.data.total,
-          }
-        : { list: [], total: 0 },
-    };
+    return this.operationLogService.getList(operationLogListDto);
   }
 
   @Post('detail')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: '获取操作日志详情' })
   @ApiBody({
     schema: {
@@ -58,16 +62,18 @@ export class OperationLogController {
     },
   })
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.OK,
     description: '获取操作日志详情成功',
-    type: OperationLogResponseDto,
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: '获取成功' },
+        data: { $ref: '#/components/schemas/OperationLogData' },
+      },
+    },
   })
-  async getById(@Body('id') id: string): Promise<OperationLogResponseDto> {
-    const result = await this.operationLogService.getById(id);
-    return {
-      code: result.code,
-      message: result.message,
-      data: result.data as OperationLogData,
-    };
+  async getById(@Body('id') id: string): Promise<OperationLogData> {
+    return this.operationLogService.getById(id);
   }
 }

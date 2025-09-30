@@ -1,4 +1,8 @@
-import { Injectable, HttpException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UserService } from '../../user/services/user.service';
@@ -29,16 +33,15 @@ export class AuthService {
     username: string,
     password: string,
     ip?: string,
-  ): Promise<IUserWithoutPassword | null> {
+  ): Promise<IUserWithoutPassword> {
     // 检查账户是否被锁定
     if (ip && this.securityService.isAccountLocked(username, ip)) {
       const remainingTime = this.securityService.getRemainingLockTime(
         username,
         ip,
       );
-      throw new HttpException(
+      throw new UnauthorizedException(
         `账户已被锁定，请在 ${remainingTime} 分钟后重试`,
-        ERROR_CODES.ACCOUNT_LOCKED,
       );
     }
 
@@ -48,17 +51,11 @@ export class AuthService {
     if (user) {
       // 检查用户状态
       if (user.status === 'locked') {
-        throw new HttpException(
-          '账户已被管理员锁定，请联系管理员',
-          ERROR_CODES.ACCOUNT_LOCKED,
-        );
+        throw new UnauthorizedException('账户已被管理员锁定，请联系管理员');
       }
 
       if (user.status === 'inactive') {
-        throw new HttpException(
-          '账户已被禁用，请联系管理员',
-          ERROR_CODES.ACCOUNT_DISABLED,
-        );
+        throw new UnauthorizedException('账户已被禁用，请联系管理员');
       }
 
       isValid = await bcrypt.compare(password, user.password);
@@ -70,30 +67,15 @@ export class AuthService {
     }
 
     if (user && isValid) {
-      // 验证成功，返回用户信息（排除密码）
-      // 手动构建用户对象，排除密码字段
-      const userObj: Record<string, unknown> = {};
-      for (const key in user) {
-        if (
-          Object.prototype.hasOwnProperty.call(user, key) &&
-          key !== 'password'
-        ) {
-          const value = (user as unknown as Record<string, unknown>)[key];
-          // 只复制非函数类型的值
-          if (typeof value !== 'function') {
-            userObj[key] = value;
-          }
-        }
-      }
-
-      // 确保有正确的id字段
+      const { password, ...result } = user;
+      const profile = await this.getProfile(user.id);
       return {
-        ...userObj,
-        id: user.id,
-      } as IUserWithoutPassword;
+        ...result,
+        permissions: profile.permissions,
+      };
     }
 
-    return null;
+    throw new UnauthorizedException('用户名或密码错误');
   }
 
   /**
@@ -106,34 +88,16 @@ export class AuthService {
     user: IUserWithoutPassword,
     ip?: string,
   ): Promise<ILoginResponse> {
-    // 使用username作为备用标识符，如果id不存在
-    let userId = user.id;
-
-    if (!userId) {
-      const foundUser = await this.userService.findOne(user.username);
-      if (!foundUser) {
-        throw new HttpException('用户不存在', ERROR_CODES.USER_NOT_FOUND);
-      }
-      const foundUserId = foundUser.id;
-      if (!foundUserId) {
-        throw new HttpException(
-          '无法确定用户ID',
-          ERROR_CODES.USER_ID_UNDEFINED,
-        );
-      }
-      userId = foundUserId;
+    if (!user.id) {
+      throw new UnauthorizedException('无法确定用户ID');
     }
 
-    if (!userId) {
-      throw new HttpException('无法确定用户ID', ERROR_CODES.INVALID_USER_ID);
-    }
-
-    await this.userService.updateLastLogin(userId, ip);
+    await this.userService.updateLastLogin(user.id, ip);
 
     // 生成访问令牌
     const accessTokenPayload: IJwtPayload = {
       username: user.username,
-      sub: userId,
+      sub: user.id,
       role: user.roles && user.roles.length > 0 ? user.roles[0].name : '',
     };
 
@@ -161,11 +125,7 @@ export class AuthService {
         secret: this.configService.get('JWT_SECRET'),
       });
     } catch (error) {
-      console.log('validateToken error', error);
-      throw new HttpException(
-        '访问令牌无效或已过期',
-        ERROR_CODES.INVALID_TOKEN,
-      );
+      throw new UnauthorizedException('访问令牌无效或已过期');
     }
   }
 
@@ -195,7 +155,7 @@ export class AuthService {
   async getProfile(userId: string): Promise<UserInfoDto> {
     const user = await this.userService.findById(userId);
     if (!user) {
-      throw new HttpException('用户不存在', ERROR_CODES.USER_NOT_FOUND);
+      throw new UnauthorizedException('用户不存在');
     }
 
     return this.formatUserInfo(user);
@@ -212,35 +172,27 @@ export class AuthService {
     currentPassword: string,
     newPassword: string,
   ): Promise<void> {
-    try {
-      const user = await this.userService.findById(userId);
-      if (!user) {
-        throw new HttpException('用户不存在', ERROR_CODES.USER_NOT_FOUND);
-      }
-
-      // 验证当前密码
-      const userWithPassword = await this.userService.findOne(user.username);
-      if (
-        !userWithPassword ||
-        !(await bcrypt.compare(currentPassword, userWithPassword.password))
-      ) {
-        throw new HttpException('当前密码不正确', ERROR_CODES.INVALID_PASSWORD);
-      }
-
-      // 检查新密码是否与当前密码相同
-      if (await bcrypt.compare(newPassword, userWithPassword.password)) {
-        throw new HttpException(
-          '新密码不能与当前密码相同',
-          ERROR_CODES.PASSWORD_SAME_AS_CURRENT,
-        );
-      }
-
-      // 更新密码
-      await this.userService.updatePassword(userId, newPassword);
-    } catch (error: unknown) {
-      console.log(error);
-      throw error;
+    const user = await this.userService.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('用户不存在');
     }
+
+    // 验证当前密码
+    const userWithPassword = await this.userService.findOne(user.username);
+    if (
+      !userWithPassword ||
+      !(await bcrypt.compare(currentPassword, userWithPassword.password))
+    ) {
+      throw new UnauthorizedException('当前密码不正确');
+    }
+
+    // 检查新密码是否与当前密码相同
+    if (await bcrypt.compare(newPassword, userWithPassword.password)) {
+      throw new BadRequestException('新密码不能与当前密码相同');
+    }
+
+    // 更新密码
+    await this.userService.updatePassword(userId, newPassword);
   }
 
   /**
@@ -269,22 +221,16 @@ export class AuthService {
   async resetPassword(id: string): Promise<string> {
     const user = await this.userService.findById(id);
     if (!user) {
-      throw new HttpException('用户不存在', ERROR_CODES.USER_NOT_FOUND);
+      throw new BadRequestException('用户不存在');
     }
 
     // 检查用户状态
     if (user.status === 'locked') {
-      throw new HttpException(
-        '账户已被锁定，无法重置密码',
-        ERROR_CODES.ACCOUNT_LOCKED,
-      );
+      throw new BadRequestException('账户已被锁定，无法重置密码');
     }
 
     if (user.status === 'inactive') {
-      throw new HttpException(
-        '账户已被禁用，无法重置密码',
-        ERROR_CODES.ACCOUNT_DISABLED,
-      );
+      throw new BadRequestException('账户已被禁用，无法重置密码');
     }
 
     // 生成随机密码

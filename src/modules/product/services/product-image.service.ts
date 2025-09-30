@@ -1,13 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { ProductImage } from '../entities/product-image.entity';
 import { UpdateProductImagesDto } from '../dto/update-product-images.dto';
-import {
-  ERROR_CODES,
-  ERROR_MESSAGES,
-} from '../../../common/constants/error-codes';
-import { IApiResponse } from '../../../common/types/api-response.interface';
 
 @Injectable()
 export class ProductImageService {
@@ -24,7 +19,7 @@ export class ProductImageService {
    */
   async updateProductImages(
     updateProductImagesDto: UpdateProductImagesDto,
-  ): Promise<IApiResponse<null>> {
+  ): Promise<void> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -35,11 +30,7 @@ export class ProductImageService {
       // 验证主图设置：最多只能有一个主图
       const mainImages = images.filter((img) => img.isMain);
       if (mainImages.length > 1) {
-        return {
-          code: ERROR_CODES.VALIDATION_FAILED,
-          message: '最多只能设置一张主图',
-          data: null,
-        };
+        throw new BadRequestException('最多只能设置一张主图');
       }
 
       // 删除该商品的所有旧关联记录
@@ -61,20 +52,10 @@ export class ProductImageService {
       }
 
       await queryRunner.commitTransaction();
-
-      return {
-        code: ERROR_CODES.SUCCESS,
-        message: ERROR_MESSAGES[ERROR_CODES.SUCCESS],
-        data: null,
-      };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       this.logger.error('更新商品图片关联失败', error);
-      return {
-        code: ERROR_CODES.VALIDATION_FAILED,
-        message: ERROR_MESSAGES[ERROR_CODES.VALIDATION_FAILED],
-        data: null,
-      };
+      throw error;
     } finally {
       await queryRunner.release();
     }
