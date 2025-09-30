@@ -232,23 +232,23 @@ export class OrderController {
     description: '获取订单状态字典成功',
     type: OrderStatusDictionaryResponseDto,
   })
-  async getOrderStatusDictionary(): Promise<IApiResponse<any>> {
+  getOrderStatusDictionary(): Promise<IApiResponse<any>> {
     try {
-      const result = await this.orderService.getOrderStatusDictionary();
-      return {
+      const result = this.orderService.getOrderStatusDictionary();
+      return Promise.resolve({
         code: ERROR_CODES.SUCCESS,
         message: ERROR_MESSAGES[ERROR_CODES.SUCCESS],
         data: result.data,
-      };
+      });
     } catch (error) {
-      return {
+      return Promise.resolve({
         code: ERROR_CODES.VALIDATION_FAILED,
         message:
           error instanceof Error
             ? error.message
             : ERROR_MESSAGES[ERROR_CODES.VALIDATION_FAILED],
         data: null,
-      };
+      });
     }
   }
 }
