@@ -96,7 +96,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
     );
 
     // 构造错误响应
-    const errorResponse: IApiResponse<null> = {
+    const errorResponse: IApiResponse<null> & {
+      errors?: { [key: string]: string[] };
+    } = {
       code: this.getErrorCode(status, message),
       message,
       data: null,
