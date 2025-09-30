@@ -29,7 +29,7 @@ import {
 } from '../dto';
 
 @ApiTags('订单管理')
-@Controller('api/orders')
+@Controller('orders')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class OrderController {
