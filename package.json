@@ -26,8 +26,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "test:all": "npm run test:setup && npm run test",
-    "test:supabase": "node scripts/test-supabase.js"
+    "test:all": "npm run test:setup && npm run test"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

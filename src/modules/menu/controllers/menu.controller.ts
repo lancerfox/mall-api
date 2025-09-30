@@ -6,8 +6,8 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { BusinessException } from 'src/common/exceptions/business.exception';
-import { ERROR_CODES } from 'src/common/constants/error-codes';
+import { BusinessException } from '../../../common/exceptions/business.exception';
+import { ERROR_CODES } from '../../../common/constants/error-codes';
 import {
   ApiOperation,
   ApiResponse,

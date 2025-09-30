@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { BusinessException } from 'src/common/exceptions/business.exception';
+import { BusinessException } from '../../../common/exceptions/business.exception';
 import { Repository, In } from 'typeorm';
 import { Role } from '../entities/role.entity';
 import { RoleType } from '../../../common/enums/role-type.enum';

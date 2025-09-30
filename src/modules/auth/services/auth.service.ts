@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { BusinessException } from 'src/common/exceptions/business.exception';
-import { ERROR_CODES } from 'src/common/constants/error-codes';
+import { BusinessException } from '../../../common/exceptions/business.exception';
+import { ERROR_CODES } from '../../../common/constants/error-codes';
 import { ConfigService } from '@nestjs/config';
 import { UserService } from '../../user/services/user.service';
 import { SecurityService } from './security.service';

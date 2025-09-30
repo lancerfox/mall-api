@@ -115,7 +115,7 @@ export class AuthController {
   async changePassword(
     @Body() changePasswordDto: ChangePasswordDto,
     @CurrentUser('sub') userId: string,
-  ): Promise<void> {
+  ): Promise<{ message: string }> {
     // 验证新密码和确认密码是否一致
     if (changePasswordDto.newPassword !== changePasswordDto.confirmPassword) {
       throw new BusinessException(ERROR_CODES.VALIDATION_FAILED);
@@ -126,6 +126,8 @@ export class AuthController {
       changePasswordDto.currentPassword,
       changePasswordDto.newPassword,
     );
+
+    return { message: '密码修改成功' };
   }
 
   /**
@@ -198,7 +200,8 @@ export class AuthController {
   @Post('reset-password')
   async resetPassword(
     @Body() resetPasswordDto: ResetPasswordDto,
-  ): Promise<string> {
-    return this.authService.resetPassword(resetPasswordDto.id);
+  ): Promise<{ message: string; newPassword: string }> {
+    const newPassword = await this.authService.resetPassword(resetPasswordDto.id);
+    return { message: '密码重置成功', newPassword };
   }
 }

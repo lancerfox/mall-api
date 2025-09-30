@@ -8,7 +8,7 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { BusinessException } from 'src/common/exceptions/business.exception';
+import { BusinessException } from '../../../common/exceptions/business.exception';
 import {
   ApiTags,
   ApiOperation,
