@@ -1,5 +1,7 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { BusinessException } from 'src/common/exceptions/business.exception';
+import { ERROR_CODES } from 'src/common/constants/error-codes';
 import { Repository, Like, Between } from 'typeorm';
 import { OperationLog } from '../entities/operation-log.entity';
 import { CreateOperationLogDto } from '../dto/create-operation-log.dto';
@@ -91,7 +93,7 @@ export class OperationLogService {
     });
 
     if (!operationLog) {
-      throw new NotFoundException('操作日志不存在');
+      throw new BusinessException(ERROR_CODES.OPERATION_LOG_NOT_FOUND);
     }
 
     return operationLog;

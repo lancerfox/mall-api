@@ -1,10 +1,6 @@
-import {
-  Injectable,
-  ConflictException,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { BusinessException } from 'src/common/exceptions/business.exception';
 import { Repository, In } from 'typeorm';
 import { Role } from '../entities/role.entity';
 import { RoleType } from '../../../common/enums/role-type.enum';
@@ -29,13 +25,13 @@ export class RoleService {
     });
 
     if (existingRole) {
-      throw new ConflictException('角色名称已存在');
+      throw new BusinessException(ERROR_CODES.ROLE_NOT_FOUND);
     }
 
     // 验证角色类型是否合法
     const validRoleTypes = Object.values(RoleType) as RoleType[];
     if (!validRoleTypes.includes(createRoleDto.type)) {
-      throw new BadRequestException('无效的角色类型');
+      throw new BusinessException(ERROR_CODES.ROLE_NOT_FOUND);
     }
 
     const newRole = this.roleRepository.create({
@@ -52,7 +48,7 @@ export class RoleService {
         createRoleDto.permissions,
       );
       if (permissions.length !== createRoleDto.permissions.length) {
-        throw new BadRequestException('部分权限不存在');
+        throw new BusinessException(ERROR_CODES.PERMISSION_NOT_FOUND);
       }
       newRole.permissions = permissions;
     }
@@ -85,7 +81,7 @@ export class RoleService {
       relations: ['permissions'],
     });
     if (!role) {
-      throw new NotFoundException('角色不存在');
+      throw new BusinessException(ERROR_CODES.ROLE_NOT_FOUND);
     }
     return role;
   }
@@ -119,17 +115,17 @@ export class RoleService {
     });
 
     if (!roleToUpdate) {
-      throw new NotFoundException('角色不存在');
+      throw new BusinessException(ERROR_CODES.ROLE_NOT_FOUND);
     }
 
     // 系统角色不允许修改某些字段
     if (roleToUpdate.isSystem && updateRoleDto.isSystem === false) {
-      throw new BadRequestException('不能修改系统角色的系统标识');
+      throw new BusinessException(ERROR_CODES.ROLE_NOT_FOUND);
     }
 
     // 角色类型不允许修改
     if (updateRoleDto.type && updateRoleDto.type !== roleToUpdate.type) {
-      throw new BadRequestException('角色类型不允许修改');
+      throw new BusinessException(ERROR_CODES.ROLE_NOT_FOUND);
     }
 
     if (updateRoleDto.name) {
@@ -138,7 +134,7 @@ export class RoleService {
       });
 
       if (duplicateRole && duplicateRole.id !== id) {
-        throw new ConflictException('角色名称已存在');
+        throw new BusinessException(ERROR_CODES.ROLE_NOT_FOUND);
       }
     }
 
@@ -149,7 +145,7 @@ export class RoleService {
           updateRoleDto.permissions,
         );
         if (permissions.length !== updateRoleDto.permissions.length) {
-          throw new BadRequestException('部分权限不存在');
+          throw new BusinessException(ERROR_CODES.PERMISSION_NOT_FOUND);
         }
         roleToUpdate.permissions = permissions;
       } else {
@@ -163,16 +159,16 @@ export class RoleService {
   async remove(id: string): Promise<void> {
     const role = await this.roleRepository.findOneBy({ id });
     if (!role) {
-      throw new NotFoundException('角色不存在');
+      throw new BusinessException(ERROR_CODES.ROLE_NOT_FOUND);
     }
 
     if (role.isSystem) {
-      throw new BadRequestException('系统角色不能删除');
+      throw new BusinessException(ERROR_CODES.ROLE_NOT_FOUND);
     }
 
     const result = await this.roleRepository.delete(id);
     if (result.affected === 0) {
-      throw new NotFoundException('角色不存在');
+      throw new BusinessException(ERROR_CODES.ROLE_NOT_FOUND);
     }
   }
 
@@ -182,14 +178,14 @@ export class RoleService {
       relations: ['permissions'],
     });
     if (!role) {
-      throw new NotFoundException('角色不存在');
+      throw new BusinessException(ERROR_CODES.ROLE_NOT_FOUND);
     }
 
     // 验证权限是否存在
     const newPermissions =
       await this.permissionService.findByIds(permissionIds);
     if (newPermissions.length !== permissionIds.length) {
-      throw new BadRequestException('部分权限不存在');
+      throw new BusinessException(ERROR_CODES.PERMISSION_NOT_FOUND);
     }
 
     // 添加权限（去重）
@@ -209,7 +205,7 @@ export class RoleService {
   ): Promise<Role> {
     const role = await this.roleRepository.findOneBy({ id: roleId });
     if (!role) {
-      throw new NotFoundException('角色不存在');
+      throw new BusinessException(ERROR_CODES.ROLE_NOT_FOUND);
     }
 
     let permissions: Permission[] = [];
@@ -217,7 +213,7 @@ export class RoleService {
     if (permissionIds.length > 0) {
       permissions = await this.permissionService.findByIds(permissionIds);
       if (permissions.length !== permissionIds.length) {
-        throw new BadRequestException('部分权限不存在');
+        throw new BusinessException(ERROR_CODES.PERMISSION_NOT_FOUND);
       }
     }
 
@@ -244,7 +240,7 @@ export class RoleService {
     });
 
     if (!role) {
-      throw new NotFoundException('角色不存在');
+      throw new BusinessException(ERROR_CODES.ROLE_NOT_FOUND);
     }
 
     let permissions = role.permissions || [];

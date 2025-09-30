@@ -1,5 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { BusinessException } from 'src/common/exceptions/business.exception';
+import { ERROR_CODES } from 'src/common/constants/error-codes';
 import { Repository, FindOptionsWhere } from 'typeorm';
 import { Menu } from '../entities/menu.entity';
 import { CreateMenuDto } from '../dto/create-menu.dto';
@@ -31,7 +33,7 @@ export class MenuService {
   async findOne(id: string): Promise<Menu> {
     const menu = await this.menuRepository.findOne({ where: { id } });
     if (!menu) {
-      throw new NotFoundException(`菜单 ${id} 不存在`);
+      throw new BusinessException(ERROR_CODES.MENU_NOT_FOUND);
     }
     return menu;
   }
@@ -123,7 +125,7 @@ export class MenuService {
 
     const menu = await this.menuRepository.findOne({ where: { id } });
     if (!menu) {
-      throw new NotFoundException(`菜单 ${id} 不存在`);
+      throw new BusinessException(ERROR_CODES.MENU_NOT_FOUND);
     }
 
     let permissionNameToSet: string | undefined;
@@ -214,7 +216,9 @@ export class MenuService {
     const updatedMenu = await this.menuRepository.save(menu);
 
     if (!updatedMenu) {
-      throw new NotFoundException(`菜单 ${id} 更新失败`);
+      // 在这种情况下，可以定义一个新的错误码，或者复用一个通用的“更新失败”错误码
+      // 这里我们暂时复用 MENU_NOT_FOUND，但更理想的是有专门的错误码
+      throw new BusinessException(ERROR_CODES.MENU_NOT_FOUND);
     }
     return updatedMenu;
   }
@@ -222,7 +226,7 @@ export class MenuService {
   async delete(id: string): Promise<void> {
     const menu = await this.menuRepository.findOne({ where: { id } });
     if (!menu) {
-      throw new NotFoundException(`菜单 ${id} 不存在`);
+      throw new BusinessException(ERROR_CODES.MENU_NOT_FOUND);
     }
 
     // 删除关联的权限

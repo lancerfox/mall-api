@@ -1,9 +1,7 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { BusinessException } from 'src/common/exceptions/business.exception';
+import { ERROR_CODES } from 'src/common/constants/error-codes';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import {
   Order,
@@ -155,7 +153,7 @@ export class OrderService {
     });
 
     if (!order) {
-      throw new NotFoundException('订单不存在');
+      throw new BusinessException(ERROR_CODES.ORDER_NOT_FOUND);
     }
 
     // 格式化返回数据
@@ -224,11 +222,11 @@ export class OrderService {
     });
 
     if (!order) {
-      throw new NotFoundException('订单不存在');
+      throw new BusinessException(ERROR_CODES.ORDER_NOT_FOUND);
     }
 
     if (order.status !== OrderStatus.TO_BE_SHIPPED) {
-      throw new BadRequestException('只有待发货状态的订单才能执行发货操作');
+      throw new BusinessException(ERROR_CODES.ORDER_CANNOT_SHIP);
     }
 
     // 开启事务
@@ -282,11 +280,11 @@ export class OrderService {
     });
 
     if (!order) {
-      throw new NotFoundException('订单不存在');
+      throw new BusinessException(ERROR_CODES.ORDER_NOT_FOUND);
     }
 
     if (order.status !== OrderStatus.PENDING_PAYMENT) {
-      throw new BadRequestException('只有待付款状态的订单才能执行关闭操作');
+      throw new BusinessException(ERROR_CODES.ORDER_CANNOT_CLOSE);
     }
 
     // 开启事务
@@ -346,11 +344,11 @@ export class OrderService {
     });
 
     if (!order) {
-      throw new NotFoundException('订单不存在');
+      throw new BusinessException(ERROR_CODES.ORDER_NOT_FOUND);
     }
 
     if (order.status !== OrderStatus.TO_BE_SHIPPED) {
-      throw new BadRequestException('只有待发货状态的订单才能修改收货地址');
+      throw new BusinessException(ERROR_CODES.ORDER_CANNOT_MODIFY_ADDRESS);
     }
 
     // 开启事务

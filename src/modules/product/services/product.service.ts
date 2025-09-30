@@ -1,5 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { BusinessException } from 'src/common/exceptions/business.exception';
+import { ERROR_CODES } from 'src/common/constants/error-codes';
 import { Repository, In, ILike, Not } from 'typeorm';
 import { ProductSPU } from '../entities/product-spu.entity';
 import { ProductSKU, Specification } from '../entities/product-sku.entity';
@@ -84,7 +86,7 @@ export class ProductService {
         where: { id: spu.id },
       });
       if (!existingSpu) {
-        throw new NotFoundException('商品不存在');
+        throw new BusinessException(ERROR_CODES.PRODUCT_NOT_FOUND);
       }
 
       // 更新SPU
@@ -108,7 +110,7 @@ export class ProductService {
     }
 
     if (!savedSpu) {
-      throw new NotFoundException('保存商品失败');
+      throw new BusinessException(ERROR_CODES.PRODUCT_SAVE_FAILED);
     }
 
     // 保存SKUs
@@ -168,9 +170,7 @@ export class ProductService {
             where: { skuCode: sku.skuCode, id: Not(sku.id) }, // 排除自己
           });
           if (conflictingSku) {
-            throw new Error(
-              `SKU编码 "${sku.skuCode}" 已被其他商品使用，请使用不同的编码`,
-            );
+            throw new BusinessException(ERROR_CODES.PRODUCT_SKU_CODE_CONFLICT);
           }
         }
       }
@@ -197,9 +197,7 @@ export class ProductService {
             where: { skuCode: sku.skuCode },
           });
           if (existingSku) {
-            throw new Error(
-              `SKU编码 "${sku.skuCode}" 已被其他商品使用，请使用不同的编码`,
-            );
+            throw new BusinessException(ERROR_CODES.PRODUCT_SKU_CODE_CONFLICT);
           }
         }
       }
@@ -279,7 +277,7 @@ export class ProductService {
 
     const spu = await this.spuRepository.findOne({ where: { id } });
     if (!spu) {
-      throw new NotFoundException('商品不存在');
+      throw new BusinessException(ERROR_CODES.PRODUCT_NOT_FOUND);
     }
 
     return this.transformToEditResponseDto(spu);
@@ -300,7 +298,7 @@ export class ProductService {
     const result = await this.spuRepository.update({ id: In(ids) }, updateData);
 
     if (result.affected === 0) {
-      throw new NotFoundException('未找到符合条件的商品');
+      throw new BusinessException(ERROR_CODES.PRODUCT_NOT_FOUND);
     }
   }
 
@@ -317,7 +315,7 @@ export class ProductService {
     );
 
     if (result.affected === 0) {
-      throw new NotFoundException('未找到符合条件的商品');
+      throw new BusinessException(ERROR_CODES.PRODUCT_NOT_FOUND);
     }
   }
 

@@ -1,5 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { BusinessException } from 'src/common/exceptions/business.exception';
+import { ERROR_CODES } from 'src/common/constants/error-codes';
 import { Repository } from 'typeorm';
 import { ProductCategory } from '../entities/product-category.entity';
 import { CreateCategoryDto } from '../dto/create-category.dto';
@@ -36,7 +38,7 @@ export class ProductCategoryService {
     const category = await this.categoryRepository.findOne({ where: { id } });
 
     if (!category) {
-      throw new NotFoundException('分类不存在');
+      throw new BusinessException(ERROR_CODES.VALIDATION_INVALID_ID);
     }
 
     const updatedCategory = this.categoryRepository.merge(category, {
@@ -55,7 +57,7 @@ export class ProductCategoryService {
     const result = await this.categoryRepository.delete(id);
 
     if (result.affected === 0) {
-      throw new NotFoundException('分类不存在');
+      throw new BusinessException(ERROR_CODES.VALIDATION_INVALID_ID);
     }
   }
 
@@ -78,7 +80,7 @@ export class ProductCategoryService {
     const category = await this.categoryRepository.findOne({ where: { id } });
 
     if (!category) {
-      throw new NotFoundException('分类不存在');
+      throw new BusinessException(ERROR_CODES.VALIDATION_INVALID_ID);
     }
 
     return this.transformToResponseDto(category);

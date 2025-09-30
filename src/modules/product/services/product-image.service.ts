@@ -1,5 +1,7 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { BusinessException } from 'src/common/exceptions/business.exception';
+import { ERROR_CODES } from 'src/common/constants/error-codes';
 import { Repository, DataSource } from 'typeorm';
 import { ProductImage } from '../entities/product-image.entity';
 import { UpdateProductImagesDto } from '../dto/update-product-images.dto';
@@ -30,7 +32,7 @@ export class ProductImageService {
       // 验证主图设置：最多只能有一个主图
       const mainImages = images.filter((img) => img.isMain);
       if (mainImages.length > 1) {
-        throw new BadRequestException('最多只能设置一张主图');
+        throw new BusinessException(ERROR_CODES.PRODUCT_TOO_MANY_MAIN_IMAGES);
       }
 
       // 删除该商品的所有旧关联记录

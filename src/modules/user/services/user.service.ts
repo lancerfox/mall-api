@@ -1,9 +1,7 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { BusinessException } from 'src/common/exceptions/business.exception';
+import { ERROR_CODES } from 'src/common/constants/error-codes';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { CreateUserDto } from '../dto/create-user.dto';
@@ -93,7 +91,7 @@ export class UserService {
     });
 
     if (!updatedUser) {
-      throw new NotFoundException('用户不存在');
+      throw new BusinessException(ERROR_CODES.USER_NOT_FOUND);
     }
 
     return this.transformUserToResponse(updatedUser);
@@ -107,7 +105,7 @@ export class UserService {
   async updatePassword(id: string, newPassword: string): Promise<void> {
     const user = await this.userRepository.findOneBy({ id });
     if (!user) {
-      throw new NotFoundException('用户不存在');
+      throw new BusinessException(ERROR_CODES.USER_NOT_FOUND);
     }
 
     user.password = newPassword;
@@ -169,7 +167,7 @@ export class UserService {
       username: createUserDto.username,
     });
     if (existingUser) {
-      throw new BadRequestException('用户名已存在');
+      throw new BusinessException(ERROR_CODES.USER_ALREADY_EXISTS);
     }
 
     const newUser = this.userRepository.create({
@@ -183,7 +181,7 @@ export class UserService {
     if (createUserDto.roles && createUserDto.roles.length > 0) {
       const roles = await this.roleService.findByIds(createUserDto.roles);
       if (roles.length !== createUserDto.roles.length) {
-        throw new BadRequestException('部分角色不存在');
+        throw new BusinessException(ERROR_CODES.ROLE_NOT_FOUND);
       }
       newUser.roles = roles;
     }
@@ -218,7 +216,7 @@ export class UserService {
     });
 
     if (!userToUpdate) {
-      throw new NotFoundException('用户不存在');
+      throw new BusinessException(ERROR_CODES.USER_NOT_FOUND);
     }
 
     // 验证并更新角色
@@ -226,7 +224,7 @@ export class UserService {
       if (updateUserDto.roles.length > 0) {
         const roles = await this.roleService.findByIds(updateUserDto.roles);
         if (roles.length !== updateUserDto.roles.length) {
-          throw new BadRequestException('部分角色不存在');
+          throw new BusinessException(ERROR_CODES.ROLE_NOT_FOUND);
         }
         userToUpdate.roles = roles;
       } else {
@@ -245,7 +243,8 @@ export class UserService {
     });
 
     if (!userWithRelations) {
-      throw new NotFoundException('更新用户失败');
+      // 考虑为“更新失败”创建一个更具体的错误码
+      throw new BusinessException(ERROR_CODES.USER_INFO_RETRIEVAL_FAILED);
     }
 
     return this.transformUserToResponse(userWithRelations);
@@ -258,7 +257,7 @@ export class UserService {
   async remove(id: string): Promise<void> {
     const result = await this.userRepository.delete(id);
     if (result.affected === 0) {
-      throw new NotFoundException('用户不存在');
+      throw new BusinessException(ERROR_CODES.USER_NOT_FOUND);
     }
   }
 
@@ -351,7 +350,7 @@ export class UserService {
     });
 
     if (!user) {
-      throw new NotFoundException('用户不存在');
+      throw new BusinessException(ERROR_CODES.USER_NOT_FOUND);
     }
 
     // 获取用户所有权限

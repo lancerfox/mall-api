@@ -5,8 +5,9 @@ import {
   Body,
   HttpCode,
   HttpStatus,
-  NotFoundException,
 } from '@nestjs/common';
+import { BusinessException } from 'src/common/exceptions/business.exception';
+import { ERROR_CODES } from 'src/common/constants/error-codes';
 import {
   ApiOperation,
   ApiResponse,
@@ -57,7 +58,7 @@ export class MenuController {
   ): Promise<MenuResponseDto[]> {
     const role = await this.roleService.findByName(roleName);
     if (!role) {
-      throw new NotFoundException('当前用户角色不存在');
+      throw new BusinessException(ERROR_CODES.ROLE_NOT_FOUND);
     }
     return this.menuService.findByRole(role.id);
   }

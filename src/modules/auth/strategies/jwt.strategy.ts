@@ -1,9 +1,10 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { UserService } from '../../user/services/user.service';
 import { IJwtPayload } from '../types';
+import { BusinessException } from '../../../common/exceptions/business.exception';
 import { ERROR_CODES } from '../../../common/constants/error-codes';
 
 @Injectable()
@@ -26,18 +27,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const user = await this.userService.findById(payload.sub);
     if (!user) {
       console.log('JWT Strategy - user not found:', payload.sub);
-      throw new UnauthorizedException({
-        message: '用户不存在',
-        errorCode: ERROR_CODES.USER_NOT_FOUND,
-      });
+      throw new BusinessException(ERROR_CODES.USER_NOT_FOUND);
     }
 
     if (user.status !== 'active') {
       console.log('JWT Strategy - user not active:', user.status);
-      throw new UnauthorizedException({
-        message: '用户账户已被禁用',
-        errorCode: ERROR_CODES.ACCOUNT_DISABLED,
-      });
+      throw new BusinessException(ERROR_CODES.ACCOUNT_DISABLED);
     }
 
     // console.log(

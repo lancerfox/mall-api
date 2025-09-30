@@ -1,5 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { BusinessException } from 'src/common/exceptions/business.exception';
+import { ERROR_CODES } from 'src/common/constants/error-codes';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 @Injectable()
@@ -22,7 +24,7 @@ export class SupabaseService {
       this.logger.error(
         'Supabase配置缺失: SUPABASE_URL 和 SUPABASE_SERVICE_KEY 是必需的',
       );
-      throw new Error('Supabase配置缺失');
+      throw new BusinessException(ERROR_CODES.IMAGE_SUPABASE_ERROR);
     }
 
     this.supabase = createClient(supabaseUrl, supabaseServiceKey, {

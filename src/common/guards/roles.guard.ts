@@ -2,12 +2,12 @@ import {
   Injectable,
   CanActivate,
   ExecutionContext,
-  ForbiddenException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { UserService } from '../../modules/user/services/user.service';
 import { RoleType } from '../../common/enums/role-type.enum';
 import type { Request } from 'express';
+import { BusinessException } from '../exceptions/business.exception';
 import { ERROR_CODES } from '../constants/error-codes';
 
 interface JwtUser {
@@ -54,35 +54,23 @@ export class RolesGuard implements CanActivate {
     const jwtUser = request.user;
 
     if (!jwtUser) {
-      throw new ForbiddenException({
-        message: '用户信息不存在',
-        errorCode: ERROR_CODES.AUTH_USER_INFO_MISSING,
-      });
+      throw new BusinessException(ERROR_CODES.AUTH_USER_INFO_MISSING);
     }
 
     // 获取最新的用户信息，确保权限是最新的
     const user = await this.userService.findById(jwtUser.sub);
     if (!user) {
-      throw new ForbiddenException({
-        message: '用户不存在',
-        errorCode: ERROR_CODES.USER_NOT_FOUND,
-      });
+      throw new BusinessException(ERROR_CODES.USER_NOT_FOUND);
     }
 
     if (user.status !== 'active') {
-      throw new ForbiddenException({
-        message: '用户账户已被禁用',
-        errorCode: ERROR_CODES.ACCOUNT_DISABLED,
-      });
+      throw new BusinessException(ERROR_CODES.ACCOUNT_DISABLED);
     }
 
     // 获取用户的完整信息（包含角色和权限）
     const userDoc = await this.userService.findOne(user.username);
     if (!userDoc) {
-      throw new ForbiddenException({
-        message: '用户信息获取失败',
-        errorCode: ERROR_CODES.USER_INFO_RETRIEVAL_FAILED,
-      });
+      throw new BusinessException(ERROR_CODES.USER_INFO_RETRIEVAL_FAILED);
     }
 
     // 获取用户所有权限
@@ -102,10 +90,7 @@ export class RolesGuard implements CanActivate {
     if (requiredRoles && requiredRoles.length > 0) {
       const hasRole = this.checkRoles(userRoles, requiredRoles);
       if (!hasRole) {
-        throw new ForbiddenException({
-          message: '用户角色权限不足',
-          errorCode: ERROR_CODES.PERMISSION_ROLE_INSUFFICIENT,
-        });
+        throw new BusinessException(ERROR_CODES.PERMISSION_ROLE_INSUFFICIENT);
       }
     }
 
@@ -116,10 +101,7 @@ export class RolesGuard implements CanActivate {
         requiredPermissions,
       );
       if (!hasPermission) {
-        throw new ForbiddenException({
-          message: '用户权限不足',
-          errorCode: ERROR_CODES.PERMISSION_INSUFFICIENT,
-        });
+        throw new BusinessException(ERROR_CODES.PERMISSION_INSUFFICIENT);
       }
     }
 

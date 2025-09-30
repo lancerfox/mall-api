@@ -1,9 +1,7 @@
-import {
-  Injectable,
-  UnauthorizedException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { BusinessException } from 'src/common/exceptions/business.exception';
+import { ERROR_CODES } from 'src/common/constants/error-codes';
 import { ConfigService } from '@nestjs/config';
 import { UserService } from '../../user/services/user.service';
 import { SecurityService } from './security.service';
@@ -11,7 +9,6 @@ import * as bcrypt from 'bcrypt';
 import { IUserWithoutPassword, ILoginResponse, IJwtPayload } from '../types';
 import { UserInfoDto } from '../dto/auth-response.dto';
 import { UserResponseDto } from '../../user/dto/user-response.dto';
-import { ERROR_CODES } from '../../../common/constants/error-codes';
 
 @Injectable()
 export class AuthService {
@@ -40,9 +37,7 @@ export class AuthService {
         username,
         ip,
       );
-      throw new UnauthorizedException(
-        `账户已被锁定，请在 ${remainingTime} 分钟后重试`,
-      );
+      throw new BusinessException(ERROR_CODES.ACCOUNT_LOCKED);
     }
 
     const user = await this.userService.findOne(username);
@@ -51,11 +46,11 @@ export class AuthService {
     if (user) {
       // 检查用户状态
       if (user.status === 'locked') {
-        throw new UnauthorizedException('账户已被管理员锁定，请联系管理员');
+        throw new BusinessException(ERROR_CODES.ACCOUNT_LOCKED);
       }
 
       if (user.status === 'inactive') {
-        throw new UnauthorizedException('账户已被禁用，请联系管理员');
+        throw new BusinessException(ERROR_CODES.ACCOUNT_DISABLED);
       }
 
       isValid = await bcrypt.compare(password, user.password);
@@ -75,7 +70,7 @@ export class AuthService {
       };
     }
 
-    throw new UnauthorizedException('用户名或密码错误');
+    throw new BusinessException(ERROR_CODES.AUTH_INVALID_CREDENTIALS);
   }
 
   /**
@@ -89,7 +84,7 @@ export class AuthService {
     ip?: string,
   ): Promise<ILoginResponse> {
     if (!user.id) {
-      throw new UnauthorizedException('无法确定用户ID');
+      throw new BusinessException(ERROR_CODES.AUTH_USER_INFO_MISSING);
     }
 
     await this.userService.updateLastLogin(user.id, ip);
@@ -125,7 +120,7 @@ export class AuthService {
         secret: this.configService.get('JWT_SECRET'),
       });
     } catch (error) {
-      throw new UnauthorizedException('访问令牌无效或已过期');
+      throw new BusinessException(ERROR_CODES.AUTH_TOKEN_INVALID);
     }
   }
 
@@ -155,7 +150,7 @@ export class AuthService {
   async getProfile(userId: string): Promise<UserInfoDto> {
     const user = await this.userService.findById(userId);
     if (!user) {
-      throw new UnauthorizedException('用户不存在');
+      throw new BusinessException(ERROR_CODES.USER_NOT_FOUND);
     }
 
     return this.formatUserInfo(user);
@@ -174,7 +169,7 @@ export class AuthService {
   ): Promise<void> {
     const user = await this.userService.findById(userId);
     if (!user) {
-      throw new UnauthorizedException('用户不存在');
+      throw new BusinessException(ERROR_CODES.USER_NOT_FOUND);
     }
 
     // 验证当前密码
@@ -183,12 +178,12 @@ export class AuthService {
       !userWithPassword ||
       !(await bcrypt.compare(currentPassword, userWithPassword.password))
     ) {
-      throw new UnauthorizedException('当前密码不正确');
+      throw new BusinessException(ERROR_CODES.AUTH_PASSWORD_MISMATCH);
     }
 
     // 检查新密码是否与当前密码相同
     if (await bcrypt.compare(newPassword, userWithPassword.password)) {
-      throw new BadRequestException('新密码不能与当前密码相同');
+      throw new BusinessException(ERROR_CODES.PASSWORD_SAME_AS_CURRENT);
     }
 
     // 更新密码
@@ -221,16 +216,16 @@ export class AuthService {
   async resetPassword(id: string): Promise<string> {
     const user = await this.userService.findById(id);
     if (!user) {
-      throw new BadRequestException('用户不存在');
+      throw new BusinessException(ERROR_CODES.USER_NOT_FOUND);
     }
 
     // 检查用户状态
     if (user.status === 'locked') {
-      throw new BadRequestException('账户已被锁定，无法重置密码');
+      throw new BusinessException(ERROR_CODES.ACCOUNT_LOCKED);
     }
 
     if (user.status === 'inactive') {
-      throw new BadRequestException('账户已被禁用，无法重置密码');
+      throw new BusinessException(ERROR_CODES.ACCOUNT_DISABLED);
     }
 
     // 生成随机密码

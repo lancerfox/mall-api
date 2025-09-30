@@ -5,8 +5,9 @@ import {
   Body,
   UseGuards,
   Ip,
-  BadRequestException,
 } from '@nestjs/common';
+import { BusinessException } from '../../../common/exceptions/business.exception';
+import { ERROR_CODES } from '../../../common/constants/error-codes';
 import {
   ApiTags,
   ApiOperation,
@@ -124,7 +125,7 @@ export class AuthController {
   ): Promise<void> {
     // 验证新密码和确认密码是否一致
     if (changePasswordDto.newPassword !== changePasswordDto.confirmPassword) {
-      throw new BadRequestException('新密码和确认密码不一致');
+      throw new BusinessException(ERROR_CODES.VALIDATION_FAILED);
     }
 
     await this.authService.changePassword(

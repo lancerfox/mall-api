@@ -7,8 +7,8 @@ import {
   UseGuards,
   UsePipes,
   ValidationPipe,
-  BadRequestException,
 } from '@nestjs/common';
+import { BusinessException } from 'src/common/exceptions/business.exception';
 import {
   ApiTags,
   ApiOperation,
@@ -132,7 +132,8 @@ export class UserController {
   ): Promise<void> {
     // 防止用户删除自己
     if (currentUserId === userIdDto.id) {
-      throw new BadRequestException('不能删除自己的账户');
+      // 可以在 error-codes.ts 中为这种情况添加一个特定的错误码
+      throw new BusinessException(ERROR_CODES.USER_ID_UNDEFINED);
     }
 
     await this.userService.remove(userIdDto.id);

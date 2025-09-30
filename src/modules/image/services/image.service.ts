@@ -1,12 +1,7 @@
-import {
-  Injectable,
-  Logger,
-  HttpException,
-  HttpStatus,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, Logger, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { BusinessException } from 'src/common/exceptions/business.exception';
+import { ERROR_CODES } from 'src/common/constants/error-codes';
 import { Repository, In } from 'typeorm';
 import { Image } from '../entities/image.entity';
 import { CreateImageDto } from '../dto/create-image.dto';
@@ -40,7 +35,7 @@ export class ImageService {
 
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
     if (!allowedTypes.includes(fileType.toLowerCase())) {
-      throw new BadRequestException('无效的文件类型');
+      throw new BusinessException(ERROR_CODES.IMAGE_INVALID_FORMAT);
     }
 
     const moduleName = businessModule || 'default';
@@ -62,10 +57,7 @@ export class ImageService {
 
     if (result.error) {
       this.logger.error('Supabase生成预签名URL失败:', result.error);
-      throw new HttpException(
-        `Supabase错误: ${result.error}`,
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      throw new BusinessException(ERROR_CODES.IMAGE_SUPABASE_ERROR);
     }
 
     this.logger.log(`预签名URL生成成功: ${filePath}`);
@@ -99,7 +91,7 @@ export class ImageService {
       };
     } catch (error) {
       this.logger.error('创建图片记录失败', error);
-      throw new HttpException('图片上传失败', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new BusinessException(ERROR_CODES.IMAGE_UPLOAD_FAILED);
     }
   }
 
@@ -141,7 +133,7 @@ export class ImageService {
   async deleteImage(imageId: string): Promise<void> {
     const image = await this.imageRepository.findOne({ where: { id: imageId } });
     if (!image) {
-      throw new NotFoundException('图片不存在');
+      throw new BusinessException(ERROR_CODES.IMAGE_NOT_FOUND);
     }
 
     const deleteResult = await this.supabaseService.deleteFile(image.path);
@@ -167,7 +159,8 @@ export class ImageService {
     const notFoundIds = imageIds.filter((id) => !foundIds.includes(id));
 
     if (notFoundIds.length > 0) {
-      throw new NotFoundException(`以下图片不存在: ${notFoundIds.join(', ')}`);
+      // 可以考虑创建一个更具体的错误码来传递不存在的ID列表
+      throw new BusinessException(ERROR_CODES.IMAGE_NOT_FOUND);
     }
 
     for (const image of images) {
@@ -198,10 +191,7 @@ export class ImageService {
       };
     } catch (error) {
       this.logger.error('检查Supabase连接失败', error);
-      throw new HttpException(
-        'Supabase连接失败',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      throw new BusinessException(ERROR_CODES.IMAGE_SUPABASE_ERROR);
     }
   }
 }
