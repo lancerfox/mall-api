@@ -72,7 +72,7 @@ export const ERROR_CODES = {
 /**
  * 错误消息映射
  */
-export const ERROR_MESSAGES = {
+export const ERROR_MESSAGES: { readonly [key: number]: string } = {
   [ERROR_CODES.SUCCESS]: '操作成功',
 
   // 认证相关

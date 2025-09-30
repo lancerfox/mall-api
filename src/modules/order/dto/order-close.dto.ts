@@ -37,9 +37,12 @@ export class OrderCloseDto {
   @IsOptional()
   @IsString({ message: '关闭备注必须为字符串格式' })
   @Length(0, 200, { message: '关闭备注长度不能超过200个字符' })
-  @ValidateIf((o) => o.close_reason === OrderCloseReason.OTHER_REASON, {
-    message: '当关闭原因为OTHER_REASON时，关闭备注为必填项',
-  })
+  @ValidateIf(
+    (o: OrderCloseDto) => o.close_reason === OrderCloseReason.OTHER_REASON,
+    {
+      message: '当关闭原因为OTHER_REASON时，关闭备注为必填项',
+    },
+  )
   @IsNotEmpty({
     message: '当关闭原因为OTHER_REASON时，关闭备注不能为空',
   })

@@ -7,6 +7,7 @@ import {
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../../common/decorators/user.decorator';
+import type { JwtUser } from '../../../common/decorators/user.decorator';
 import { IApiResponse } from '../../../common/types/api-response.interface';
 import {
   ERROR_CODES,
@@ -84,11 +85,14 @@ export class OrderController {
       const isNotFoundError =
         error instanceof Error &&
         'status' in error &&
-        (error as any).status === 404;
-      return {
-        code: isNotFoundError
+        (error as Error & { status?: number }).status === 404;
+      const code = (
+        isNotFoundError
           ? ERROR_CODES.ORDER_NOT_FOUND
-          : ERROR_CODES.VALIDATION_FAILED,
+          : ERROR_CODES.VALIDATION_FAILED
+      ) as number;
+      return {
+        code,
         message:
           error instanceof Error
             ? error.message
@@ -107,7 +111,7 @@ export class OrderController {
   })
   async shipOrder(
     @Body() dto: OrderShipDto,
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtUser,
   ): Promise<IApiResponse<OrderShipResponseDto>> {
     try {
       const operatorName = user?.username || '系统';
@@ -121,11 +125,14 @@ export class OrderController {
       const isNotFoundError =
         error instanceof Error &&
         'status' in error &&
-        (error as any).status === 404;
-      return {
-        code: isNotFoundError
+        (error as Error & { status?: number }).status === 404;
+      const code = (
+        isNotFoundError
           ? ERROR_CODES.ORDER_NOT_FOUND
-          : ERROR_CODES.VALIDATION_FAILED,
+          : ERROR_CODES.VALIDATION_FAILED
+      ) as number;
+      return {
+        code,
         message:
           error instanceof Error
             ? error.message
@@ -144,7 +151,7 @@ export class OrderController {
   })
   async closeOrder(
     @Body() dto: OrderCloseDto,
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtUser,
   ): Promise<IApiResponse<OrderCloseResponseDto>> {
     try {
       const operatorName = user?.username || '系统';
@@ -158,11 +165,14 @@ export class OrderController {
       const isNotFoundError =
         error instanceof Error &&
         'status' in error &&
-        (error as any).status === 404;
-      return {
-        code: isNotFoundError
+        (error as Error & { status?: number }).status === 404;
+      const code = (
+        isNotFoundError
           ? ERROR_CODES.ORDER_NOT_FOUND
-          : ERROR_CODES.VALIDATION_FAILED,
+          : ERROR_CODES.VALIDATION_FAILED
+      ) as number;
+      return {
+        code,
         message:
           error instanceof Error
             ? error.message
@@ -181,7 +191,7 @@ export class OrderController {
   })
   async modifyOrderAddress(
     @Body() dto: OrderModifyAddressDto,
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtUser,
   ): Promise<IApiResponse<OrderModifyAddressResponseDto>> {
     try {
       const operatorName = user?.username || '系统';
@@ -198,11 +208,14 @@ export class OrderController {
       const isNotFoundError =
         error instanceof Error &&
         'status' in error &&
-        (error as any).status === 404;
-      return {
-        code: isNotFoundError
+        (error as Error & { status?: number }).status === 404;
+      const code = (
+        isNotFoundError
           ? ERROR_CODES.ORDER_NOT_FOUND
-          : ERROR_CODES.VALIDATION_FAILED,
+          : ERROR_CODES.VALIDATION_FAILED
+      ) as number;
+      return {
+        code,
         message:
           error instanceof Error
             ? error.message

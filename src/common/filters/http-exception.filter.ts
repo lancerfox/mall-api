@@ -173,10 +173,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     }
 
     const errorCode = this.getErrorCode(status);
-    return (
-      (ERROR_MESSAGES[errorCode as keyof typeof ERROR_MESSAGES] as string) ||
-      '未知错误'
-    );
+    return ERROR_MESSAGES[errorCode] || '未知错误';
   }
 
   /**
