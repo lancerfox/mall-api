@@ -1,7 +1,4 @@
-import {
-  OrderStatus,
-  OrderCloseReason,
-} from '../../../common/enums/order-status.enum';
+import { OrderStatus } from '../../../common/enums/order-status.enum';
 
 /**
  * 订单查询条件接口

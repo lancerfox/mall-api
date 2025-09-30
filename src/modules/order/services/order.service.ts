@@ -17,7 +17,6 @@ import {
   OrderStatus,
   OrderCloseReason,
 } from '../../../common/enums/order-status.enum';
-import { IPaginatedResponse } from '../../../common/types/api-response.interface';
 import {
   OrderListQueryDto,
   OrderDetailQueryDto,
@@ -387,7 +386,7 @@ export class OrderService {
   /**
    * 获取订单状态字典
    */
-  async getOrderStatusDictionary(): Promise<OrderStatusDictionaryResponseDto> {
+  getOrderStatusDictionary(): OrderStatusDictionaryResponseDto {
     const statusDictionary = [
       {
         value: OrderStatus.PENDING_PAYMENT,

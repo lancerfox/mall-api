@@ -64,7 +64,7 @@ export class OrderListQueryDto {
   })
   @IsOptional()
   @IsNumberString()
-  @Transform(({ value }) => parseInt(value) || 1)
+  @Transform(({ value }) => parseInt(String(value), 10) || 1)
   page?: number = 1;
 
   @ApiProperty({
@@ -75,6 +75,6 @@ export class OrderListQueryDto {
   })
   @IsOptional()
   @IsNumberString()
-  @Transform(({ value }) => parseInt(value) || 10)
+  @Transform(({ value }) => parseInt(String(value), 10) || 10)
   pageSize?: number = 10;
 }
