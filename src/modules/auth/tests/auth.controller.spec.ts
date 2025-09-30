@@ -24,6 +24,8 @@ describe('AuthController', () => {
             changePassword: jest.fn(),
             getSecurityStats: jest.fn(),
             resetPassword: jest.fn(),
+            validateToken: jest.fn(),
+            unlockAccount: jest.fn(),
           },
         },
       ],
@@ -43,8 +45,7 @@ describe('AuthController', () => {
       const mockUser = { id: '1', username: 'testuser' };
       const mockLoginResponse = {
         access_token: 'access_token',
-        refresh_token: 'refresh_token',
-        user: mockUser,
+        expires_in: 3600,
       };
 
       authService.validateUser.mockResolvedValue(mockUser);
@@ -80,6 +81,24 @@ describe('AuthController', () => {
         }),
       );
     });
+
+    it('应该在登录过程中发生其他错误时抛出通用登录失败异常', async () => {
+      // 安排
+      const loginDto: LoginDto = {
+        username: 'testuser',
+        password: 'testpassword',
+      };
+
+      authService.validateUser.mockRejectedValue(new Error('Database error'));
+
+      // 执行和断言
+      await expect(authController.login(loginDto, '127.0.0.1')).rejects.toThrow(
+        new UnauthorizedException({
+          message: '登录失败，请稍后重试',
+          errorCode: ERROR_CODES.AUTH_LOGIN_FAILED,
+        }),
+      );
+    });
   });
 
   describe('getProfile', () => {
@@ -90,6 +109,9 @@ describe('AuthController', () => {
         id: 'user123',
         username: 'testuser',
         email: 'test@example.com',
+        roles: [],
+        status: 'active',
+        permissions: [],
       };
 
       authService.getProfile.mockResolvedValue(mockProfile);
@@ -153,12 +175,12 @@ describe('AuthController', () => {
   describe('getSecurityStats', () => {
     it('应该成功获取安全统计信息', async () => {
       // 安排
-      const mockUser = { username: 'testuser', sub: 'user123' };
+      const mockUser = { sub: '123', username: 'testuser' };
       const mockStats = {
         totalAttempts: 10,
         successfulAttempts: 8,
         failedAttempts: 2,
-        lockedAccounts: 0,
+        lockedAccounts: 1,
       };
 
       authService.getSecurityStats.mockResolvedValue(mockStats);
@@ -170,13 +192,35 @@ describe('AuthController', () => {
       expect(result).toEqual(mockStats);
       expect(authService.getSecurityStats).toHaveBeenCalledWith('testuser');
     });
+
+    it('应该在用户没有用户名时处理空用户名', async () => {
+      // 安排
+      const mockUser = { sub: '123' }; // 没有username
+      const mockStats = {
+        totalAttempts: 0,
+        successfulAttempts: 0,
+        failedAttempts: 0,
+        lockedAccounts: 0,
+      };
+
+      authService.getSecurityStats.mockResolvedValue(mockStats);
+
+      // 执行
+      const result = await authController.getSecurityStats(mockUser);
+
+      // 断言
+      expect(result).toEqual(mockStats);
+      expect(authService.getSecurityStats).toHaveBeenCalledWith(undefined);
+    });
   });
 
   describe('resetPassword', () => {
-    it('应该成功重置用户密码', async () => {
+    it('应该成功重置密码', async () => {
       // 安排
-      const resetPasswordDto: ResetPasswordDto = { id: 'user123' };
-      const mockNewPassword = 'generatedPassword123';
+      const resetPasswordDto: ResetPasswordDto = {
+        id: 'user123',
+      };
+      const mockNewPassword = 'new-generated-password';
 
       authService.resetPassword.mockResolvedValue(mockNewPassword);
 
@@ -191,4 +235,6 @@ describe('AuthController', () => {
       expect(authService.resetPassword).toHaveBeenCalledWith('user123');
     });
   });
+
+
 });
