@@ -43,14 +43,7 @@ export class PermissionController {
   @ApiResponse({
     status: HttpStatus.CREATED,
     description: '权限创建成功',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 201 },
-        message: { type: 'string', example: '创建成功' },
-        data: { $ref: '#/components/schemas/Permission' },
-      },
-    },
+    type: Permission,
   })
   create(
     @Body() createPermissionDto: CreatePermissionDto,
@@ -64,17 +57,7 @@ export class PermissionController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: '成功获取权限列表',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: '获取成功' },
-        data: {
-          type: 'array',
-          items: { $ref: '#/components/schemas/Permission' },
-        },
-      },
-    },
+    type: [Permission],
   })
   findAll(@Query('type') type?: string): Promise<Permission[]> {
     if (type) {
@@ -117,14 +100,7 @@ export class PermissionController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: '权限更新成功',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: '更新成功' },
-        data: { $ref: '#/components/schemas/Permission' },
-      },
-    },
+    type: Permission,
   })
   update(
     @Body() updatePermissionDto: UpdatePermissionWithIdDto,

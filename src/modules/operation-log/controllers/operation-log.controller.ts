@@ -34,14 +34,7 @@ export class OperationLogController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: '获取操作日志列表成功',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: '获取成功' },
-        data: { $ref: '#/components/schemas/OperationLogListResponseDto' },
-      },
-    },
+    type: OperationLogListResponseDto,
   })
   async getList(
     @Body() operationLogListDto: OperationLogListDto,
@@ -64,14 +57,7 @@ export class OperationLogController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: '获取操作日志详情成功',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: '获取成功' },
-        data: { $ref: '#/components/schemas/OperationLogData' },
-      },
-    },
+    type: OperationLogData,
   })
   async getById(@Body('id') id: string): Promise<OperationLogData> {
     return this.operationLogService.getById(id);

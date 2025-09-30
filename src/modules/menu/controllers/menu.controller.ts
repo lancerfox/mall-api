@@ -41,17 +41,7 @@ export class MenuController {
   @ApiResponse({
     status: 200,
     description: '成功获取菜单列表',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: '获取成功' },
-        data: {
-          type: 'array',
-          items: { $ref: '#/components/schemas/MenuResponseDto' },
-        },
-      },
-    },
+    type: [MenuResponseDto],
   })
   async getMenus(
     @CurrentUser('role') roleName: string,
@@ -68,17 +58,7 @@ export class MenuController {
   @ApiResponse({
     status: 200,
     description: '成功获取菜单列表',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: '获取成功' },
-        data: {
-          type: 'array',
-          items: { $ref: '#/components/schemas/MenuResponseDto' },
-        },
-      },
-    },
+    type: [MenuResponseDto],
   })
   async getMenusByRole(
     @Body() body: MenuByRoleRequestDto,
@@ -91,16 +71,11 @@ export class MenuController {
   @ApiResponse({
     status: 200,
     description: '成功获取菜单详情',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: '获取成功' },
-        data: { $ref: '#/components/schemas/Menu' },
-      },
-    },
+    type: MenuResponseDto,
   })
-  async getMenuDetail(@Body() body: MenuDetailRequestDto): Promise<Menu> {
+  async getMenuDetail(
+    @Body() body: MenuDetailRequestDto,
+  ): Promise<MenuResponseDto> {
     return this.menuService.findOne(body.id);
   }
 
@@ -110,16 +85,11 @@ export class MenuController {
   @ApiResponse({
     status: HttpStatus.CREATED,
     description: '菜单创建成功',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 201 },
-        message: { type: 'string', example: '创建成功' },
-        data: { $ref: '#/components/schemas/Menu' },
-      },
-    },
+    type: MenuResponseDto,
   })
-  async createMenu(@Body() createMenuDto: CreateMenuDto): Promise<Menu> {
+  async createMenu(
+    @Body() createMenuDto: CreateMenuDto,
+  ): Promise<MenuResponseDto> {
     return this.menuService.create(createMenuDto);
   }
 
@@ -128,16 +98,11 @@ export class MenuController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: '菜单更新成功',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: '更新成功' },
-        data: { $ref: '#/components/schemas/Menu' },
-      },
-    },
+    type: MenuResponseDto,
   })
-  async updateMenu(@Body() updateMenuDto: UpdateMenuDto): Promise<Menu> {
+  async updateMenu(
+    @Body() updateMenuDto: UpdateMenuDto,
+  ): Promise<MenuResponseDto> {
     return this.menuService.update(updateMenuDto);
   }
 

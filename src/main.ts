@@ -1,3 +1,10 @@
+// BigInt serialization fix for Swagger
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+BigInt.prototype.toJSON = function () {
+  return this.toString();
+};
+
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';

@@ -46,14 +46,7 @@ export class RoleController {
   @ApiResponse({
     status: HttpStatus.CREATED,
     description: '角色创建成功',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 201 },
-        message: { type: 'string', example: '创建成功' },
-        data: { $ref: '#/components/schemas/Role' },
-      },
-    },
+    type: Role,
   })
   create(@Body() createRoleDto: CreateRoleDto): Promise<Role> {
     return this.roleService.create(createRoleDto);
@@ -65,17 +58,7 @@ export class RoleController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: '成功获取角色列表',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: '获取成功' },
-        data: {
-          type: 'array',
-          items: { $ref: '#/components/schemas/RoleListResponseDto' },
-        },
-      },
-    },
+    type: [RoleListResponseDto],
   })
   findAll(): Promise<RoleListResponseDto[]> {
     return this.roleService.findAll();
@@ -124,14 +107,7 @@ export class RoleController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: '角色权限更新成功',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: '更新成功' },
-        data: { $ref: '#/components/schemas/Role' },
-      },
-    },
+    type: Role,
   })
   updatePermissions(
     @Body('id') id: string,
@@ -150,14 +126,7 @@ export class RoleController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: '角色更新成功',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: '更新成功' },
-        data: { $ref: '#/components/schemas/Role' },
-      },
-    },
+    type: Role,
   })
   update(@Body() updateRoleDto: UpdateRoleWithIdDto): Promise<Role> {
     return this.roleService.update(updateRoleDto.id, updateRoleDto);

@@ -30,14 +30,7 @@ export class ProductCategoryController {
   @ApiResponse({
     status: HttpStatus.CREATED,
     description: '创建成功',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 201 },
-        message: { type: 'string', example: '创建成功' },
-        data: { $ref: '#/components/schemas/ProductCategoryResponseDto' },
-      },
-    },
+    type: ProductCategoryResponseDto,
   })
   async create(
     @Body() createCategoryDto: CreateCategoryDto,
@@ -50,14 +43,7 @@ export class ProductCategoryController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: '更新成功',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: '更新成功' },
-        data: { $ref: '#/components/schemas/ProductCategoryResponseDto' },
-      },
-    },
+    type: ProductCategoryResponseDto,
   })
   async update(
     @Body() updateCategoryDto: UpdateCategoryDto,
@@ -89,17 +75,7 @@ export class ProductCategoryController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: '获取成功',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: '获取成功' },
-        data: {
-          type: 'array',
-          items: { $ref: '#/components/schemas/ProductCategoryResponseDto' },
-        },
-      },
-    },
+    type: [ProductCategoryResponseDto],
   })
   async list(): Promise<ProductCategoryResponseDto[]> {
     return this.categoryService.findAll();
@@ -110,14 +86,7 @@ export class ProductCategoryController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: '获取成功',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: '获取成功' },
-        data: { $ref: '#/components/schemas/ProductCategoryResponseDto' },
-      },
-    },
+    type: ProductCategoryResponseDto,
   })
   async detail(
     @Body() body: { id: string },

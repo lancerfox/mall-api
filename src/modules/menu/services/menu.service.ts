@@ -30,12 +30,12 @@ export class MenuService {
     return menuTree.map((menu) => this.convertToResponseDto(menu));
   }
 
-  async findOne(id: string): Promise<Menu> {
+  async findOne(id: string): Promise<MenuResponseDto> {
     const menu = await this.menuRepository.findOne({ where: { id } });
     if (!menu) {
       throw new BusinessException(ERROR_CODES.MENU_NOT_FOUND);
     }
-    return menu;
+    return this.convertToResponseDto(menu as MenuTree);
   }
 
   async findByRole(roleId: string): Promise<MenuResponseDto[]> {
@@ -89,7 +89,7 @@ export class MenuService {
     return menuTree.map((menu) => this.convertToResponseDto(menu));
   }
 
-  async create(createMenuDto: CreateMenuDto): Promise<Menu> {
+  async create(createMenuDto: CreateMenuDto): Promise<MenuResponseDto> {
     // 创建菜单
     const menu = this.menuRepository.create(createMenuDto);
 
@@ -117,10 +117,11 @@ export class MenuService {
       status: 'active',
     });
 
-    return await this.menuRepository.save(menu);
+    const savedMenu = await this.menuRepository.save(menu);
+    return this.convertToResponseDto(savedMenu as MenuTree);
   }
 
-  async update(updateMenuDto: UpdateMenuDto): Promise<Menu> {
+  async update(updateMenuDto: UpdateMenuDto): Promise<MenuResponseDto> {
     const { id, ...updateData } = updateMenuDto;
 
     const menu = await this.menuRepository.findOne({ where: { id } });
@@ -220,7 +221,7 @@ export class MenuService {
       // 这里我们暂时复用 MENU_NOT_FOUND，但更理想的是有专门的错误码
       throw new BusinessException(ERROR_CODES.MENU_NOT_FOUND);
     }
-    return updatedMenu;
+    return this.convertToResponseDto(updatedMenu as MenuTree);
   }
 
   async delete(id: string): Promise<void> {

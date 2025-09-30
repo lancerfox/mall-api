@@ -48,14 +48,7 @@ export class UserController {
   @ApiResponse({
     status: 200,
     description: '获取用户列表成功',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: '获取成功' },
-        data: { $ref: '#/components/schemas/UserListResponseDto' },
-      },
-    },
+    type: UserListResponseDto,
   })
   @Permissions(PERMISSIONS.USER_READ)
   async findAll(@Query() query: QueryUserDto): Promise<UserListResponseDto> {
@@ -67,14 +60,7 @@ export class UserController {
   @ApiResponse({
     status: 201,
     description: '创建用户成功',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 201 },
-        message: { type: 'string', example: '创建成功' },
-        data: { $ref: '#/components/schemas/UserResponseDto' },
-      },
-    },
+    type: UserResponseDto,
   })
   @Permissions(PERMISSIONS.USER_CREATE)
   async create(@Body() createUserDto: CreateUserDto): Promise<UserResponseDto> {
@@ -86,14 +72,7 @@ export class UserController {
   @ApiResponse({
     status: 200,
     description: '更新用户信息成功',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: '更新成功' },
-        data: { $ref: '#/components/schemas/UserResponseDto' },
-      },
-    },
+    type: UserResponseDto,
   })
   @Permissions(PERMISSIONS.USER_UPDATE)
   async update(

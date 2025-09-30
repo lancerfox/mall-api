@@ -24,14 +24,7 @@ export class ProductController {
   @ApiResponse({
     status: 200,
     description: '保存成功',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: '保存成功' },
-        data: { $ref: '#/components/schemas/ProductResponseDto' },
-      },
-    },
+    type: ProductResponseDto,
   })
   async save(
     @Body() saveProductDto: SaveProductDto,
@@ -44,14 +37,7 @@ export class ProductController {
   @ApiResponse({
     status: 200,
     description: '获取成功',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: '获取成功' },
-        data: { $ref: '#/components/schemas/ProductListPaginatedDto' },
-      },
-    },
+    type: ProductListPaginatedDto,
   })
   async list(
     @Body() productListDto: ProductListDto,
@@ -64,14 +50,7 @@ export class ProductController {
   @ApiResponse({
     status: 200,
     description: '获取成功',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: '获取成功' },
-        data: { $ref: '#/components/schemas/ProductEditResponseDto' },
-      },
-    },
+    type: ProductEditResponseDto,
   })
   async detail(
     @Body() productDetailDto: ProductDetailDto,
