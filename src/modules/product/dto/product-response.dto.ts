@@ -244,5 +244,3 @@ export class ProductDetailResponseDto extends ProductResponseDto {
   })
   packageList: string[];
 }
-
-

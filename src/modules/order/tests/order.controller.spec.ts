@@ -1,8 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { OrderController } from '../controllers/order.controller';
 import { OrderService } from '../services/order.service';
-import { OrderStatus, OrderCloseReason } from '../../../common/enums/order-status.enum';
-import { ERROR_CODES, ERROR_MESSAGES } from '../../../common/constants/error-codes';
+import {
+  OrderStatus,
+  OrderCloseReason,
+} from '../../../common/enums/order-status.enum';
+import {
+  ERROR_CODES,
+  ERROR_MESSAGES,
+} from '../../../common/constants/error-codes';
 import {
   OrderListQueryDto,
   OrderDetailQueryDto,
@@ -444,7 +450,10 @@ describe('OrderController', () => {
         data: mockModifyResponse,
       });
 
-      expect(orderService.modifyOrderAddress).toHaveBeenCalledWith(dto, '管理员');
+      expect(orderService.modifyOrderAddress).toHaveBeenCalledWith(
+        dto,
+        '管理员',
+      );
     });
 
     it('应该处理订单不存在的错误', async () => {
@@ -526,7 +535,9 @@ describe('OrderController', () => {
         ],
       };
 
-      (orderService.getOrderStatusDictionary as jest.Mock).mockResolvedValue(mockDictionaryResponse);
+      (orderService.getOrderStatusDictionary as jest.Mock).mockResolvedValue(
+        mockDictionaryResponse,
+      );
 
       const result = await controller.getOrderStatusDictionary();
 
@@ -541,7 +552,9 @@ describe('OrderController', () => {
 
     it('应该处理服务错误', async () => {
       const mockError = new Error('Service unavailable');
-      (orderService.getOrderStatusDictionary as jest.Mock).mockRejectedValue(mockError);
+      (orderService.getOrderStatusDictionary as jest.Mock).mockRejectedValue(
+        mockError,
+      );
 
       const result = await controller.getOrderStatusDictionary();
 

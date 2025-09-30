@@ -115,7 +115,11 @@ describe('AuthService', () => {
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
       // 执行
-      const result = await authService.validateUser('testuser', 'password', '127.0.0.1');
+      const result = await authService.validateUser(
+        'testuser',
+        'password',
+        '127.0.0.1',
+      );
 
       // 断言
       expect(result).toEqual(expectedUser);
@@ -135,7 +139,10 @@ describe('AuthService', () => {
       await expect(
         authService.validateUser('testuser', 'password', '127.0.0.1'),
       ).rejects.toThrow(
-        new HttpException('账户已被锁定，请在 15 分钟后重试', ERROR_CODES.ACCOUNT_LOCKED),
+        new HttpException(
+          '账户已被锁定，请在 15 分钟后重试',
+          ERROR_CODES.ACCOUNT_LOCKED,
+        ),
       );
     });
 
@@ -155,7 +162,10 @@ describe('AuthService', () => {
       await expect(
         authService.validateUser('testuser', 'password', '127.0.0.1'),
       ).rejects.toThrow(
-        new HttpException('账户已被管理员锁定，请联系管理员', ERROR_CODES.ACCOUNT_LOCKED),
+        new HttpException(
+          '账户已被管理员锁定，请联系管理员',
+          ERROR_CODES.ACCOUNT_LOCKED,
+        ),
       );
     });
 
@@ -175,7 +185,10 @@ describe('AuthService', () => {
       await expect(
         authService.validateUser('testuser', 'password', '127.0.0.1'),
       ).rejects.toThrow(
-        new HttpException('账户已被禁用，请联系管理员', ERROR_CODES.ACCOUNT_DISABLED),
+        new HttpException(
+          '账户已被禁用，请联系管理员',
+          ERROR_CODES.ACCOUNT_DISABLED,
+        ),
       );
     });
 
@@ -193,7 +206,11 @@ describe('AuthService', () => {
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
       // 执行
-      const result = await authService.validateUser('testuser', 'wrongpassword', '127.0.0.1');
+      const result = await authService.validateUser(
+        'testuser',
+        'wrongpassword',
+        '127.0.0.1',
+      );
 
       // 断言
       expect(result).toBeNull();
@@ -230,7 +247,10 @@ describe('AuthService', () => {
         access_token: mockToken,
         expires_in: 3600, // 1小时转换为秒
       });
-      expect(userService.updateLastLogin).toHaveBeenCalledWith('1', '127.0.0.1');
+      expect(userService.updateLastLogin).toHaveBeenCalledWith(
+        '1',
+        '127.0.0.1',
+      );
       expect(jwtService.sign).toHaveBeenCalledWith(
         {
           username: 'testuser',
@@ -366,7 +386,7 @@ describe('AuthService', () => {
       userService.findById.mockResolvedValue(mockUser);
       userService.findOne.mockResolvedValue(mockUserWithPassword);
       (bcrypt.compare as jest.Mock)
-        .mockResolvedValueOnce(true)  // 当前密码验证
+        .mockResolvedValueOnce(true) // 当前密码验证
         .mockResolvedValueOnce(false); // 新密码与当前密码不同
       userService.updatePassword.mockResolvedValue(undefined);
 
@@ -374,7 +394,10 @@ describe('AuthService', () => {
       await authService.changePassword('1', 'oldpassword', 'newpassword123');
 
       // 断言
-      expect(userService.updatePassword).toHaveBeenCalledWith('1', expect.any(String));
+      expect(userService.updatePassword).toHaveBeenCalledWith(
+        '1',
+        expect.any(String),
+      );
     });
 
     it('应该在当前密码不正确时抛出异常', async () => {
@@ -427,7 +450,10 @@ describe('AuthService', () => {
       await expect(
         authService.changePassword('1', 'password', 'password'),
       ).rejects.toThrow(
-        new HttpException('新密码不能与当前密码相同', ERROR_CODES.PASSWORD_SAME_AS_CURRENT),
+        new HttpException(
+          '新密码不能与当前密码相同',
+          ERROR_CODES.PASSWORD_SAME_AS_CURRENT,
+        ),
       );
     });
   });
@@ -447,7 +473,7 @@ describe('AuthService', () => {
       };
 
       const mockNewPassword = 'generated-password-123';
-      
+
       userService.findById.mockResolvedValue(mockUser);
       userService.generateRandomPassword.mockReturnValue(mockNewPassword);
       userService.updatePassword.mockResolvedValue(undefined);
@@ -457,7 +483,10 @@ describe('AuthService', () => {
 
       // 断言
       expect(result).toBe(mockNewPassword);
-      expect(userService.updatePassword).toHaveBeenCalledWith('1', mockNewPassword);
+      expect(userService.updatePassword).toHaveBeenCalledWith(
+        '1',
+        mockNewPassword,
+      );
     });
 
     it('应该在用户状态为locked时抛出异常', async () => {
@@ -477,7 +506,10 @@ describe('AuthService', () => {
 
       // 执行和断言
       await expect(authService.resetPassword('1')).rejects.toThrow(
-        new HttpException('账户已被锁定，无法重置密码', ERROR_CODES.ACCOUNT_LOCKED),
+        new HttpException(
+          '账户已被锁定，无法重置密码',
+          ERROR_CODES.ACCOUNT_LOCKED,
+        ),
       );
     });
   });

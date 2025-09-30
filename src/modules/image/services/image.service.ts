@@ -131,7 +131,9 @@ export class ImageService {
    * 删除单张图片
    */
   async deleteImage(imageId: string): Promise<void> {
-    const image = await this.imageRepository.findOne({ where: { id: imageId } });
+    const image = await this.imageRepository.findOne({
+      where: { id: imageId },
+    });
     if (!image) {
       throw new BusinessException(ERROR_CODES.IMAGE_NOT_FOUND);
     }

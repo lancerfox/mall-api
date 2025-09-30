@@ -52,8 +52,8 @@ describe('LoginDto', () => {
 
     // 断言
     expect(errors).toHaveLength(2);
-    expect(errors.map(e => e.property)).toContain('username');
-    expect(errors.map(e => e.property)).toContain('password');
+    expect(errors.map((e) => e.property)).toContain('username');
+    expect(errors.map((e) => e.property)).toContain('password');
   });
 
   it('应该处理空字符串值', async () => {

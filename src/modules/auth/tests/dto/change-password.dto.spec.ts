@@ -70,9 +70,9 @@ describe('ChangePasswordDto', () => {
 
     // 断言
     expect(errors).toHaveLength(3);
-    expect(errors.map(e => e.property)).toContain('currentPassword');
-    expect(errors.map(e => e.property)).toContain('newPassword');
-    expect(errors.map(e => e.property)).toContain('confirmPassword');
+    expect(errors.map((e) => e.property)).toContain('currentPassword');
+    expect(errors.map((e) => e.property)).toContain('newPassword');
+    expect(errors.map((e) => e.property)).toContain('confirmPassword');
   });
 
   it('应该处理空字符串值', async () => {

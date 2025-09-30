@@ -10,7 +10,7 @@ describe('SecurityService', () => {
     }).compile();
 
     securityService = module.get<SecurityService>(SecurityService);
-    
+
     // 清除所有状态
     (securityService as any).loginAttempts.clear();
     (securityService as any).lockedAccounts.clear();
@@ -23,7 +23,9 @@ describe('SecurityService', () => {
       securityService.recordLoginAttempt('testuser', '192.168.1.1', false);
 
       // 断言
-      const attempts = (securityService as any).loginAttempts.get('testuser:192.168.1.1');
+      const attempts = (securityService as any).loginAttempts.get(
+        'testuser:192.168.1.1',
+      );
       expect(attempts).toHaveLength(2);
       expect(attempts[0].success).toBe(true);
       expect(attempts[1].success).toBe(false);
@@ -39,13 +41,18 @@ describe('SecurityService', () => {
       };
 
       const attempts = [oldAttempt];
-      (securityService as any).loginAttempts.set('testuser:192.168.1.1', attempts);
+      (securityService as any).loginAttempts.set(
+        'testuser:192.168.1.1',
+        attempts,
+      );
 
       // 执行 - 添加一个新的尝试
       securityService.recordLoginAttempt('testuser', '192.168.1.1', false);
 
       // 断言 - 应该只保留新的尝试
-      const updatedAttempts = (securityService as any).loginAttempts.get('testuser:192.168.1.1');
+      const updatedAttempts = (securityService as any).loginAttempts.get(
+        'testuser:192.168.1.1',
+      );
       expect(updatedAttempts).toHaveLength(1);
       expect(updatedAttempts[0].success).toBe(false);
     });
@@ -54,40 +61,60 @@ describe('SecurityService', () => {
   describe('isAccountLocked', () => {
     it('应该在账户未锁定时返回false', () => {
       // 执行和断言
-      expect(securityService.isAccountLocked('testuser', '192.168.1.1')).toBe(false);
+      expect(securityService.isAccountLocked('testuser', '192.168.1.1')).toBe(
+        false,
+      );
     });
 
     it('应该在账户锁定时返回true', () => {
       // 安排
-      (securityService as any).lockedAccounts.set('testuser:192.168.1.1', new Date());
+      (securityService as any).lockedAccounts.set(
+        'testuser:192.168.1.1',
+        new Date(),
+      );
 
       // 执行和断言
-      expect(securityService.isAccountLocked('testuser', '192.168.1.1')).toBe(true);
+      expect(securityService.isAccountLocked('testuser', '192.168.1.1')).toBe(
+        true,
+      );
     });
 
     it('应该在锁定时间过后返回false', () => {
       // 安排 - 设置一个过期的锁定时间
       const lockTime = new Date(Date.now() - 31 * 60 * 1000); // 31分钟前
-      (securityService as any).lockedAccounts.set('testuser:192.168.1.1', lockTime);
+      (securityService as any).lockedAccounts.set(
+        'testuser:192.168.1.1',
+        lockTime,
+      );
 
       // 执行和断言
-      expect(securityService.isAccountLocked('testuser', '192.168.1.1')).toBe(false);
+      expect(securityService.isAccountLocked('testuser', '192.168.1.1')).toBe(
+        false,
+      );
     });
   });
 
   describe('getRemainingLockTime', () => {
     it('应该在账户未锁定时返回0', () => {
       // 执行和断言
-      expect(securityService.getRemainingLockTime('testuser', '192.168.1.1')).toBe(0);
+      expect(
+        securityService.getRemainingLockTime('testuser', '192.168.1.1'),
+      ).toBe(0);
     });
 
     it('应该正确计算剩余锁定时间', () => {
       // 安排 - 设置一个15分钟前的锁定时间
       const lockTime = new Date(Date.now() - 15 * 60 * 1000); // 15分钟前
-      (securityService as any).lockedAccounts.set('testuser:192.168.1.1', lockTime);
+      (securityService as any).lockedAccounts.set(
+        'testuser:192.168.1.1',
+        lockTime,
+      );
 
       // 执行和断言 - 应该剩余15分钟
-      const remainingTime = securityService.getRemainingLockTime('testuser', '192.168.1.1');
+      const remainingTime = securityService.getRemainingLockTime(
+        'testuser',
+        '192.168.1.1',
+      );
       expect(remainingTime).toBeGreaterThan(14);
       expect(remainingTime).toBeLessThanOrEqual(15);
     });
@@ -143,7 +170,8 @@ describe('SecurityService', () => {
 
     it('应该检测缺少特殊字符', () => {
       // 执行
-      const result = securityService.validatePasswordStrength('NoSpecialChars123');
+      const result =
+        securityService.validatePasswordStrength('NoSpecialChars123');
 
       // 断言
       expect(result.isValid).toBe(false);
@@ -154,17 +182,29 @@ describe('SecurityService', () => {
   describe('unlockAccount', () => {
     it('应该解锁账户', () => {
       // 安排
-      (securityService as any).lockedAccounts.set('testuser:192.168.1.1', new Date());
+      (securityService as any).lockedAccounts.set(
+        'testuser:192.168.1.1',
+        new Date(),
+      );
       (securityService as any).loginAttempts.set('testuser:192.168.1.1', [
-        { username: 'testuser', ip: '192.168.1.1', timestamp: new Date(), success: false },
+        {
+          username: 'testuser',
+          ip: '192.168.1.1',
+          timestamp: new Date(),
+          success: false,
+        },
       ]);
 
       // 执行
       securityService.unlockAccount('testuser', '192.168.1.1');
 
       // 断言
-      expect((securityService as any).lockedAccounts.has('testuser:192.168.1.1')).toBe(false);
-      expect((securityService as any).loginAttempts.has('testuser:192.168.1.1')).toBe(false);
+      expect(
+        (securityService as any).lockedAccounts.has('testuser:192.168.1.1'),
+      ).toBe(false);
+      expect(
+        (securityService as any).loginAttempts.has('testuser:192.168.1.1'),
+      ).toBe(false);
     });
   });
 
@@ -177,7 +217,10 @@ describe('SecurityService', () => {
       securityService.recordLoginAttempt('otheruser', '192.168.1.2', true);
 
       // 锁定一个账户
-      (securityService as any).lockedAccounts.set('lockeduser:192.168.1.3', new Date());
+      (securityService as any).lockedAccounts.set(
+        'lockeduser:192.168.1.3',
+        new Date(),
+      );
 
       // 执行
       const stats = securityService.getLoginAttemptStats();
@@ -213,7 +256,9 @@ describe('SecurityService', () => {
       }
 
       // 断言
-      expect(securityService.isAccountLocked('testuser', '192.168.1.1')).toBe(true);
+      expect(securityService.isAccountLocked('testuser', '192.168.1.1')).toBe(
+        true,
+      );
     });
 
     it('不应该在失败尝试次数不足时锁定账户', () => {
@@ -223,7 +268,9 @@ describe('SecurityService', () => {
       }
 
       // 断言
-      expect(securityService.isAccountLocked('testuser', '192.168.1.1')).toBe(false);
+      expect(securityService.isAccountLocked('testuser', '192.168.1.1')).toBe(
+        false,
+      );
     });
   });
 
@@ -237,25 +284,34 @@ describe('SecurityService', () => {
         success: true,
       };
 
-      (securityService as any).loginAttempts.set('testuser:192.168.1.1', [oldAttempt]);
+      (securityService as any).loginAttempts.set('testuser:192.168.1.1', [
+        oldAttempt,
+      ]);
 
       // 执行 - 手动调用清理方法
       (securityService as any).cleanupOldAttempts();
 
       // 断言 - 过期的尝试应该被清理
-      expect((securityService as any).loginAttempts.has('testuser:192.168.1.1')).toBe(false);
+      expect(
+        (securityService as any).loginAttempts.has('testuser:192.168.1.1'),
+      ).toBe(false);
     });
 
     it('应该清理过期的锁定账户', () => {
       // 安排 - 设置一个过期的锁定时间
       const lockTime = new Date(Date.now() - 31 * 60 * 1000); // 31分钟前
-      (securityService as any).lockedAccounts.set('testuser:192.168.1.1', lockTime);
+      (securityService as any).lockedAccounts.set(
+        'testuser:192.168.1.1',
+        lockTime,
+      );
 
       // 执行 - 手动调用清理方法
       (securityService as any).cleanupOldAttempts();
 
       // 断言 - 过期的锁定应该被清理
-      expect((securityService as any).lockedAccounts.has('testuser:192.168.1.1')).toBe(false);
+      expect(
+        (securityService as any).lockedAccounts.has('testuser:192.168.1.1'),
+      ).toBe(false);
     });
   });
 });

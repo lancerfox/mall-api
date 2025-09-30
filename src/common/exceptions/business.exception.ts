@@ -12,7 +12,10 @@ export class BusinessException extends HttpException {
    * @param errorCode 业务错误码，必须在 ERROR_CODES 中定义
    * @param additionalData 额外的数据，会合并到响应体中
    */
-  constructor(errorCode: (typeof ERROR_CODES)[keyof typeof ERROR_CODES], additionalData?: any) {
+  constructor(
+    errorCode: (typeof ERROR_CODES)[keyof typeof ERROR_CODES],
+    additionalData?: any,
+  ) {
     const message = ERROR_MESSAGES[errorCode] || '未知错误';
     const response = {
       code: errorCode,

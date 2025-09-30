@@ -235,6 +235,4 @@ describe('AuthController', () => {
       expect(authService.resetPassword).toHaveBeenCalledWith('user123');
     });
   });
-
-
 });

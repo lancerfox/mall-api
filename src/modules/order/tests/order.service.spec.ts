@@ -3,9 +3,18 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { OrderService } from '../services/order.service';
-import { Order, OrderItem, PaymentInfo, ShippingInfo, OrderOperationLog } from '../entities';
+import {
+  Order,
+  OrderItem,
+  PaymentInfo,
+  ShippingInfo,
+  OrderOperationLog,
+} from '../entities';
 import { ProductSKU } from '../../product/entities/product-sku.entity';
-import { OrderStatus, OrderCloseReason } from '../../../common/enums/order-status.enum';
+import {
+  OrderStatus,
+  OrderCloseReason,
+} from '../../../common/enums/order-status.enum';
 import {
   OrderListQueryDto,
   OrderDetailQueryDto,
@@ -112,11 +121,21 @@ describe('OrderService', () => {
 
     service = module.get<OrderService>(OrderService);
     orderRepository = module.get<Repository<Order>>(getRepositoryToken(Order));
-    orderItemRepository = module.get<Repository<OrderItem>>(getRepositoryToken(OrderItem));
-    paymentInfoRepository = module.get<Repository<PaymentInfo>>(getRepositoryToken(PaymentInfo));
-    shippingInfoRepository = module.get<Repository<ShippingInfo>>(getRepositoryToken(ShippingInfo));
-    operationLogRepository = module.get<Repository<OrderOperationLog>>(getRepositoryToken(OrderOperationLog));
-    productSkuRepository = module.get<Repository<ProductSKU>>(getRepositoryToken(ProductSKU));
+    orderItemRepository = module.get<Repository<OrderItem>>(
+      getRepositoryToken(OrderItem),
+    );
+    paymentInfoRepository = module.get<Repository<PaymentInfo>>(
+      getRepositoryToken(PaymentInfo),
+    );
+    shippingInfoRepository = module.get<Repository<ShippingInfo>>(
+      getRepositoryToken(ShippingInfo),
+    );
+    operationLogRepository = module.get<Repository<OrderOperationLog>>(
+      getRepositoryToken(OrderOperationLog),
+    );
+    productSkuRepository = module.get<Repository<ProductSKU>>(
+      getRepositoryToken(ProductSKU),
+    );
   });
 
   afterEach(() => {
@@ -272,7 +291,9 @@ describe('OrderService', () => {
       const query: OrderDetailQueryDto = { id: '999' };
       mockRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.getOrderDetail(query)).rejects.toThrow(NotFoundException);
+      await expect(service.getOrderDetail(query)).rejects.toThrow(
+        NotFoundException,
+      );
       await expect(service.getOrderDetail(query)).rejects.toThrow('订单不存在');
     });
   });
@@ -292,9 +313,11 @@ describe('OrderService', () => {
       };
 
       mockRepository.findOne.mockResolvedValue(mockOrder);
-      mockRepository.manager.transaction.mockImplementation(async (callback) => {
-        return callback(mockTransactionManager);
-      });
+      mockRepository.manager.transaction.mockImplementation(
+        async (callback) => {
+          return callback(mockTransactionManager);
+        },
+      );
 
       const result = await service.shipOrder(dto, '管理员');
 
@@ -317,8 +340,12 @@ describe('OrderService', () => {
 
       mockRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.shipOrder(dto, '管理员')).rejects.toThrow(NotFoundException);
-      await expect(service.shipOrder(dto, '管理员')).rejects.toThrow('订单不存在');
+      await expect(service.shipOrder(dto, '管理员')).rejects.toThrow(
+        NotFoundException,
+      );
+      await expect(service.shipOrder(dto, '管理员')).rejects.toThrow(
+        '订单不存在',
+      );
     });
 
     it('当订单状态不是待发货时应该抛出BadRequestException', async () => {
@@ -328,11 +355,18 @@ describe('OrderService', () => {
         tracking_number: 'SF123456789',
       };
 
-      const orderWithWrongStatus = { ...mockOrder, status: OrderStatus.PENDING_PAYMENT };
+      const orderWithWrongStatus = {
+        ...mockOrder,
+        status: OrderStatus.PENDING_PAYMENT,
+      };
       mockRepository.findOne.mockResolvedValue(orderWithWrongStatus);
 
-      await expect(service.shipOrder(dto, '管理员')).rejects.toThrow(BadRequestException);
-      await expect(service.shipOrder(dto, '管理员')).rejects.toThrow('只有待发货状态的订单才能执行发货操作');
+      await expect(service.shipOrder(dto, '管理员')).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.shipOrder(dto, '管理员')).rejects.toThrow(
+        '只有待发货状态的订单才能执行发货操作',
+      );
     });
   });
 
@@ -363,9 +397,11 @@ describe('OrderService', () => {
       };
 
       mockRepository.findOne.mockResolvedValue(orderWithPendingPayment);
-      mockRepository.manager.transaction.mockImplementation(async (callback) => {
-        return callback(mockTransactionManager);
-      });
+      mockRepository.manager.transaction.mockImplementation(
+        async (callback) => {
+          return callback(mockTransactionManager);
+        },
+      );
 
       const result = await service.closeOrder(dto, '管理员');
 
@@ -388,8 +424,12 @@ describe('OrderService', () => {
 
       mockRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.closeOrder(dto, '管理员')).rejects.toThrow(NotFoundException);
-      await expect(service.closeOrder(dto, '管理员')).rejects.toThrow('订单不存在');
+      await expect(service.closeOrder(dto, '管理员')).rejects.toThrow(
+        NotFoundException,
+      );
+      await expect(service.closeOrder(dto, '管理员')).rejects.toThrow(
+        '订单不存在',
+      );
     });
 
     it('当订单状态不是待付款时应该抛出BadRequestException', async () => {
@@ -398,11 +438,18 @@ describe('OrderService', () => {
         close_reason: OrderCloseReason.TIMEOUT_UNPAID,
       };
 
-      const orderWithWrongStatus = { ...mockOrder, status: OrderStatus.SHIPPED };
+      const orderWithWrongStatus = {
+        ...mockOrder,
+        status: OrderStatus.SHIPPED,
+      };
       mockRepository.findOne.mockResolvedValue(orderWithWrongStatus);
 
-      await expect(service.closeOrder(dto, '管理员')).rejects.toThrow(BadRequestException);
-      await expect(service.closeOrder(dto, '管理员')).rejects.toThrow('只有待付款状态的订单才能执行关闭操作');
+      await expect(service.closeOrder(dto, '管理员')).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.closeOrder(dto, '管理员')).rejects.toThrow(
+        '只有待付款状态的订单才能执行关闭操作',
+      );
     });
   });
 
@@ -422,9 +469,11 @@ describe('OrderService', () => {
       };
 
       mockRepository.findOne.mockResolvedValue(mockOrder);
-      mockRepository.manager.transaction.mockImplementation(async (callback) => {
-        return callback(mockTransactionManager);
-      });
+      mockRepository.manager.transaction.mockImplementation(
+        async (callback) => {
+          return callback(mockTransactionManager);
+        },
+      );
 
       const result = await service.modifyOrderAddress(dto, '管理员');
 
@@ -451,8 +500,12 @@ describe('OrderService', () => {
 
       mockRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.modifyOrderAddress(dto, '管理员')).rejects.toThrow(NotFoundException);
-      await expect(service.modifyOrderAddress(dto, '管理员')).rejects.toThrow('订单不存在');
+      await expect(service.modifyOrderAddress(dto, '管理员')).rejects.toThrow(
+        NotFoundException,
+      );
+      await expect(service.modifyOrderAddress(dto, '管理员')).rejects.toThrow(
+        '订单不存在',
+      );
     });
 
     it('当订单状态不是待发货时应该抛出BadRequestException', async () => {
@@ -463,11 +516,18 @@ describe('OrderService', () => {
         address: '上海市浦东新区新地址',
       };
 
-      const orderWithWrongStatus = { ...mockOrder, status: OrderStatus.SHIPPED };
+      const orderWithWrongStatus = {
+        ...mockOrder,
+        status: OrderStatus.SHIPPED,
+      };
       mockRepository.findOne.mockResolvedValue(orderWithWrongStatus);
 
-      await expect(service.modifyOrderAddress(dto, '管理员')).rejects.toThrow(BadRequestException);
-      await expect(service.modifyOrderAddress(dto, '管理员')).rejects.toThrow('只有待发货状态的订单才能修改收货地址');
+      await expect(service.modifyOrderAddress(dto, '管理员')).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.modifyOrderAddress(dto, '管理员')).rejects.toThrow(
+        '只有待发货状态的订单才能修改收货地址',
+      );
     });
   });
 

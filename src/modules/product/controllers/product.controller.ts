@@ -93,9 +93,7 @@ export class ProductController {
       },
     },
   })
-  async updateStatus(
-    @Body() updateStatusDto: UpdateStatusDto,
-  ): Promise<void> {
+  async updateStatus(@Body() updateStatusDto: UpdateStatusDto): Promise<void> {
     await this.productService.updateProductStatus(updateStatusDto);
   }
 
