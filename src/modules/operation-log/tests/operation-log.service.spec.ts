@@ -1,12 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { OperationLogService } from '../services/operation-log.service';
-import { OperationLog } from '../entities/operation-log.entity';
+import { OperationLog, OperationType } from '../entities/operation-log.entity';
 import { Repository } from 'typeorm';
 import { BusinessException } from '../../../common/exceptions/business.exception';
 import { ERROR_CODES } from '../../../common/constants/error-codes';
 import { CreateOperationLogDto } from '../dto/create-operation-log.dto';
 import { OperationLogListDto } from '../dto/operation-log-list.dto';
+import { Like, Between } from 'typeorm';
 
 describe('OperationLogService', () => {
   let service: OperationLogService;
@@ -18,7 +19,7 @@ describe('OperationLogService', () => {
     userId: 'user1',
     username: 'testuser',
     module: 'auth',
-    operationType: 'login',
+    operationType: OperationType.LOGIN,
     description: 'User login',
     method: 'POST',
     url: '/auth/login',
@@ -67,7 +68,7 @@ describe('OperationLogService', () => {
         userId: 'user1',
         username: 'testuser',
         module: 'auth',
-        operationType: 'login',
+        operationType: OperationType.LOGIN,
         description: 'User login',
         method: 'POST',
         url: '/auth/login',
@@ -84,12 +85,12 @@ describe('OperationLogService', () => {
       expect(result).toEqual(mockOperationLog);
     });
 
-    it('should throw an error if creation fails', async () => {
+    it('should throw BusinessException if creation fails', async () => {
       const createDto: CreateOperationLogDto = {
         userId: 'user1',
         username: 'testuser',
         module: 'auth',
-        operationType: 'login',
+        operationType: OperationType.LOGIN,
         description: 'User login',
         method: 'POST',
         url: '/auth/login',
@@ -101,7 +102,9 @@ describe('OperationLogService', () => {
         new Error('Database error'),
       );
 
-      await expect(service.create(createDto)).rejects.toThrow('Database error');
+      await expect(service.create(createDto)).rejects.toThrow(
+        new BusinessException(ERROR_CODES.OPERATION_LOG_CREATE_FAILED),
+      );
     });
   });
 
@@ -111,7 +114,7 @@ describe('OperationLogService', () => {
         page: 1,
         pageSize: 10,
         module: 'auth',
-        operationType: 'login',
+        operationType: OperationType.LOGIN,
         username: 'test',
         startTime: '2023-01-01',
         endTime: '2023-12-31',
@@ -129,10 +132,10 @@ describe('OperationLogService', () => {
 
       expect(repository.findAndCount).toHaveBeenCalledWith({
         where: {
-          module: expect.anything(), // Like('%auth%')
-          operationType: 'login',
-          username: expect.anything(), // Like('%test%')
-          createdAt: expect.anything(), // Between dates
+          module: Like('%auth%'),
+          operationType: OperationType.LOGIN,
+          username: Like('%test%'),
+          createdAt: Between(expect.any(Date), expect.any(Date)),
         },
         order: { createdAt: 'DESC' },
         skip: 0,
@@ -185,7 +188,7 @@ describe('OperationLogService', () => {
 
       expect(repository.findAndCount).toHaveBeenCalledWith({
         where: {
-          createdAt: expect.anything(), // Between startTime and now
+          createdAt: Between(expect.any(Date), expect.any(Date)),
         },
         order: { createdAt: 'DESC' },
         skip: 0,
@@ -212,7 +215,7 @@ describe('OperationLogService', () => {
 
       expect(repository.findAndCount).toHaveBeenCalledWith({
         where: {
-          createdAt: expect.anything(), // Between epoch and endTime
+          createdAt: Between(expect.any(Date), expect.any(Date)),
         },
         order: { createdAt: 'DESC' },
         skip: 0,
