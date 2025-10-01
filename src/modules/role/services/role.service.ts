@@ -25,13 +25,13 @@ export class RoleService {
     });
 
     if (existingRole) {
-      throw new BusinessException(ERROR_CODES.ROLE_NOT_FOUND);
+      throw new BusinessException(ERROR_CODES.ROLE_ALREADY_EXISTS);
     }
 
     // 验证角色类型是否合法
     const validRoleTypes = Object.values(RoleType) as RoleType[];
     if (!validRoleTypes.includes(createRoleDto.type)) {
-      throw new BusinessException(ERROR_CODES.ROLE_NOT_FOUND);
+      throw new BusinessException(ERROR_CODES.VALIDATION_INVALID_ID);
     }
 
     const newRole = this.roleRepository.create({
@@ -120,12 +120,12 @@ export class RoleService {
 
     // 系统角色不允许修改某些字段
     if (roleToUpdate.isSystem && updateRoleDto.isSystem === false) {
-      throw new BusinessException(ERROR_CODES.ROLE_NOT_FOUND);
+      throw new BusinessException(ERROR_CODES.ROLE_CANNOT_MODIFY_SYSTEM);
     }
 
     // 角色类型不允许修改
     if (updateRoleDto.type && updateRoleDto.type !== roleToUpdate.type) {
-      throw new BusinessException(ERROR_CODES.ROLE_NOT_FOUND);
+      throw new BusinessException(ERROR_CODES.ROLE_TYPE_CANNOT_CHANGE);
     }
 
     if (updateRoleDto.name) {
@@ -163,7 +163,7 @@ export class RoleService {
     }
 
     if (role.isSystem) {
-      throw new BusinessException(ERROR_CODES.ROLE_NOT_FOUND);
+      throw new BusinessException(ERROR_CODES.ROLE_CANNOT_DELETE_SYSTEM);
     }
 
     const result = await this.roleRepository.delete(id);

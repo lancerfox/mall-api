@@ -180,7 +180,7 @@ export class UserService {
     // 验证并关联角色
     if (createUserDto.roles && createUserDto.roles.length > 0) {
       const roles = await this.roleService.findByIds(createUserDto.roles);
-      if (roles.length !== createUserDto.roles.length) {
+      if (!roles || roles.length !== createUserDto.roles.length) {
         throw new BusinessException(ERROR_CODES.ROLE_NOT_FOUND);
       }
       newUser.roles = roles;
@@ -223,7 +223,7 @@ export class UserService {
     if (updateUserDto.roles) {
       if (updateUserDto.roles.length > 0) {
         const roles = await this.roleService.findByIds(updateUserDto.roles);
-        if (roles.length !== updateUserDto.roles.length) {
+        if (!roles || roles.length !== updateUserDto.roles.length) {
           throw new BusinessException(ERROR_CODES.ROLE_NOT_FOUND);
         }
         userToUpdate.roles = roles;

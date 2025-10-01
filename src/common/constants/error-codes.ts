@@ -42,6 +42,10 @@ export const ERROR_CODES = {
 
   // 角色相关错误 (5000-5999)
   ROLE_NOT_FOUND: 5000,
+  ROLE_ALREADY_EXISTS: 5001,
+  ROLE_TYPE_CANNOT_CHANGE: 5002,
+  ROLE_CANNOT_DELETE_SYSTEM: 5003,
+  ROLE_CANNOT_MODIFY_SYSTEM: 5004,
 
   // 菜单相关错误 (6000-6999)
   MENU_NOT_FOUND: 6000,
@@ -108,6 +112,10 @@ export const ERROR_MESSAGES: { readonly [key: number]: string } = {
 
   // 角色相关
   [ERROR_CODES.ROLE_NOT_FOUND]: '角色不存在',
+  [ERROR_CODES.ROLE_ALREADY_EXISTS]: '角色已存在',
+  [ERROR_CODES.ROLE_TYPE_CANNOT_CHANGE]: '角色类型不允许更改',
+  [ERROR_CODES.ROLE_CANNOT_DELETE_SYSTEM]: '系统角色不允许删除',
+  [ERROR_CODES.ROLE_CANNOT_MODIFY_SYSTEM]: '系统角色不允许修改',
 
   // 菜单相关
   [ERROR_CODES.MENU_NOT_FOUND]: '菜单不存在',

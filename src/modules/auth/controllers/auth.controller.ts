@@ -201,7 +201,9 @@ export class AuthController {
   async resetPassword(
     @Body() resetPasswordDto: ResetPasswordDto,
   ): Promise<{ message: string; newPassword: string }> {
-    const newPassword = await this.authService.resetPassword(resetPasswordDto.id);
+    const newPassword = await this.authService.resetPassword(
+      resetPasswordDto.id,
+    );
     return { message: '密码重置成功', newPassword };
   }
 }
