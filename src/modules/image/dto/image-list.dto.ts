@@ -1,26 +1,57 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsOptional, Min, Max } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsOptional, IsInt, Min, Max } from 'class-validator';
 import { Transform } from 'class-transformer';
 
+// 辅助函数：安全地将值转换为整数
+const safeTransformToInt = ({
+  value,
+}: {
+  value: unknown;
+}): number | undefined => {
+  // 忽略 null, undefined 和空字符串
+  if (value === null || value === undefined || value === '') {
+    return undefined;
+  }
+
+  // 如果是数字，直接取整
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return Math.floor(value);
+  }
+
+  // 如果是字符串，尝试解析
+  if (typeof value === 'string') {
+    const num = parseInt(value, 10);
+    // 如果解析结果不是数字（比如非数字字符串解析后是NaN），则返回 undefined
+    return isNaN(num) ? undefined : num;
+  }
+
+  // 其他类型不支持转换，返回 undefined
+  return undefined;
+};
+
 export class ImageListDto {
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: '页码',
     example: 1,
-    default: 1,
+    minimum: 1,
+    type: Number,
   })
-  @Transform(({ value }) => parseInt(value, 10))
-  @IsNumber()
-  @Min(1)
-  page: number = 1;
+  @Transform(safeTransformToInt)
+  @IsOptional()
+  @IsInt({ message: '页码必须是整数' })
+  @Min(1, { message: '页码不能小于1' })
+  page?: number = 1;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: '每页数量',
     example: 20,
-    default: 20,
+    minimum: 1,
+    type: Number,
   })
-  @Transform(({ value }) => parseInt(value, 10))
-  @IsNumber()
-  @Min(1)
-  @Max(50)
-  pageSize: number = 20;
+  @Transform(safeTransformToInt)
+  @IsOptional()
+  @IsInt({ message: '每页数量必须是整数' })
+  @Min(1, { message: '每页数量不能小于1' })
+  @Max(50, { message: '每页数量不能大于50' })
+  pageSize?: number = 20;
 }

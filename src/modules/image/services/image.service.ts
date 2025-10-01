@@ -1,4 +1,4 @@
-import { Injectable, Logger, HttpStatus } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BusinessException } from '../../../common/exceptions/business.exception';
 import { ERROR_CODES } from '../../../common/constants/error-codes';
@@ -101,7 +101,9 @@ export class ImageService {
   async getImageList(
     imageListDto: ImageListDto,
   ): Promise<ImageListResponseDto> {
-    const { page, pageSize } = imageListDto;
+    // 提供默认值以防止 undefined 错误
+    const page = imageListDto.page ?? 1;
+    const pageSize = imageListDto.pageSize ?? 20;
     const skip = (page - 1) * pageSize;
 
     const [images, total] = await this.imageRepository.findAndCount({

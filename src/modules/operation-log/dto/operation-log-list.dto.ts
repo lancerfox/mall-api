@@ -1,46 +1,51 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsString, IsEnum } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
 import { OperationType } from '../entities/operation-log.entity';
 
+// 辅助函数：将空字符串转换为 undefined
+const emptyStringToUndefined = ({ value }: { value: unknown }) =>
+  value === '' ? undefined : value;
+
 export class OperationLogListDto extends PaginationDto {
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: '操作模块',
-    required: false,
   })
+  @Transform(emptyStringToUndefined)
   @IsOptional()
   @IsString()
   module?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: '操作类型',
     enum: OperationType,
-    required: false,
   })
+  @Transform(emptyStringToUndefined)
   @IsOptional()
   @IsEnum(OperationType)
   operationType?: OperationType;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: '操作用户',
-    required: false,
   })
+  @Transform(emptyStringToUndefined)
   @IsOptional()
   @IsString()
   username?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: '开始时间',
-    required: false,
   })
+  @Transform(emptyStringToUndefined)
   @IsOptional()
   @IsString()
   startTime?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: '结束时间',
-    required: false,
   })
+  @Transform(emptyStringToUndefined)
   @IsOptional()
   @IsString()
   endTime?: string;

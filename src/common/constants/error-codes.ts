@@ -8,6 +8,7 @@
  * 4000-4999: 权限相关错误
  * 5000-5999: 角色相关错误
  * 6000-6999: 菜单相关错误
+ * 8000-8999: 操作日志相关错误
  * 9000-9999: 业务相关错误
  */
 
@@ -52,6 +53,7 @@ export const ERROR_CODES = {
 
   // 操作日志相关错误 (8000-8999)
   OPERATION_LOG_NOT_FOUND: 8000,
+  OPERATION_LOG_CREATE_FAILED: 8001,
 
   // 图片相关错误 (7000-7999)
   IMAGE_NOT_FOUND: 7000,
@@ -122,6 +124,7 @@ export const ERROR_MESSAGES: { readonly [key: number]: string } = {
 
   // 操作日志相关
   [ERROR_CODES.OPERATION_LOG_NOT_FOUND]: '操作日志不存在',
+  [ERROR_CODES.OPERATION_LOG_CREATE_FAILED]: '创建操作日志失败',
 
   // 图片相关
   [ERROR_CODES.IMAGE_NOT_FOUND]: '图片不存在',

@@ -1,11 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { BusinessException } from '../../../common/exceptions/business.exception';
-import { ERROR_CODES } from '../../../common/constants/error-codes';
 import { Repository, Like, Between } from 'typeorm';
 import { OperationLog } from '../entities/operation-log.entity';
 import { CreateOperationLogDto } from '../dto/create-operation-log.dto';
 import { OperationLogListDto } from '../dto/operation-log-list.dto';
+import { BusinessException } from '../../../common/exceptions/business.exception';
+import { ERROR_CODES } from '../../../common/constants/error-codes';
+import { OperationType } from '../entities/operation-log.entity';
 
 @Injectable()
 export class OperationLogService {
@@ -18,8 +19,8 @@ export class OperationLogService {
 
   /**
    * 创建操作日志
-   * @param createOperationLogDto 创建操作日志DTO
-   * @returns 操作日志实体
+   * @param createOperationLogDto 创建操作日志数据传输对象
+   * @returns 创建的操作日志
    */
   async create(
     createOperationLogDto: CreateOperationLogDto,
@@ -30,30 +31,35 @@ export class OperationLogService {
       );
       return await this.operationLogRepository.save(operationLog);
     } catch (error: any) {
-      this.logger.error('创建操作日志失败', error.stack || error.message);
-      throw error;
+      this.logger.error(
+        '创建操作日志失败',
+        error.stack || error.message || String(error),
+      );
+      throw new BusinessException(ERROR_CODES.OPERATION_LOG_CREATE_FAILED);
     }
   }
 
   /**
    * 获取操作日志列表
-   * @param operationLogListDto 查询条件
+   * @param operationLogListDto 操作日志列表查询条件
    * @returns 操作日志列表和总数
    */
   async getList(
     operationLogListDto: OperationLogListDto,
   ): Promise<{ list: OperationLog[]; total: number }> {
-    const {
-      page,
-      pageSize,
-      module,
-      operationType,
-      username,
-      startTime,
-      endTime,
-    } = operationLogListDto;
+    const { module, operationType, username, startTime, endTime } =
+      operationLogListDto;
 
-    const where: any = {};
+    // 提供默认值以防止 undefined 错误
+    const page = operationLogListDto.page ?? 1;
+    const pageSize = operationLogListDto.pageSize ?? 10;
+
+    const where: {
+      module?: any;
+      operationType?: OperationType;
+      username?: any;
+      createdAt?: any;
+    } = {};
 
     if (module) {
       where.module = Like(`%${module}%`);
