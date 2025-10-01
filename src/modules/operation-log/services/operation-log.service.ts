@@ -7,6 +7,7 @@ import { OperationLogListDto } from '../dto/operation-log-list.dto';
 import { BusinessException } from '../../../common/exceptions/business.exception';
 import { ERROR_CODES } from '../../../common/constants/error-codes';
 import { OperationType } from '../entities/operation-log.entity';
+import { parseDateString } from '../../../common/utils/date-parser';
 
 @Injectable()
 export class OperationLogService {
@@ -33,7 +34,7 @@ export class OperationLogService {
     } catch (error: any) {
       this.logger.error(
         '创建操作日志失败',
-        error.stack || error.message || String(error),
+        (error as Error).stack || (error as Error).message || String(error),
       );
       throw new BusinessException(ERROR_CODES.OPERATION_LOG_CREATE_FAILED);
     }
@@ -70,12 +71,20 @@ export class OperationLogService {
     if (username) {
       where.username = Like(`%${username}%`);
     }
-    if (startTime && endTime) {
-      where.createdAt = Between(new Date(startTime), new Date(endTime));
-    } else if (startTime) {
-      where.createdAt = Between(new Date(startTime), new Date());
-    } else if (endTime) {
-      where.createdAt = Between(new Date(0), new Date(endTime));
+
+    // 时间范围筛选
+    const parsedStartTime = startTime ? parseDateString(startTime) : null;
+    const parsedEndTime = endTime ? parseDateString(endTime) : null;
+
+    if (parsedStartTime && parsedEndTime) {
+      where.createdAt = Between(parsedStartTime, parsedEndTime);
+    } else if (parsedStartTime) {
+      // 如果只有开始时间，查找该时间之后的记录
+      where.createdAt = Between(parsedStartTime, new Date());
+    } else if (parsedEndTime) {
+      // 如果只有结束时间，查找该时间之前的记录
+      const beginningOfTime = new Date(0);
+      where.createdAt = Between(beginningOfTime, parsedEndTime);
     }
 
     const [list, total] = await this.operationLogRepository.findAndCount({

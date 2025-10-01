@@ -28,6 +28,7 @@ import {
   OrderModifyAddressResponseDto,
   OrderStatusDictionaryItemDto,
 } from '../dto';
+import { parseDateString } from '../../../common/utils/date-parser';
 
 @Injectable()
 export class OrderService {
@@ -88,14 +89,20 @@ export class OrderService {
 
     // 时间范围筛选
     if (start_time) {
-      queryBuilder.andWhere('order.createdAt >= :startTime', {
-        startTime: new Date(start_time),
-      });
+      const startDate = parseDateString(start_time);
+      if (startDate) {
+        queryBuilder.andWhere('order.createdAt >= :startTime', {
+          startTime: startDate,
+        });
+      }
     }
     if (end_time) {
-      queryBuilder.andWhere('order.createdAt <= :endTime', {
-        endTime: new Date(end_time),
-      });
+      const endDate = parseDateString(end_time);
+      if (endDate) {
+        queryBuilder.andWhere('order.createdAt <= :endTime', {
+          endTime: endDate,
+        });
+      }
     }
 
     // 分页

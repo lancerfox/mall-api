@@ -9,6 +9,7 @@ import {
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { OrderStatus } from '../../../common/enums/order-status.enum';
+import { transformDateString } from '../../../common/utils/date-parser';
 
 // 辅助函数：将空字符串转换为 undefined
 const emptyStringToUndefined = ({ value }: { value: unknown }) =>
@@ -72,18 +73,18 @@ export class OrderListQueryDto {
 
   @ApiPropertyOptional({
     description: '下单时间范围-开始时间',
-    example: '2025-09-29T00:00:00.000Z',
+    example: '2025-09-29 00:00:00',
   })
-  @Transform(emptyStringToUndefined)
+  @Transform(transformDateString)
   @IsOptional()
   @IsDateString()
   start_time?: string;
 
   @ApiPropertyOptional({
     description: '下单时间范围-结束时间',
-    example: '2025-09-29T23:59:59.000Z',
+    example: '2025-09-29 23:59:59',
   })
-  @Transform(emptyStringToUndefined)
+  @Transform(transformDateString)
   @IsOptional()
   @IsDateString()
   end_time?: string;
