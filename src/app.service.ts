@@ -16,14 +16,14 @@ export class AppService implements OnModuleInit {
    * 检查并创建初始管理员账户
    */
   async onModuleInit() {
-    const adminUsername = 'adminabaaaba';
-    const adminPassword = 'xxx13579!';
+    const adminUsername = 'admin';
+    const adminPassword = 'admin123';
 
     try {
       // 检查管理员账户是否已存在
       const existingAdmin = await this.userService.findOne(adminUsername);
       if (!existingAdmin) {
-        console.log('❌ adminabaaaba 用户不存在');
+        console.log('❌ admin 用户不存在');
         // 查找 super_admin 角色
         const superAdminRole = await this.roleService.findByType(
           RoleType.SUPER_ADMIN,
