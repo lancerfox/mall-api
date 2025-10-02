@@ -10,7 +10,7 @@ import {
 import { ProductSPU } from './product-spu.entity';
 
 @Entity('product_categories')
-@Tree('nested-set')
+@Tree('materialized-path')
 export class ProductCategory {
   @PrimaryGeneratedColumn('uuid')
   id: string;

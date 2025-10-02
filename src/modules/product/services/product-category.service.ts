@@ -23,7 +23,14 @@ export class ProductCategoryService {
   async create(
     createCategoryDto: CreateCategoryDto,
   ): Promise<ProductCategoryResponseDto> {
-    const category = this.categoryRepository.create(createCategoryDto);
+    // 处理一级分类的情况
+    // 如果没有提供 parentId 或 parentId 为 null/undefined，则创建一级分类
+    const categoryData = {
+      ...createCategoryDto,
+      level: createCategoryDto.parentId ? 2 : 1, // 如果有父级则为二级分类，否则为一级分类
+    };
+
+    const category = this.categoryRepository.create(categoryData);
     const savedCategory = await this.categoryRepository.save(category);
     return this.transformToResponseDto(savedCategory);
   }
