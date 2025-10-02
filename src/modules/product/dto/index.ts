@@ -8,3 +8,4 @@ export * from './save-product.dto';
 export * from './product-list.dto';
 export * from './product-detail.dto';
 export * from './update-status.dto';
+export * from './delete-product.dto';

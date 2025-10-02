@@ -205,6 +205,9 @@ export class ProductService {
       const newSkus = skusToCreate.map((sku: SKUData) =>
         this.skuRepository.create({
           ...sku,
+          skuCode:
+            sku.skuCode ||
+            `SKU-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           spuId,
           createdAt: now,
           updatedAt: now,
@@ -228,9 +231,13 @@ export class ProductService {
     const where: {
       name?: any;
       id?: string;
-      status?: string;
+      status?: any;
       categoryId?: string;
     } = {};
+
+    // 默认排除已删除的商品
+    where.status = Not('Deleted');
+
     if (filters) {
       if (filters.name) {
         where.name = ILike(`%${filters.name}%`);
@@ -306,13 +313,21 @@ export class ProductService {
    * 删除商品
    */
   async deleteProducts(ids: string[]): Promise<void> {
-    const result = await this.spuRepository.update(
-      { id: In(ids) },
-      {
-        status: 'Deleted',
-        updatedAt: new Date(),
-      },
-    );
+    // 先检查商品是否存在
+    const products = await this.spuRepository.find({
+      where: { id: In(ids) },
+    });
+
+    if (products.length === 0) {
+      throw new BusinessException(ERROR_CODES.PRODUCT_NOT_FOUND);
+    }
+
+    // 删除相关的SKU记录
+    const spuIds = products.map((product) => product.id);
+    await this.skuRepository.delete({ spuId: In(spuIds) });
+
+    // 删除商品记录
+    const result = await this.spuRepository.delete({ id: In(ids) });
 
     if (result.affected === 0) {
       throw new BusinessException(ERROR_CODES.PRODUCT_NOT_FOUND);
@@ -335,7 +350,9 @@ export class ProductService {
    * 根据ID查找商品
    */
   async findById(id: string): Promise<ProductSPU | null> {
-    return this.spuRepository.findOne({ where: { id } });
+    return this.spuRepository.findOne({
+      where: { id, status: Not('Deleted') },
+    });
   }
 
   /**

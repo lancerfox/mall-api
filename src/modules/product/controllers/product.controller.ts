@@ -10,6 +10,7 @@ import { ProductDetailDto } from '../dto/product-detail.dto';
 import { ProductResponseDto } from '../dto/product-response.dto';
 import { ProductListPaginatedDto } from '../dto/product-list-response.dto';
 import { ProductEditResponseDto } from '../dto/product-edit-response.dto';
+import { DeleteProductDto } from '../dto/delete-product.dto';
 
 @ApiTags('商品管理')
 @Controller('product')
@@ -90,8 +91,8 @@ export class ProductController {
       },
     },
   })
-  async delete(@Body() body: { ids: string[] }): Promise<void> {
-    await this.productService.deleteProducts(body.ids);
+  async delete(@Body() deleteProductDto: DeleteProductDto): Promise<void> {
+    await this.productService.deleteProducts(deleteProductDto.ids);
   }
 
   @Post('updateImages')
